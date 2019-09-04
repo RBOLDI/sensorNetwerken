@@ -35,9 +35,9 @@
 #include <string.h>
 #include <stdio.h>
 
-uint8_t  channel = 50;		//0-128
+uint8_t  channel = 54;		//0-128
 uint8_t  global_pipe[5] = {20, 19, 20, 20, 00};
-uint8_t  private_pipe[5] = {51, 51, 53, 77, 78};
+uint8_t  private_pipe[5] = "FSR69";
 uint8_t  packet[32];		//buffer voor data
 
 /*!
@@ -799,7 +799,6 @@ uint8_t nrfGetDynamicPayloadSize(void)
   nrfspiTransfer(NRF_R_RX_PL_WID);    // Send Command
   result = nrfspiTransfer(NRF_NOP);   // Read byte
   nrfCSn(NRF_DESELECT);
-printf("%d", result);
   return result;
 }
 
@@ -1159,23 +1158,14 @@ uint8_t nrfVerifySPIConnection(void)
   else                 return(0);                  // 0 - Value is different
 }
 
-uint8_t numbrOfBytes(unsigned char *c){
-	int i = 0;
-	while(*c != '\0'){
-		i++;
-		*c++;
-	}
-	return i;
-}
-
 void nrfSend(uint8_t* send){
 	nrfStopListening();
 	PORTC.DIRSET = PIN0_bm;
 	PORTC.OUTTGL = PIN0_bm;
-	printf("%d", sizeof(uint8_t));
 	_delay_ms(5);
-	//printf("%d", numbrOfBytes(send));
-	nrfWrite((uint8_t *) send, 2);
+
+	printf("%d", strlen(send));
+	nrfWrite((uint8_t *) send, strlen(send));
 	PORTC.OUTTGL = PIN0_bm;
 	
 	nrfStartListening();

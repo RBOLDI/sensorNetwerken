@@ -13,10 +13,17 @@
 #include "nrf24spiXM2.h"
 #include "stream.h"
 
+
+#define TRANSMITTER (PORTD.IN & PIN0_bm)
+#define RECEIVER !TRANSMITTER
+
+
 typedef struct pair {
 	char* initials;
 	uint8_t id;
 } PAIR;
+
+uint8_t newDataFlag = 0;
 
 const PAIR table[] =
 {
@@ -46,7 +53,7 @@ void init_nrf(void){
 	nrfSetDataRate(NRF_RF_SETUP_RF_DR_250K_gc);
 	nrfSetCRCLength(NRF_CONFIG_CRC_16_gc);
 	nrfSetChannel(channel);
-	nrfSetAutoAck(0);
+	nrfSetAutoAck(1);
 	nrfEnableAckPayload();
 	nrfEnableDynamicPayloads();
 
@@ -57,6 +64,11 @@ void init_nrf(void){
 	PORTF.INT0MASK |= PIN6_bm;
 	PORTF.PIN6CTRL  = PORT_ISC_FALLING_gc;
 	PORTF.INTCTRL   = (PORTF.INTCTRL & ~PORT_INT0LVL_gm) | PORT_INT0LVL_LO_gc;
+
+	PORTF.DIRSET = PIN0_bm;
+	
+	PORTD.DIRCLR = PIN0_bm;
+	PORTD.PIN0CTRL = PORT_OPC_PULLUP_gc;
 
 //	nrfOpenReadingPipe(0, global_pipe);
 	nrfOpenReadingPipe(1, private_pipe);
@@ -71,24 +83,30 @@ ISR(PORTF_INT0_vect){		//triggers when data is received
 	uint8_t  tx_ds, max_rt, rx_dr;
 	nrfWhatHappened(&tx_ds, &max_rt, &rx_dr);
 	if(rx_dr){
-		nrfRead(packet,  nrfGetDynamicPayloadSize());
-		PORTF.DIRSET = PIN0_bm;
-		PORTF.OUTTGL = PIN0_bm;
-		printf("%s",packet);
+		nrfRead(packet, nrfGetDynamicPayloadSize());
+		newDataFlag = 1;
 	}
 }
 
 int main(void)
 {
-	int i = 0;
 	init_stream(F_CPU);
 	init_nrf();
-    unsigned char nrfBuffer[32] = "kanker";
+    uint8_t nrfBuffer[32] = "Dit is een lang bericht ja toc\n";
     /* Replace with your application code */
     while (1) 
     {
-		nrfSend(nrfBuffer);
- 		_delay_ms(1000);
+		if(RECEIVER && newDataFlag)
+		{
+	   		newDataFlag = 0;
+			PORTF.OUTTGL = PIN0_bm;
+			printf("%s", packet);
+		}
+		else if(TRANSMITTER)
+		{
+			nrfSend(nrfBuffer);
+			_delay_ms(1000);
+		}
     }
 }
 
