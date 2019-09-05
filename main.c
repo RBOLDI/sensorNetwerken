@@ -140,6 +140,10 @@ int writeMessage(uint8_t* message){
 			c_byte[pos] = NULL;
 			printf("\b \b");
 		}
+		else if(c == '*'){
+			clear_screen();
+			return rc;
+		}
 		else
 		{
 			printf("%c", c);
