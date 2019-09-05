@@ -77,7 +77,14 @@ void init_nrf(void){
 //	nrfOpenReadingPipe(0, global_pipe);
 	nrfOpenReadingPipe(1, private_pipe);
 	nrfOpenWritingPipe(private_pipe);
+	nrfOpenReadingPipe(0, RB_pipe);
+	nrfOpenReadingPipe(1, FB_pipe);
+	nrfOpenReadingPipe(2, SB_pipe);
+	nrfOpenReadingPipe(3, JG_pipe);
+	nrfOpenReadingPipe(5, AO_pipe);
+	
 	nrfStartListening();
+	
 	
 	PMIC.CTRL |= PMIC_LOLVLEN_bm;
 	sei();
