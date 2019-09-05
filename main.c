@@ -12,11 +12,14 @@
 #include "nrf24L01.h"
 #include "nrf24spiXM2.h"
 #include "stream.h"
+#include "uart.h"
 
 
 #define TRANSMITTER (PORTD.IN & PIN0_bm)
 #define RECEIVER !TRANSMITTER
+#define MYID 51
 
+int writeMessage();
 
 typedef struct pair {
 	char* initials;
@@ -24,6 +27,7 @@ typedef struct pair {
 } PAIR;
 
 uint8_t newDataFlag = 0;
+uint8_t sendDataFlag = 0;
 
 const PAIR table[] =
 {
@@ -81,6 +85,7 @@ void init_nrf(void){
 
 ISR(PORTF_INT0_vect){		//triggers when data is received
 	uint8_t  tx_ds, max_rt, rx_dr;
+	memset(packet, NULL, sizeof(packet));
 	nrfWhatHappened(&tx_ds, &max_rt, &rx_dr);
 	if(rx_dr){
 		nrfRead(packet, nrfGetDynamicPayloadSize());
@@ -100,13 +105,53 @@ int main(void)
 		{
 	   		newDataFlag = 0;
 			PORTF.OUTTGL = PIN0_bm;
-			printf("%s", packet);
+			printf("%s\n", packet);
 		}
 		else if(TRANSMITTER)
 		{
-			nrfSend(nrfBuffer);
-			_delay_ms(1000);
+			writeMessage(&nrfBuffer);
+				
+			if(sendDataFlag)
+			{
+				sendDataFlag = 0;
+				nrfSend(nrfBuffer);
+			}
 		}
     }
 }
 
+int writeMessage(uint8_t* message){
+	int pos = 0;
+	uint8_t c_byte[32] = {0};
+	uint16_t c;
+	int rc = 0;
+	while(rc == 0) {
+		if((c = uart_fgetc(&uart_stdinout)) == 0x0100){
+			continue;
+		}
+		else if (c == '\r')
+		{
+			strcpy(message,c_byte);
+			memset(c_byte, NULL, sizeof(c_byte));
+			
+			sendDataFlag = 1;
+			rc = 1;
+		}
+		else if (c == '\b')
+		{
+			pos--;
+			c_byte[pos] = NULL;
+			printf("\b \b");
+		}
+		else
+		{
+			printf("%c", c);
+			c_byte[pos] = c;
+			pos++;
+		}
+	}
+
+	printf("\r%s_%s\n", get_user_initials(MYID), message);	// Print een regel met initialen + het opgestelde bericht.
+	
+	return rc;
+}

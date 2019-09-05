@@ -1164,7 +1164,7 @@ void nrfSend(uint8_t* send){
 	PORTC.OUTTGL = PIN0_bm;
 	_delay_ms(5);
 
-	printf("%d", strlen(send));
+// 	printf("%d", strlen(send));
 	nrfWrite((uint8_t *) send, strlen(send));
 	PORTC.OUTTGL = PIN0_bm;
 	
