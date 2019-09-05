@@ -8,6 +8,7 @@
 #include <avr/io.h>
 #include <util/delay.h>
 #include <stdlib.h>
+#include <string.h>
 #include <avr/interrupt.h>
 #include "nrf24L01.h"
 #include "nrf24spiXM2.h"
@@ -19,7 +20,11 @@
 #define RECEIVER !TRANSMITTER
 #define MYID 51
 
-int writeMessage();
+#define FULL_MESSAGE_SIZE 32
+#define NUMBER_OF_PREFIX_BYTES 3
+#define MAX_MESSAGE_SIZE FULL_MESSAGE_SIZE - NUMBER_OF_PREFIX_BYTES // Waarvan de laatste is '\0'
+
+void writeMessage();
 
 typedef struct pair {
 	char* initials;
@@ -31,11 +36,11 @@ uint8_t sendDataFlag = 0;
 
 const PAIR table[] =
 {
-	{ "FB",  51 },
-	{ "RB",  52 },
-	{ "SB",  53 },
-	{ "JG",  77 },
-	{ "AO",  78 },
+	{ "FB_",  51 },
+	{ "RB_",  52 },
+	{ "SB_",  53 },
+	{ "JG_",  77 },
+	{ "AO_",  78 },
 };
 
 char* get_user_initials(uint8_t id)
@@ -97,7 +102,10 @@ int main(void)
 {
 	init_stream(F_CPU);
 	init_nrf();
-    uint8_t nrfBuffer[32] = "Dit is een lang bericht ja toc\n";
+    uint8_t initials[NUMBER_OF_PREFIX_BYTES] = {0};
+	uint8_t message[MAX_MESSAGE_SIZE] = {0};
+	uint8_t fullMessage[FULL_MESSAGE_SIZE] = {0};
+	
     /* Replace with your application code */
     while (1) 
     {
@@ -109,33 +117,35 @@ int main(void)
 		}
 		else if(TRANSMITTER)
 		{
-			writeMessage(&nrfBuffer);
-				
+			writeMessage(&message);
+
+			printf("\r%s%s\n",get_user_initials(MYID),message);
+			
 			if(sendDataFlag)
 			{
 				sendDataFlag = 0;
-				nrfSend(nrfBuffer);
+				nrfSend(message);		// Initialen moeten er nog voor worden geplakt. strcat is kapot irritant en wil niet goed werken
 			}
 		}
     }
 }
 
-int writeMessage(uint8_t* message){
+void writeMessage(uint8_t* msg){
 	int pos = 0;
-	uint8_t c_byte[32] = {0};
+	uint8_t c_byte[MAX_MESSAGE_SIZE] = {0};
 	uint16_t c;
-	int rc = 0;
-	while(rc == 0) {
+	
+	while(1) {
 		if((c = uart_fgetc(&uart_stdinout)) == 0x0100){
 			continue;
 		}
-		else if (c == '\r')
+		else if (c == '\r' || pos == (MAX_MESSAGE_SIZE-1))
 		{
-			strcpy(message,c_byte);
-			memset(c_byte, NULL, sizeof(c_byte));
-			
+			c_byte[pos] = '\0';
 			sendDataFlag = 1;
-			rc = 1;
+			
+			strcpy(msg,c_byte);
+			return;
 		}
 		else if (c == '\b')
 		{
@@ -149,9 +159,5 @@ int writeMessage(uint8_t* message){
 			c_byte[pos] = c;
 			pos++;
 		}
-	}
-
-	printf("\r%s_%s\n", get_user_initials(MYID), message);	// Print een regel met initialen + het opgestelde bericht.
-	
-	return rc;
+	}	
 }
