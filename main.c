@@ -101,24 +101,21 @@ int main(void)
     /* Replace with your application code */
     while (1) 
     {
-		if(RECEIVER && newDataFlag)
+		if(newDataFlag)
 		{
 	   		newDataFlag = 0;
 			PORTF.OUTTGL = PIN0_bm;
 			printf("%s\n", packet);
 		}
-		else if(TRANSMITTER)
-		{
 			writeMessage(&nrfBuffer);
-				
-			if(sendDataFlag)
-			{
-				sendDataFlag = 0;
-				nrfSend(nrfBuffer);
-			}
+		if(sendDataFlag)
+		{
+			sendDataFlag = 0;
+			nrfSend(nrfBuffer);
 		}
-    }
+	}
 }
+
 
 int writeMessage(uint8_t* message){
 	int pos = 0;
