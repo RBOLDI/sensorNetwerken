@@ -37,6 +37,11 @@
 
 uint8_t  channel = 54;		//0-128
 uint8_t  global_pipe[5] = {20, 19, 20, 20, 00};
+uint8_t  FB_pipe[5] =	  {20, 19, 20, 20, 51};
+uint8_t  RB_pipe[5] =	  {20, 19, 20, 20, 52};
+uint8_t  SB_pipe[5] =	  {20, 19, 20, 20, 53};
+uint8_t  JG_pipe[5] =	  {20, 19, 20, 20, 77};
+uint8_t  AO_pipe[5] =	  {20, 19, 20, 20, 78};
 uint8_t  private_pipe[5] = "FSR69";
 
 // Pipes added per teammembers xMega each pipe ending with the members unique ID

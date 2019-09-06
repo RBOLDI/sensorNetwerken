@@ -124,13 +124,14 @@ int main(void)
     /* Replace with your application code */
     while (1) 
     {
-		if(RECEIVER && newDataFlag)
+		if(newDataFlag)
 		{
 	   		newDataFlag = 0;
 			PORTF.OUTTGL = PIN0_bm;
 			printf("%s\n", packet);
 		}
-		else if(TRANSMITTER)
+			writeMessage(&nrfBuffer);
+		if(sendDataFlag)
 		{
 			writeMessage(&message);
 
@@ -144,7 +145,7 @@ int main(void)
 				nrfStartListening();
 			}
 		}
-    }
+	}
 }
 
 void writeMessage(uint8_t* msg){
@@ -169,6 +170,10 @@ void writeMessage(uint8_t* msg){
 			pos--;
 			c_byte[pos] = NULL;
 			printf("\b \b");
+		}
+		else if(c == '*'){
+			clear_screen();
+			return rc;
 		}
 		else
 		{
