@@ -15,16 +15,22 @@
 #include "stream.h"
 #include "uart.h"
 
+#define		FB !(PORTD.IN & PIN1_bm)
+#define		RB !(PORTD.IN & PIN2_bm)
+#define		SB !(PORTD.IN & PIN3_bm)
 
 #define TRANSMITTER (PORTD.IN & PIN0_bm)
 #define RECEIVER !TRANSMITTER
-#define MYID 51
+
 
 #define FULL_MESSAGE_SIZE 32
 #define NUMBER_OF_PREFIX_BYTES 3
 #define MAX_MESSAGE_SIZE FULL_MESSAGE_SIZE - NUMBER_OF_PREFIX_BYTES // Waarvan de laatste is '\0'
 
+//Function prototypes
+const uint8_t getID();
 void writeMessage();
+uint8_t* pipe_selector(uint8_t ID);
 
 typedef struct pair {
 	char* initials;
@@ -53,7 +59,7 @@ char* get_user_initials(uint8_t id)
 	return "User not found";
 }
 
-void init_nrf(void){
+void init_nrf(const uint8_t pvtID){
 	nrfspiInit();
 	nrfBegin();
 
@@ -76,13 +82,20 @@ void init_nrf(void){
 
 	PORTF.DIRSET = PIN0_bm;
 	
-	PORTD.DIRCLR = PIN0_bm;
+	PORTD.DIRCLR = PIN0_bm, PIN1_bm, PIN2_bm, PIN3_bm;
+	
 	PORTD.PIN0CTRL = PORT_OPC_PULLUP_gc;
+	PORTD.PIN1CTRL = PORT_OPC_PULLUP_gc;
+	PORTD.PIN2CTRL = PORT_OPC_PULLUP_gc;
+	PORTD.PIN3CTRL = PORT_OPC_PULLUP_gc;
 
-//	nrfOpenReadingPipe(0, global_pipe);
-	nrfOpenReadingPipe(1, private_pipe);
-	nrfOpenWritingPipe(private_pipe);
+	//nrfOpenReadingPipe(0, global_pipe);
+	nrfOpenReadingPipe(1, FB_pipe);
+	nrfOpenReadingPipe(2, RB_pipe);
+	nrfOpenReadingPipe(3, SB_pipe);
 	nrfStartListening();
+	
+	nrfOpenWritingPipe(pipe_selector(pvtID));
 	
 	PMIC.CTRL |= PMIC_LOLVLEN_bm;
 	sei();
@@ -100,8 +113,10 @@ ISR(PORTF_INT0_vect){		//triggers when data is received
 
 int main(void)
 {
+	const uint8_t MYID = getID();
+	
 	init_stream(F_CPU);
-	init_nrf();
+	init_nrf(MYID);
     uint8_t initials[NUMBER_OF_PREFIX_BYTES] = {0};
 	uint8_t message[MAX_MESSAGE_SIZE] = {0};
 	uint8_t fullMessage[FULL_MESSAGE_SIZE] = {0};
@@ -124,7 +139,9 @@ int main(void)
 			if(sendDataFlag)
 			{
 				sendDataFlag = 0;
+				nrfStopListening();
 				nrfSend(message);		// Initialen moeten er nog voor worden geplakt. strcat is kapot irritant en wil niet goed werken
+				nrfStartListening();
 			}
 		}
     }
@@ -160,4 +177,22 @@ void writeMessage(uint8_t* msg){
 			pos++;
 		}
 	}	
+}
+
+uint8_t* pipe_selector(uint8_t ID){
+	switch (ID){
+		case 51:  
+			return RB_pipe;
+		case 52: 
+			return FB_pipe;
+		case 53:
+			return SB_pipe;
+	}
+}
+
+const uint8_t getID(){
+	if(FB) return 51;
+	else if(RB) return 52;
+	else if(SB) return 53;
+	else return 00;
 }
