@@ -38,6 +38,14 @@
 uint8_t  channel = 54;		//0-128
 uint8_t  global_pipe[5] = {20, 19, 20, 20, 00};
 uint8_t  private_pipe[5] = "FSR69";
+
+// Pipes added per teammembers xMega each pipe ending with the members unique ID
+uint8_t  FB_pipe[5] = {69, 19, 20, 20, 51};
+uint8_t  RB_pipe[5] = {69, 19, 20, 20, 52};
+uint8_t  SB_pipe[5] = {69, 19, 20, 20, 53};
+uint8_t  JG_pipe[5] = {69, 19, 20, 20, 77};
+uint8_t  AO_pipe[5] = {69, 19, 20, 20, 78};
+	
 uint8_t  packet[32];		//buffer voor data
 
 /*!
@@ -1164,7 +1172,6 @@ void nrfSend(uint8_t* send){
 	PORTC.OUTTGL = PIN0_bm;
 	_delay_ms(5);
 
-// 	printf("%d", strlen(send));
 	nrfWrite((uint8_t *) send, strlen(send));
 	PORTC.OUTTGL = PIN0_bm;
 	
