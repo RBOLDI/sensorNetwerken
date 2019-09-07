@@ -71,7 +71,7 @@ void init_nrf(const uint8_t pvtID){
 	nrfSetAutoAck(1);
 	nrfEnableAckPayload();
 	nrfEnableDynamicPayloads();
-
+	
 	nrfClearInterruptBits();
 	nrfFlushRx();
 	nrfFlushTx();
@@ -85,11 +85,12 @@ void init_nrf(const uint8_t pvtID){
 	PORTD.DIRCLR = PIN0_bm, PIN1_bm, PIN2_bm, PIN3_bm;
 	
 	PORTD.PIN0CTRL = PORT_OPC_PULLUP_gc;
-	PORTD.PIN1CTRL = PORT_OPC_PULLUP_gc;
-	PORTD.PIN2CTRL = PORT_OPC_PULLUP_gc;
-	PORTD.PIN3CTRL = PORT_OPC_PULLUP_gc;
 
+	//TODO: automatisch reading pipes selecteren, zodat eigen adres hier niet meer tussen staat.
+	//Reading pipe 0 dient gelijk te zijn aan de Writing pipe (xMega ID) i.v.m. auto acknowledge.
+	 
 	//nrfOpenReadingPipe(0, global_pipe);
+	nrfOpenReadingPipe(0, pipe_selector(pvtID));
 	nrfOpenReadingPipe(1, FB_pipe);
 	nrfOpenReadingPipe(2, RB_pipe);
 	nrfOpenReadingPipe(3, SB_pipe);
@@ -113,9 +114,18 @@ ISR(PORTF_INT0_vect){		//triggers when data is received
 
 int main(void)
 {
+	init_stream(F_CPU);
+	
+	//Set ID selector pins
+	PORTD.DIRCLR = PIN1_bm, PIN2_bm, PIN3_bm;
+	
+	PORTD.PIN1CTRL = PORT_OPC_PULLUP_gc;
+	PORTD.PIN2CTRL = PORT_OPC_PULLUP_gc;
+	PORTD.PIN3CTRL = PORT_OPC_PULLUP_gc;
+	
 	const uint8_t MYID = getID();
 	
-	init_stream(F_CPU);
+	
 	init_nrf(MYID);
     uint8_t initials[NUMBER_OF_PREFIX_BYTES] = {0};
 	uint8_t message[MAX_MESSAGE_SIZE] = {0};
@@ -139,9 +149,7 @@ int main(void)
 			if(sendDataFlag)
 			{
 				sendDataFlag = 0;
-				nrfStopListening();
 				nrfSend(message);		// Initialen moeten er nog voor worden geplakt. strcat is kapot irritant en wil niet goed werken
-				nrfStartListening();
 			}
 		}
     }
@@ -182,9 +190,9 @@ void writeMessage(uint8_t* msg){
 uint8_t* pipe_selector(uint8_t ID){
 	switch (ID){
 		case 51:  
-			return RB_pipe;
-		case 52: 
 			return FB_pipe;
+		case 52: 
+			return RB_pipe;
 		case 53:
 			return SB_pipe;
 	}
