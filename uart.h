@@ -52,7 +52,7 @@
 #define UART_NO_DATA          0x0100
 
 uint16_t calc_bsel(uint32_t f_cpu, uint32_t baud, int8_t scale, uint8_t clk2x);
-uint16_t uart_getc(USART_data_t *uart);
+uint8_t uart_getc(USART_data_t *uart);
 void uart_putc(USART_data_t *uart, uint8_t data);
 void uart_puts(USART_data_t *uart, char *s);
 void set_usart_txrx_direction(USART_t *usart);

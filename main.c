@@ -15,6 +15,7 @@
 #include "stream.h"
 #include "uart.h"
 
+#include "KeyboardCodes.h"
 
 #define TRANSMITTER (PORTD.IN & PIN0_bm)
 #define RECEIVER !TRANSMITTER
@@ -50,7 +51,7 @@ char* get_user_initials(uint8_t id)
 		if(table[i].id == id)
 		return table[i].initials;
 	}
-	return "User not found";
+	return "XX_";
 }
 
 void init_nrf(void){
@@ -90,7 +91,7 @@ void init_nrf(void){
 
 ISR(PORTF_INT0_vect){		//triggers when data is received
 	uint8_t  tx_ds, max_rt, rx_dr;
-	memset(packet, NULL, sizeof(packet));
+	memset(packet, 0, sizeof(packet));
 	nrfWhatHappened(&tx_ds, &max_rt, &rx_dr);
 	if(rx_dr){
 		nrfRead(packet, nrfGetDynamicPayloadSize());
@@ -102,11 +103,10 @@ int main(void)
 {
 	init_stream(F_CPU);
 	init_nrf();
-    uint8_t initials[NUMBER_OF_PREFIX_BYTES] = {0};
-	uint8_t message[MAX_MESSAGE_SIZE] = {0};
-	uint8_t fullMessage[FULL_MESSAGE_SIZE] = {0};
+    char initials[NUMBER_OF_PREFIX_BYTES] = {0};
+	char message[MAX_MESSAGE_SIZE] = {0};
+	char fullMessage[FULL_MESSAGE_SIZE] = {0};
 	
-    /* Replace with your application code */
     while (1) 
     {
 		if(RECEIVER && newDataFlag)
@@ -117,29 +117,36 @@ int main(void)
 		}
 		else if(TRANSMITTER)
 		{
+			memset(initials, 0, sizeof(initials));
+			memset(message, 0, sizeof(message));
+			memset(fullMessage, 0, sizeof(fullMessage));
+			
+			
+			memcpy(&initials, get_user_initials(MYID), NUMBER_OF_PREFIX_BYTES);
 			writeMessage(&message);
+			strcat(fullMessage,strcat(initials,message));
 
-			printf("\r%s%s\n",get_user_initials(MYID),message);
+			printf("\r%s%s\n",initials,message);
 			
 			if(sendDataFlag)
 			{
 				sendDataFlag = 0;
-				nrfSend(message);		// Initialen moeten er nog voor worden geplakt. strcat is kapot irritant en wil niet goed werken
+				nrfSend( (uint8_t *) fullMessage);		// Initialen moeten er nog voor worden geplakt. strcat is kapot irritant en wil niet goed werken
 			}
 		}
     }
 }
 
-void writeMessage(uint8_t* msg){
+void writeMessage(char* msg){
 	int pos = 0;
-	uint8_t c_byte[MAX_MESSAGE_SIZE] = {0};
-	uint16_t c;
+	char c_byte[MAX_MESSAGE_SIZE] = {0};
+	char c;
 	
 	while(1) {
-		if((c = uart_fgetc(&uart_stdinout)) == 0x0100){
+		if((c = uart_fgetc(&uart_stdinout)) == UART_NO_DATA){
 			continue;
 		}
-		else if (c == '\r' || pos == (MAX_MESSAGE_SIZE-1))
+		else if (c == ENTER || pos == (MAX_MESSAGE_SIZE-1))
 		{
 			c_byte[pos] = '\0';
 			sendDataFlag = 1;
@@ -147,10 +154,10 @@ void writeMessage(uint8_t* msg){
 			strcpy(msg,c_byte);
 			return;
 		}
-		else if (c == '\b')
+		else if (c == BACKSPACE)
 		{
 			pos--;
-			c_byte[pos] = NULL;
+			c_byte[pos] = 0;
 			printf("\b \b");
 		}
 		else

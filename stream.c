@@ -48,9 +48,9 @@ int uart_fputc(char c, FILE *stream)
  *  \return received byte from circulair buffer (low byte) or
  *          UART_NO_DATA if buffer is empty
  */
-int uart_fgetc(FILE * stream)
+uint8_t uart_fgetc(FILE * stream)
 {
-  int c;
+  uint8_t c;
 
   while ( (c = uart_getc(&uartF0)) == UART_NO_DATA) ;
 

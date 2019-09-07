@@ -48,7 +48,7 @@
  *  \return received byte from circulair buffer (low byte) or
  *          UART_NO_DATA if buffer is empty
  */
-uint16_t uart_getc(USART_data_t *uart)
+uint8_t uart_getc(USART_data_t *uart)
 {
   uint8_t data;
 

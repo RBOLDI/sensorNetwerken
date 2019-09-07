@@ -137,6 +137,9 @@
     <Compile Include="avr_compiler.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="KeyboardCodes.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="main.c">
       <SubType>compile</SubType>
     </Compile>
