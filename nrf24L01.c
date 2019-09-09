@@ -1160,12 +1160,9 @@ uint8_t nrfVerifySPIConnection(void)
 
 void nrfSend(uint8_t* send){
 	nrfStopListening();
-	PORTC.DIRSET = PIN0_bm;
-	PORTC.OUTTGL = PIN0_bm;
 	_delay_ms(5);
 
 	nrfWrite((uint8_t *) send, strlen(send));
-	PORTC.OUTTGL = PIN0_bm;
 	
 	nrfStartListening();
 	_delay_ms(5);

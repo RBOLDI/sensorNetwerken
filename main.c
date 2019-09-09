@@ -51,7 +51,16 @@ char* get_user_initials(uint8_t id)
 		if(table[i].id == id)
 		return table[i].initials;
 	}
-	return "XX_";
+	return "XX_";		// Niet gevonden
+}
+
+void init_io(void){
+	PORTF.DIRSET = PIN0_bm;
+	
+	PORTC.DIRSET = PIN0_bm;
+	
+	PORTD.DIRCLR = PIN0_bm;
+	PORTD.PIN0CTRL = PORT_OPC_PULLUP_gc;
 }
 
 void init_nrf(void){
@@ -75,10 +84,7 @@ void init_nrf(void){
 	PORTF.PIN6CTRL  = PORT_ISC_FALLING_gc;
 	PORTF.INTCTRL   = (PORTF.INTCTRL & ~PORT_INT0LVL_gm) | PORT_INT0LVL_LO_gc;
 
-	PORTF.DIRSET = PIN0_bm;
-	
-	PORTD.DIRCLR = PIN0_bm;
-	PORTD.PIN0CTRL = PORT_OPC_PULLUP_gc;
+
 
 //	nrfOpenReadingPipe(0, global_pipe);
 	nrfOpenReadingPipe(1, private_pipe);
@@ -102,8 +108,8 @@ ISR(PORTF_INT0_vect){		//triggers when data is received
 int main(void)
 {
 	init_stream(F_CPU);
+	init_io();
 	init_nrf();
-    char initials[NUMBER_OF_PREFIX_BYTES] = {0};
 	char message[MAX_MESSAGE_SIZE] = {0};
 	char fullMessage[FULL_MESSAGE_SIZE] = {0};
 	
@@ -117,21 +123,24 @@ int main(void)
 		}
 		else if(TRANSMITTER)
 		{
-			memset(initials, 0, sizeof(initials));
 			memset(message, 0, sizeof(message));
 			memset(fullMessage, 0, sizeof(fullMessage));
 			
 			
-			memcpy(&initials, get_user_initials(MYID), NUMBER_OF_PREFIX_BYTES);
 			writeMessage(&message);
-			strcat(fullMessage,strcat(initials,message));
+			
+			memmove(fullMessage,get_user_initials(MYID), NUMBER_OF_PREFIX_BYTES);
+			memmove(fullMessage+NUMBER_OF_PREFIX_BYTES, message, MAX_MESSAGE_SIZE);
 
-			printf("\r%s%s\n",initials,message);
+			printf("\r%s\n",fullMessage);
 			
 			if(sendDataFlag)
 			{
 				sendDataFlag = 0;
+				
+				PORTC.OUTTGL = PIN0_bm;
 				nrfSend( (uint8_t *) fullMessage);		// Initialen moeten er nog voor worden geplakt. strcat is kapot irritant en wil niet goed werken
+				PORTC.OUTTGL = PIN0_bm;
 			}
 		}
     }
@@ -156,15 +165,16 @@ void writeMessage(char* msg){
 		}
 		else if (c == BACKSPACE)
 		{
-			pos--;
-			c_byte[pos] = 0;
-			printf("\b \b");
+			if(pos > 0)
+			{
+				c_byte[pos--] = 0;
+				printf("\b \b");
+			}
 		}
 		else
 		{
 			printf("%c", c);
-			c_byte[pos] = c;
-			pos++;
+			c_byte[pos++] = c;
 		}
 	}	
 }

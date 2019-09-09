@@ -27,6 +27,6 @@
 
 FILE uart_stdinout;
 
-uint8_t uart_fgetc(FILE * stream);
+int uart_fgetc(FILE * stream);
 void init_stream(uint32_t fcpu);
 
