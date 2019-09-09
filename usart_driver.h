@@ -61,6 +61,7 @@
 
 #include "avr_compiler.h"
 
+uint8_t newKeyboardData;
 /* USART buffer defines. */
 
 /* \brief  Receive buffer size: 2,4,8,16,32,64,128 or 256 bytes. */

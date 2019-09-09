@@ -17,15 +17,13 @@
 
 #include "KeyboardCodes.h"
 
-#define TRANSMITTER (PORTD.IN & PIN0_bm)
-#define RECEIVER !TRANSMITTER
 #define MYID 51
 
 #define FULL_MESSAGE_SIZE 32
 #define NUMBER_OF_PREFIX_BYTES 3
 #define MAX_MESSAGE_SIZE FULL_MESSAGE_SIZE - NUMBER_OF_PREFIX_BYTES // Waarvan de laatste is '\0'
 
-void writeMessage();
+uint8_t writeMessage();
 
 typedef struct pair {
 	char* initials;
@@ -34,6 +32,11 @@ typedef struct pair {
 
 uint8_t newDataFlag = 0;
 uint8_t sendDataFlag = 0;
+uint8_t newKeyboardData = 0;
+
+int pointer = 0;
+char charBuffer[MAX_MESSAGE_SIZE] = {0};
+
 
 const PAIR table[] =
 {
@@ -115,66 +118,66 @@ int main(void)
 	
     while (1) 
     {
-		if(RECEIVER && newDataFlag)
+		if(newDataFlag)
 		{
 	   		newDataFlag = 0;
-			PORTF.OUTTGL = PIN0_bm;
 			printf("%s\n", packet);
+			PORTF.OUTTGL = PIN0_bm;
 		}
-		else if(TRANSMITTER)
+
+		if(newKeyboardData)
 		{
-			memset(message, 0, sizeof(message));
-			memset(fullMessage, 0, sizeof(fullMessage));
-			
-			
+			newKeyboardData = 0;
 			writeMessage(&message);
+		}
+		
+		if(sendDataFlag)
+		{
+			sendDataFlag = 0;
 			
 			memmove(fullMessage,get_user_initials(MYID), NUMBER_OF_PREFIX_BYTES);
 			memmove(fullMessage+NUMBER_OF_PREFIX_BYTES, message, MAX_MESSAGE_SIZE);
 
 			printf("\r%s\n",fullMessage);
-			
-			if(sendDataFlag)
-			{
-				sendDataFlag = 0;
 				
-				PORTC.OUTTGL = PIN0_bm;
-				nrfSend( (uint8_t *) fullMessage);		// Initialen moeten er nog voor worden geplakt. strcat is kapot irritant en wil niet goed werken
-				PORTC.OUTTGL = PIN0_bm;
-			}
+			PORTC.OUTSET = PIN0_bm;
+			nrfSend( (uint8_t *) fullMessage);		// Initialen moeten er nog voor worden geplakt. strcat is kapot irritant en wil niet goed werken
+			PORTC.OUTCLR = PIN0_bm;
+
+			memset(message, 0 , sizeof(message));
+			memset(fullMessage, 0, sizeof(fullMessage));
 		}
     }
 }
 
-void writeMessage(char* msg){
-	int pos = 0;
-	char c_byte[MAX_MESSAGE_SIZE] = {0};
-	char c;
+uint8_t writeMessage(char* msg){
+	char c = uart_fgetc(&uart_stdinout);
 	
-	while(1) {
-		if((c = uart_fgetc(&uart_stdinout)) == UART_NO_DATA){
-			continue;
-		}
-		else if (c == ENTER || pos == (MAX_MESSAGE_SIZE-1))
+	if (c == ENTER)
+	{
+		charBuffer[pointer] = '\0';
+		sendDataFlag = 1;
+		
+		strcpy(msg,charBuffer);
+		
+		pointer = 0;
+		memset(charBuffer, 0, sizeof(charBuffer));
+		
+		return 1;
+	}
+	else if (c == BACKSPACE)
+	{
+		if(pointer > 0)
 		{
-			c_byte[pos] = '\0';
-			sendDataFlag = 1;
-			
-			strcpy(msg,c_byte);
-			return;
+			charBuffer[pointer--] = 0;
+			printf("\b \b");
 		}
-		else if (c == BACKSPACE)
-		{
-			if(pos > 0)
-			{
-				c_byte[pos--] = 0;
-				printf("\b \b");
-			}
-		}
-		else
-		{
-			printf("%c", c);
-			c_byte[pos++] = c;
-		}
-	}	
+	}
+	else if (pointer < (MAX_MESSAGE_SIZE - 1))
+	{
+		printf("%c", c);
+		charBuffer[pointer++] = c;
+	}
+	
+	return 0;
 }
