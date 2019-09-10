@@ -318,6 +318,7 @@ uint8_t  RB_pipe[5];
 uint8_t  SB_pipe[5];
 uint8_t  JG_pipe[5];
 uint8_t  AO_pipe[5];
+uint8_t	 MF_pipe[5];
 uint8_t  packet[32];
 
 #endif
