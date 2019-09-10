@@ -30,15 +30,15 @@
     <EraseKey />
     <AsfFrameworkConfig>
       <framework-data>
-  <options />
-  <configurations />
-  <files />
-  <documentation help="" />
-  <offline-documentation help="" />
-  <dependencies>
-    <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.34.1" />
-  </dependencies>
-</framework-data>
+        <options />
+        <configurations />
+        <files />
+        <documentation help="" />
+        <offline-documentation help="" />
+        <dependencies>
+          <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.34.1" />
+        </dependencies>
+      </framework-data>
     </AsfFrameworkConfig>
     <avrtool>com.atmel.avrdbg.tool.ispmk2</avrtool>
     <avrtoolinterface>PDI</avrtoolinterface>
@@ -165,6 +165,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="powersaving.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="routingtable.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="routingtable.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="stream.c">
