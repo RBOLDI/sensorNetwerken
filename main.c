@@ -46,6 +46,8 @@ uint8_t newKeyboardData = 0;
 int pointer = 0;
 char charBuffer[MAX_MESSAGE_SIZE] = {0};
 
+uint8_t broadcast_pipe [5] = {20, 19, 20, 20, 00};
+
 
 const PAIR table[] =
 {
@@ -90,12 +92,11 @@ void init_nrf(const uint8_t pvtID){
 
 	//Starts in broadcast mode with own pvt ID selected by HW pin.  
 	
-	uint8_t broadcast_pipe [5] = {20, 19, 20, 20, pvtID};
+	//uint8_t private_pipe [5] = {20, 19, 20, 20, pvtID};
+		
 	nrfOpenReadingPipe(0, broadcast_pipe);
-	//nrfOpenReadingPipe(1, pipe_selector(pvtID));
+	//nrfOpenReadingPipe(1, private_pipe);
 	nrfStartListening();
-	
-	nrfOpenWritingPipe(broadcast_pipe);
 	
 	PMIC.CTRL |= PMIC_LOLVLEN_bm;
 	sei();
@@ -113,10 +114,10 @@ ISR(PORTF_INT0_vect){		//triggers when data is received
 
 void broadcast_startup(uint8_t id)
 {
-	uint8_t msg[] = {'S','T','A','R','T',id,'\0'};
-	nrfOpenWritingPipe(global_pipe);
+	uint8_t msg[] = {'b',id,'\0'};
+	nrfOpenWritingPipe(broadcast_pipe);
 	nrfSend( msg );
-	nrfOpenReadingPipe(0,global_pipe);
+	nrfOpenReadingPipe(0,broadcast_pipe);
 }
 
 int main(void)
