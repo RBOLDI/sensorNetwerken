@@ -49,7 +49,6 @@ const PAIR table[] =
 	{ "JG_",  77 },
 	{ "AO_",  78 },
 	{ "MF_",  83 },
-		}
 };
 
 char* get_user_initials(uint8_t id)
