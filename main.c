@@ -120,6 +120,14 @@ ISR(PORTF_INT0_vect){		//triggers when data is received
 	}
 }
 
+void broadcast_startup(uint8_t id)
+{
+	uint8_t msg[] = {'S','T','A','R','T',id,'\0'};
+	nrfOpenWritingPipe(global_pipe);
+	nrfSend( msg );
+	nrfOpenReadingPipe(0,global_pipe);
+}
+
 int main(void)
 {
 	init_io();
@@ -128,7 +136,8 @@ int main(void)
 	const uint8_t MYID = getID();
 	
 	init_nrf(MYID);
-    
+   	broadcast_startup(MYID);
+
 	uint8_t initials[NUMBER_OF_PREFIX_BYTES] = {0};
 	memmove(initials, get_user_initials(MYID), NUMBER_OF_PREFIX_BYTES);
 	uint8_t message[MAX_MESSAGE_SIZE] = {0};
