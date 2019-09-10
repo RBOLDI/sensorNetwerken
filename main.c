@@ -64,18 +64,6 @@ char* get_user_initials(uint8_t id)
 	return "XX_";		// Niet gevonden
 }
 
-void init_io(void){
-	PORTF.DIRSET = PIN0_bm | PIN1_bm;
-	PORTC.DIRSET = PIN0_bm;
-	
-	//Set ID selector pins
-	PORTD.DIRCLR = PIN0_bm | PIN1_bm | PIN2_bm | PIN3_bm;
-	
-	PORTD.PIN0CTRL = PORT_OPC_PULLUP_gc;
-	PORTD.PIN1CTRL = PORT_OPC_PULLUP_gc;
-	PORTD.PIN2CTRL = PORT_OPC_PULLUP_gc;
-	PORTD.PIN3CTRL = PORT_OPC_PULLUP_gc;
-}
 void init_nrf(const uint8_t pvtID){
 	nrfspiInit();
 	nrfBegin();
