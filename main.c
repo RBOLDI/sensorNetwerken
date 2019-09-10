@@ -18,6 +18,7 @@
 #define		FB !(PORTD.IN & PIN1_bm)
 #define		RB !(PORTD.IN & PIN2_bm)
 #define		SB !(PORTD.IN & PIN3_bm)
+#define		MF !(PORTD.IN & PIN4_bm)
 
 #define TRANSMITTER (PORTD.IN & PIN0_bm)
 #define RECEIVER !TRANSMITTER
@@ -47,6 +48,8 @@ const PAIR table[] =
 	{ "SB_",  53 },
 	{ "JG_",  77 },
 	{ "AO_",  78 },
+	{ "MF_",  83 },
+		}
 };
 
 char* get_user_initials(uint8_t id)
@@ -202,5 +205,6 @@ const uint8_t getID(){
 	if(FB) return 51;
 	else if(RB) return 52;
 	else if(SB) return 53;
+	else if(MF) return 83;
 	else return 00;
 }
