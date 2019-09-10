@@ -19,6 +19,7 @@
 #define		RB !(PORTD.IN & PIN2_bm)
 #define		SB !(PORTD.IN & PIN3_bm)
 #define		MF !(PORTD.IN & PIN4_bm)
+#define		JG !(PORTD.IN & PIN5_bm)
 #include "KeyboardCodes.h"
 
 
@@ -85,11 +86,11 @@ void init_nrf(const uint8_t pvtID){
 	PORTF.PIN6CTRL  = PORT_ISC_FALLING_gc;
 	PORTF.INTCTRL   = (PORTF.INTCTRL & ~PORT_INT0LVL_gm) | PORT_INT0LVL_LO_gc;
 
-	//Starts in broadcast mode with ID selected by HW pin.  
+	//Starts in broadcast mode with own pvt ID selected by HW pin.  
 	
 	uint8_t broadcast_pipe [5] = {20, 19, 20, 20, pvtID};
 	nrfOpenReadingPipe(0, broadcast_pipe);
-	nrfOpenReadingPipe(1, pipe_selector(pvtID));
+	//nrfOpenReadingPipe(1, pipe_selector(pvtID));
 	nrfStartListening();
 	
 	nrfOpenWritingPipe(broadcast_pipe);
@@ -197,6 +198,7 @@ uint8_t writeMessage(char* msg){
 	return 0;
 }
 
+// Select Pipe to write to dependent on ID
 uint8_t* pipe_selector(uint8_t ID){
 	switch (ID){
 		case 51:  
@@ -205,6 +207,10 @@ uint8_t* pipe_selector(uint8_t ID){
 			return RB_pipe;
 		case 53:
 			return SB_pipe;
+		case 83:
+			return MF_pipe;
+		case 77:
+			return JG_pipe;
 	}
 	return 00;
 }
@@ -214,5 +220,6 @@ const uint8_t getID(){
 	else if(RB) return 52;
 	else if(SB) return 53;
 	else if(MF) return 83;
+	else if(JG) return 77;
 	else return 00;
 }

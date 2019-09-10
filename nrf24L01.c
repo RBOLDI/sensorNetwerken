@@ -45,6 +45,7 @@ uint8_t  RB_pipe[5] = {69, 19, 20, 20, 52};
 uint8_t  SB_pipe[5] = {69, 19, 20, 20, 53};
 uint8_t  JG_pipe[5] = {69, 19, 20, 20, 77};
 uint8_t  AO_pipe[5] = {69, 19, 20, 20, 78};
+uint8_t	 MF_pipe[5] = {69, 19, 20, 20, 83};
 	
 uint8_t  packet[32];		//buffer voor data
 
