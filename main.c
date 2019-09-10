@@ -18,9 +18,7 @@
 #define		FB !(PORTD.IN & PIN1_bm)
 #define		RB !(PORTD.IN & PIN2_bm)
 #define		SB !(PORTD.IN & PIN3_bm)
-
-#define TRANSMITTER (PORTD.IN & PIN0_bm)
-#define RECEIVER !TRANSMITTER
+#include "KeyboardCodes.h"
 
 
 #define FULL_MESSAGE_SIZE 32
@@ -29,8 +27,8 @@
 
 //Function prototypes
 const uint8_t getID();
-void writeMessage();
 uint8_t* pipe_selector(uint8_t ID);
+uint8_t writeMessage();
 
 typedef struct pair {
 	char* initials;
@@ -39,6 +37,11 @@ typedef struct pair {
 
 uint8_t newDataFlag = 0;
 uint8_t sendDataFlag = 0;
+uint8_t newKeyboardData = 0;
+
+int pointer = 0;
+char charBuffer[MAX_MESSAGE_SIZE] = {0};
+
 
 const PAIR table[] =
 {
@@ -56,9 +59,17 @@ char* get_user_initials(uint8_t id)
 		if(table[i].id == id)
 		return table[i].initials;
 	}
-	return "User not found";
+	return "XX_";		// Niet gevonden
 }
 
+void init_io(void){
+	PORTF.DIRSET = PIN0_bm;
+	
+	PORTC.DIRSET = PIN0_bm;
+	
+	PORTD.DIRCLR = PIN0_bm;
+	PORTD.PIN0CTRL = PORT_OPC_PULLUP_gc;
+}
 void init_nrf(const uint8_t pvtID){
 	nrfspiInit();
 	nrfBegin();
@@ -104,7 +115,7 @@ void init_nrf(const uint8_t pvtID){
 
 ISR(PORTF_INT0_vect){		//triggers when data is received
 	uint8_t  tx_ds, max_rt, rx_dr;
-	memset(packet, NULL, sizeof(packet));
+	memset(packet, 0, sizeof(packet));
 	nrfWhatHappened(&tx_ds, &max_rt, &rx_dr);
 	if(rx_dr){
 		nrfRead(packet, nrfGetDynamicPayloadSize());
@@ -131,60 +142,70 @@ int main(void)
 	uint8_t message[MAX_MESSAGE_SIZE] = {0};
 	uint8_t fullMessage[FULL_MESSAGE_SIZE] = {0};
 	
-    /* Replace with your application code */
     while (1) 
     {
-		if(RECEIVER && newDataFlag)
+		if(newDataFlag)
 		{
 	   		newDataFlag = 0;
-			PORTF.OUTTGL = PIN0_bm;
 			printf("%s\n", packet);
+			PORTF.OUTTGL = PIN0_bm;
 		}
-		else if(TRANSMITTER)
-		{
-			writeMessage(&message);
 
-			printf("\r%s%s\n",get_user_initials(MYID),message);
+		if(newKeyboardData)
+		{
+			newKeyboardData = 0;
+			writeMessage(&message);
+		}
+		
+		if(sendDataFlag)
+		{
+			sendDataFlag = 0;
 			
-			if(sendDataFlag)
-			{
-				sendDataFlag = 0;
-				nrfSend(message);		// Initialen moeten er nog voor worden geplakt. strcat is kapot irritant en wil niet goed werken
-			}
+			memmove(fullMessage,get_user_initials(MYID), NUMBER_OF_PREFIX_BYTES);
+			memmove(fullMessage+NUMBER_OF_PREFIX_BYTES, message, MAX_MESSAGE_SIZE);
+
+			printf("\r%s\n",fullMessage);
+				
+			PORTC.OUTSET = PIN0_bm;
+			nrfSend( (uint8_t *) fullMessage);		// Initialen moeten er nog voor worden geplakt. strcat is kapot irritant en wil niet goed werken
+			PORTC.OUTCLR = PIN0_bm;
+
+			memset(message, 0 , sizeof(message));
+			memset(fullMessage, 0, sizeof(fullMessage));
 		}
     }
 }
 
-void writeMessage(uint8_t* msg){
-	int pos = 0;
-	uint8_t c_byte[MAX_MESSAGE_SIZE] = {0};
-	uint16_t c;
+uint8_t writeMessage(char* msg){
+	char c = uart_fgetc(&uart_stdinout);
 	
-	while(1) {
-		if((c = uart_fgetc(&uart_stdinout)) == 0x0100){
-			continue;
-		}
-		else if (c == '\r' || pos == (MAX_MESSAGE_SIZE-1))
+	if (c == ENTER)
+	{
+		charBuffer[pointer] = '\0';
+		sendDataFlag = 1;
+		
+		strcpy(msg,charBuffer);
+		
+		pointer = 0;
+		memset(charBuffer, 0, sizeof(charBuffer));
+		
+		return 1;
+	}
+	else if (c == BACKSPACE)
+	{
+		if(pointer > 0)
 		{
-			c_byte[pos] = '\0';
-			sendDataFlag = 1;
-			
-			strcpy(msg,c_byte);
-			return;
-		}
-		else if (c == '\b')
-		{
-			pos--;
-			c_byte[pos] = NULL;
+			charBuffer[pointer--] = 0;
 			printf("\b \b");
 		}
-		else
-		{
-			printf("%c", c);
-			c_byte[pos] = c;
-			pos++;
-		}
-	}	
+	}
+	else if (pointer < (MAX_MESSAGE_SIZE - 1))
+	{
+		printf("%c", c);
+		charBuffer[pointer++] = c;
+	}
+	
+	return 0;
 }
 
 uint8_t* pipe_selector(uint8_t ID){

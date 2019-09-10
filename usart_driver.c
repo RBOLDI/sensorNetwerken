@@ -226,6 +226,7 @@ uint8_t USART_RXBuffer_GetByte(USART_data_t * usart_data)
  */
 bool USART_RXComplete(USART_data_t * usart_data)
 {
+	newKeyboardData = 1;
 	USART_Buffer_t * bufPtr;
 	bool ans;
 
