@@ -63,12 +63,16 @@ char* get_user_initials(uint8_t id)
 }
 
 void init_io(void){
-	PORTF.DIRSET = PIN0_bm;
-	
+	PORTF.DIRSET = PIN0_bm | PIN1_bm;
 	PORTC.DIRSET = PIN0_bm;
 	
-	PORTD.DIRCLR = PIN0_bm;
+	//Set ID selector pins
+	PORTD.DIRCLR = PIN0_bm | PIN1_bm | PIN2_bm | PIN3_bm;
+	
 	PORTD.PIN0CTRL = PORT_OPC_PULLUP_gc;
+	PORTD.PIN1CTRL = PORT_OPC_PULLUP_gc;
+	PORTD.PIN2CTRL = PORT_OPC_PULLUP_gc;
+	PORTD.PIN3CTRL = PORT_OPC_PULLUP_gc;
 }
 void init_nrf(const uint8_t pvtID){
 	nrfspiInit();
@@ -90,12 +94,6 @@ void init_nrf(const uint8_t pvtID){
 	PORTF.INT0MASK |= PIN6_bm;
 	PORTF.PIN6CTRL  = PORT_ISC_FALLING_gc;
 	PORTF.INTCTRL   = (PORTF.INTCTRL & ~PORT_INT0LVL_gm) | PORT_INT0LVL_LO_gc;
-
-	PORTF.DIRSET = PIN0_bm;
-	
-	PORTD.DIRCLR = PIN0_bm, PIN1_bm, PIN2_bm, PIN3_bm;
-	
-	PORTD.PIN0CTRL = PORT_OPC_PULLUP_gc;
 
 	//TODO: automatisch reading pipes selecteren, zodat eigen adres hier niet meer tussen staat.
 	//Reading pipe 0 dient gelijk te zijn aan de Writing pipe (xMega ID) i.v.m. auto acknowledge.
@@ -127,18 +125,14 @@ int main(void)
 {
 	init_stream(F_CPU);
 	
-	//Set ID selector pins
-	PORTD.DIRCLR = PIN1_bm, PIN2_bm, PIN3_bm;
-	
-	PORTD.PIN1CTRL = PORT_OPC_PULLUP_gc;
-	PORTD.PIN2CTRL = PORT_OPC_PULLUP_gc;
-	PORTD.PIN3CTRL = PORT_OPC_PULLUP_gc;
+
 	
 	const uint8_t MYID = getID();
 	
-	
 	init_nrf(MYID);
-    uint8_t initials[NUMBER_OF_PREFIX_BYTES] = {0};
+    
+	uint8_t initials[NUMBER_OF_PREFIX_BYTES] = {0};
+	memmove(initials, get_user_initials(MYID), NUMBER_OF_PREFIX_BYTES);
 	uint8_t message[MAX_MESSAGE_SIZE] = {0};
 	uint8_t fullMessage[FULL_MESSAGE_SIZE] = {0};
 	
@@ -161,7 +155,7 @@ int main(void)
 		{
 			sendDataFlag = 0;
 			
-			memmove(fullMessage,get_user_initials(MYID), NUMBER_OF_PREFIX_BYTES);
+			memmove(fullMessage, initials, NUMBER_OF_PREFIX_BYTES);
 			memmove(fullMessage+NUMBER_OF_PREFIX_BYTES, message, MAX_MESSAGE_SIZE);
 
 			printf("\r%s\n",fullMessage);
