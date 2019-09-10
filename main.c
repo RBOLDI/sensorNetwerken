@@ -97,17 +97,14 @@ void init_nrf(const uint8_t pvtID){
 	PORTF.PIN6CTRL  = PORT_ISC_FALLING_gc;
 	PORTF.INTCTRL   = (PORTF.INTCTRL & ~PORT_INT0LVL_gm) | PORT_INT0LVL_LO_gc;
 
-	//TODO: automatisch reading pipes selecteren, zodat eigen adres hier niet meer tussen staat.
-	//Reading pipe 0 dient gelijk te zijn aan de Writing pipe (xMega ID) i.v.m. auto acknowledge.
-	 
-	//nrfOpenReadingPipe(0, global_pipe);
-	nrfOpenReadingPipe(0, pipe_selector(pvtID));
-	nrfOpenReadingPipe(1, FB_pipe);
-	nrfOpenReadingPipe(2, RB_pipe);
-	nrfOpenReadingPipe(3, SB_pipe);
+	//Starts in broadcast mode with ID selected by HW pin.  
+	
+	uint8_t broadcast_pipe [5] = {20, 19, 20, 20, pvtID} 
+	nrfOpenReadingPipe(0, broadcast_pipe);
+	nrfOpenReadingPipe(1, pipe_selector(pvtID));
 	nrfStartListening();
 	
-	nrfOpenWritingPipe(pipe_selector(pvtID));
+	nrfOpenWritingPipe(broadcast_pipe);
 	
 	PMIC.CTRL |= PMIC_LOLVLEN_bm;
 	sei();
