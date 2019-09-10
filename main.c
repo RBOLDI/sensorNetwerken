@@ -125,9 +125,8 @@ ISR(PORTF_INT0_vect){		//triggers when data is received
 
 int main(void)
 {
+	init_io();
 	init_stream(F_CPU);
-	
-
 	
 	const uint8_t MYID = getID();
 	
