@@ -9,9 +9,7 @@
 #ifndef POWERSAVING_H_
 #define POWERSAVING_H_
 
-#include <avr/io.h>
-
 void init_lowpower();
 void idle();
-
+void init_io(void);
 #endif /* POWERSAVING_H_ */
