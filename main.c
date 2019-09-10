@@ -14,13 +14,15 @@
 #include "nrf24spiXM2.h"
 #include "stream.h"
 #include "uart.h"
+#include "KeyboardCodes.h"
+#include "powersaving.h"
+#include "routingtable.h"
 
 #define		FB !(PORTD.IN & PIN1_bm)
 #define		RB !(PORTD.IN & PIN2_bm)
 #define		SB !(PORTD.IN & PIN3_bm)
 #define		MF !(PORTD.IN & PIN4_bm)
 #define		JG !(PORTD.IN & PIN5_bm)
-#include "KeyboardCodes.h"
 
 
 #define FULL_MESSAGE_SIZE 32
