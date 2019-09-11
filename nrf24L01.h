@@ -311,7 +311,7 @@ uint8_t nrfVerifySPIConnection(void);
 void nrfSend(uint8_t* send);
 
 uint8_t  channel;
-uint8_t  global_pipe[5];
+uint8_t  broadcast_pipe[5];
 uint8_t  private_pipe[5];
 uint8_t  FB_pipe[5];
 uint8_t  RB_pipe[5];

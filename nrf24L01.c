@@ -36,7 +36,7 @@
 #include <stdio.h>
 
 uint8_t  channel = 54;		//0-128
-uint8_t  global_pipe[5] = {20, 19, 20, 20, 00};
+uint8_t  broadcast_pipe[5] = {20, 19, 20, 20, 00};
 uint8_t  private_pipe[5] = "FSR69";
 
 // Pipes added per team members xMega each pipe ending with the members unique ID
