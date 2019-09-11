@@ -114,20 +114,31 @@ ISR(PORTF_INT0_vect){		//triggers when data is received
 
 void broadcast_startup(uint8_t id)
 {
-	uint8_t msg[] = {'b',id,'\0'};
-	nrfOpenWritingPipe(broadcast_pipe);
-	nrfSend( msg );
-	nrfOpenReadingPipe(0,broadcast_pipe);
-}
+	uint8_t msg[NUMBER_OF_PREFIX_BYTES] = {'b',id,'\0'};
+	
+	nrfStopListening();
 
+	nrfOpenWritingPipe(broadcast_pipe);
+	
+	_delay_ms(5);
+	
+	nrfWrite((uint8_t *) msg, NUMBER_OF_PREFIX_BYTES);
+
+	nrfOpenReadingPipe(0,broadcast_pipe);
+	
+	nrfStartListening();
+	
+}
 int main(void)
 {
 	init_io();
 	init_stream(F_CPU);
 	
 	const uint8_t MYID = getID();
-	
+
 	init_nrf(MYID);
+
+ 	_delay_ms(250);
    	broadcast_startup(MYID);
 
 	uint8_t initials[NUMBER_OF_PREFIX_BYTES] = {0};
