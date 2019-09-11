@@ -4,18 +4,35 @@
  * Created: 11-9-2019 14:41:18
  *  Author: Steph
  */ 
-#define F_CPU 2000000UL
+
 #include <avr/io.h>
-#include <util/delay.h>
+#include <stdio.h> 
 #include <stdlib.h>
 #include <string.h>
-#include <avr/interrupt.h>
+
 #include "messages.h"
 #include "nrf24L01.h"
 
 uint8_t initials[NUMBER_OF_PREFIX_BYTES] = {0};
 uint8_t message[MAX_MESSAGE_SIZE] = {0};
 uint8_t fullMessage[FULL_MESSAGE_SIZE] = {0};
+	
+// Select Pipe to write to dependent on ID
+uint8_t* pipe_selector(uint8_t ID){
+	switch (ID){
+		case 51:
+		return FB_pipe;
+		case 52:
+		return RB_pipe;
+		case 53:
+		return SB_pipe;
+		case 83:
+		return MF_pipe;
+		case 77:
+		return JG_pipe;
+	}
+	return 00;
+}
 	
 void sendMessage(){
 	memmove(fullMessage, initials, NUMBER_OF_PREFIX_BYTES);
@@ -31,18 +48,7 @@ void sendMessage(){
 }
 
 void sendPvtMessage(uint8_t targetID){
-	
 	nrfOpenWritingPipe(pipe_selector(targetID));
-	
-	//Make the target target pipe the Rx0 pipe (verander volgorde)
-	//nrfOpenReadingPipe(0,pipe_selector(targetID));
-	//nrfOpenReadingPipe(1,broadcast_pipe);
-	
-	//Send message.
 	sendMessage();
-	//_delay_ms(500);
-	//Revert changes
-	//nrfOpenReadingPipe(1,pipe_selector(targetID));
-	//nrfOpenReadingPipe(0,broadcast_pipe);
 	nrfOpenWritingPipe(broadcast_pipe);
 }

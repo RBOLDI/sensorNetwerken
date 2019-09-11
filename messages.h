@@ -17,4 +17,5 @@ uint8_t fullMessage[FULL_MESSAGE_SIZE];
 
 //Function protoypes.
 void sendMessage();
-void sendPvtMessag(uint8_t targetID);
+void sendPvtMessage(uint8_t targetID);
+uint8_t* pipe_selector(uint8_t ID);

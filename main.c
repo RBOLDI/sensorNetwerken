@@ -25,14 +25,8 @@
 #define		MF !(PORTD.IN & PIN4_bm)
 #define		JG !(PORTD.IN & PIN5_bm)
 
-
-//#define FULL_MESSAGE_SIZE 32
-//#define NUMBER_OF_PREFIX_BYTES 3
-//#define MAX_MESSAGE_SIZE FULL_MESSAGE_SIZE - NUMBER_OF_PREFIX_BYTES // Waarvan de laatste is '\0'
-
 //Function prototypes
 const uint8_t getID();
-uint8_t* pipe_selector(uint8_t ID);
 uint8_t writeMessage();
 
 typedef struct pair {
@@ -90,10 +84,8 @@ void init_nrf(const uint8_t pvtID){
 
 	//Starts in broadcast mode with own pvt ID selected by HW pin.  
 	
-	//uint8_t private_pipe [5] = {20, 19, 20, 20, pvtID};
-		
 	nrfOpenReadingPipe(0, broadcast_pipe);
-	//nrfOpenReadingPipe(1, private_pipe);
+	nrfOpenReadingPipe(1, pipe_selector(pvtID));
 	nrfStartListening();
 	
 	PMIC.CTRL |= PMIC_LOLVLEN_bm;
@@ -148,6 +140,8 @@ int main(void)
 		if(sendDataFlag)
 		{
 			sendDataFlag = 0;
+			// ** Test code for testing pvt message ** // 
+			//sendMessage();
 			sendPvtMessage(51);
 		}
     }
@@ -183,23 +177,6 @@ uint8_t writeMessage(char* msg){
 	}
 	
 	return 0;
-}
-
-// Select Pipe to write to dependent on ID
-uint8_t* pipe_selector(uint8_t ID){
-	switch (ID){
-		case 51:  
-			return FB_pipe;
-		case 52: 
-			return RB_pipe;
-		case 53:
-			return SB_pipe;
-		case 83:
-			return MF_pipe;
-		case 77:
-			return JG_pipe;
-	}
-	return 00;
 }
 
 const uint8_t getID(){
