@@ -17,6 +17,7 @@
 #include "KeyboardCodes.h"
 #include "powersaving.h"
 #include "routingtable.h"
+#include "messages.h"
 
 #define		FB !(PORTD.IN & PIN1_bm)
 #define		RB !(PORTD.IN & PIN2_bm)
@@ -25,9 +26,9 @@
 #define		JG !(PORTD.IN & PIN5_bm)
 
 
-#define FULL_MESSAGE_SIZE 32
-#define NUMBER_OF_PREFIX_BYTES 3
-#define MAX_MESSAGE_SIZE FULL_MESSAGE_SIZE - NUMBER_OF_PREFIX_BYTES // Waarvan de laatste is '\0'
+//#define FULL_MESSAGE_SIZE 32
+//#define NUMBER_OF_PREFIX_BYTES 3
+//#define MAX_MESSAGE_SIZE FULL_MESSAGE_SIZE - NUMBER_OF_PREFIX_BYTES // Waarvan de laatste is '\0'
 
 //Function prototypes
 const uint8_t getID();
@@ -45,9 +46,6 @@ uint8_t newKeyboardData = 0;
 
 int pointer = 0;
 char charBuffer[MAX_MESSAGE_SIZE] = {0};
-
-uint8_t broadcast_pipe [5] = {20, 19, 20, 20, 00};
-
 
 const PAIR table[] =
 {
@@ -130,11 +128,8 @@ int main(void)
 	init_nrf(MYID);
    	broadcast_startup(MYID);
 
-	uint8_t initials[NUMBER_OF_PREFIX_BYTES] = {0};
 	memmove(initials, get_user_initials(MYID), NUMBER_OF_PREFIX_BYTES);
-	uint8_t message[MAX_MESSAGE_SIZE] = {0};
-	uint8_t fullMessage[FULL_MESSAGE_SIZE] = {0};
-	
+
     while (1) 
     {
 		if(newDataFlag)
@@ -153,18 +148,7 @@ int main(void)
 		if(sendDataFlag)
 		{
 			sendDataFlag = 0;
-			
-			memmove(fullMessage, initials, NUMBER_OF_PREFIX_BYTES);
-			memmove(fullMessage+NUMBER_OF_PREFIX_BYTES, message, MAX_MESSAGE_SIZE);
-
-			printf("\r%s\n",fullMessage);
-				
-			PORTC.OUTSET = PIN0_bm;
-			nrfSend( (uint8_t *) fullMessage);		// Initialen moeten er nog voor worden geplakt. strcat is kapot irritant en wil niet goed werken
-			PORTC.OUTCLR = PIN0_bm;
-
-			memset(message, 0 , sizeof(message));
-			memset(fullMessage, 0, sizeof(fullMessage));
+			sendPvtMessage(51);
 		}
     }
 }
@@ -226,3 +210,4 @@ const uint8_t getID(){
 	else if(JG) return 77;
 	else return 00;
 }
+
