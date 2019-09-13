@@ -30,8 +30,9 @@ uint8_t* pipe_selector(uint8_t ID){
 		return MF_pipe;
 		case 77:
 		return JG_pipe;
+		default:
+		return 00;
 	}
-	return 00;
 }
 	
 void sendMessage(){
@@ -41,7 +42,7 @@ void sendMessage(){
 	printf("\r%s\n",(char *)fullMessage);
 	
 	PORTC.OUTSET = PIN0_bm;
-	nrfSend( (uint8_t *) fullMessage);		// Initialen moeten er nog voor worden geplakt. strcat is kapot irritant en wil niet goed werken
+	nrfSend( (uint8_t *) fullMessage);
 	PORTC.OUTCLR = PIN0_bm;
 	memset(message, 0 , sizeof(message));
 	memset(fullMessage, 0, sizeof(fullMessage));

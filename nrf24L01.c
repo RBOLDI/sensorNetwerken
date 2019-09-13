@@ -35,7 +35,7 @@
 #include <string.h>
 #include <stdio.h>
 
-uint8_t  channel = 54;		//0-128
+uint8_t  channel = 111;		//0-128
 uint8_t  broadcast_pipe[5] = {20, 19, 20, 20, 00};
 uint8_t  private_pipe[5] = "FSR69";
 

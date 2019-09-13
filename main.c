@@ -65,7 +65,7 @@ void init_nrf(const uint8_t pvtID){
 	nrfspiInit();
 	nrfBegin();
 
-	nrfSetRetries(NRF_SETUP_ARD_1000US_gc, NRF_SETUP_ARC_8RETRANSMIT_gc);
+	nrfSetRetries(NRF_SETUP_ARD_1000US_gc,	NRF_SETUP_ARC_10RETRANSMIT_gc);
 	nrfSetPALevel(NRF_RF_SETUP_PWR_6DBM_gc);
 	nrfSetDataRate(NRF_RF_SETUP_RF_DR_250K_gc);
 	nrfSetCRCLength(NRF_CONFIG_CRC_16_gc);
@@ -110,28 +110,26 @@ void broadcast_startup(uint8_t id)
 
 	nrfOpenWritingPipe(broadcast_pipe);
 	
-	_delay_ms(5);
-	
 	nrfWrite((uint8_t *) msg, NUMBER_OF_PREFIX_BYTES);
 
-	nrfOpenReadingPipe(0,broadcast_pipe);
-	
 	nrfStartListening();
 	
 }
 int main(void)
 {
 	init_io();
-	init_stream(F_CPU);
-	
+
 	const uint8_t MYID = getID();
+	memmove(initials, get_user_initials(MYID), NUMBER_OF_PREFIX_BYTES);
+
+	init_stream(F_CPU);
 
 	init_nrf(MYID);
 
- 	_delay_ms(250);
+ 	_delay_ms(200);
+
    	broadcast_startup(MYID);
 
-	memmove(initials, get_user_initials(MYID), NUMBER_OF_PREFIX_BYTES);
 
     while (1) 
     {
