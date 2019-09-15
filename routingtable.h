@@ -9,11 +9,9 @@
 #ifndef ROUTINGTABLE_H_
 #define ROUTINGTABLE_H_
 
-void copyrow( uint8_t uIDRow, uint8_t* aRow );
-void addneighbor( uint8_t uIDNeighbor );
-void removeneighbor( uint8_t uIDNeighbor );
-uint8_t* getownlist( void );
-uint8_t* getotherlist( uint8_t uIDSensorNode );
-void init_routingtable( uint8_t uNodeID );
+typedef uint8_t tNodeID;
 
+void init_routingtable( void );
+void addneighbor(tNodeID NodeID);
+void removeneighbor(tNodeID NodeID);
 #endif /* ROUTINGTABLE_H_ */

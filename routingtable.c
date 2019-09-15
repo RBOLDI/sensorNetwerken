@@ -7,34 +7,65 @@
 
 #include <avr/io.h>
 #include <string.h>
+#include <stdlib.h>
+
 #include "routingtable.h"
 
+#define  MAXNEIGHBORS		255
 
-uint8_t aRoutingTable[256][32];													//256 arrays with 256 bits, position (index * 8 + bitposition) corresponds to ID, 
-																				//bits used as boolean (is ID neighbor?)
-uint8_t uMyID;
+/*The routingtable is an array of MAXNEIGHBORS structs. 
+The Nth member of the array holds the data for the SensorNode with ID N.
+The first number in the struct is the number of hops necessary to reach the target Node, 
+the second number is the ID of a connected SensorNode that is closer to the destination
+*/
 
-void copyrow( uint8_t uIDRow, uint8_t* aRow ){									//Copies neighbor list received from neighbor to table
-	if ( sizeof(aRow) == 32 ) memcpy( aRoutingTable[uIDRow], aRow , 32);
+
+typedef struct
+{																
+	uint8_t uHops;
+	tNodeID NeighborID;
+} tTableElement;
+	
+tTableElement* aRoutingTable = NULL;
+
+tNodeID* aConnectedNodes = NULL;
+
+void init_routingtable( void )
+{
+	aRoutingTable = (tTableElement*) calloc(MAXNEIGHBORS, sizeof(tTableElement));
+	aConnectedNodes = (tNodeID*) calloc(MAXNEIGHBORS, sizeof(tNodeID));
 }
 
-void addneighbor( uint8_t uIDNeighbor ){											//Function for adding own neighbor to table
-	aRoutingTable[uMyID][uIDNeighbor / 8] |= 0x01 << (uIDNeighbor % 8);
+void addneighbor(tNodeID NodeID)
+{
+	if (strchr(aConnectedNodes, NodeID) == NULL)
+	{
+		aConnectedNodes[strlen(aConnectedNodes)] = NodeID;
+		(aRoutingTable + NodeID -1)->uHops = 1;
+		(aRoutingTable + NodeID -1)->NeighborID = NodeID;
+	}
 }
 
-void removeneighbor( uint8_t uIDNeighbor ){										//Function for removing own neighbor from table
-	aRoutingTable[uMyID][uIDNeighbor / 8] &= ~(0x01 << (uIDNeighbor % 8));
-}
-
-uint8_t* getownlist( void ){													//Returns a pointer to own neighbor list for sending to neighbor
-	return aRoutingTable[uMyID];
-}
-
-uint8_t* getotherlist( uint8_t uIDSensorNode ){									//Returns pointer to neighbor list of other node for sending to neighbor
-	return aRoutingTable[uIDSensorNode];
-}
-
-void init_routingtable( uint8_t uNodeID ){
-	uMyID = uNodeID;
-	for (uint8_t i = 0; i <= 255; i++) memset(aRoutingTable[i], 0, 32);
+void removeneighbor(tNodeID NodeID)
+{
+	tNodeID *pIndex = (tNodeID *) strchr(aConnectedNodes, NodeID);
+	size_t Size = strlen(aConnectedNodes);
+	
+	#if (MAXNEIGHBORS > SIZE_MAX)
+	#error "MAXNEIGHBORS won't fit in size_t. Change type of uSize."
+	#endif
+	
+	if (pIndex != NULL)
+	{
+		while (pIndex < (aConnectedNodes + Size))
+		{
+			*pIndex = *(pIndex + 1);
+			pIndex++;
+		}
+		
+		if (Size == MAXNEIGHBORS)
+		{
+			*(aConnectedNodes + MAXNEIGHBORS -1) = 0;
+		}
+	}
 }
