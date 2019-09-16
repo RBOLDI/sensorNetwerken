@@ -1,5 +1,5 @@
 /*
- * GccApplication1.c
+ * SensorNetwerkenNox.c
  *
  * Created: 3-9-2019 07:28:30
  * Author : Rowan
@@ -42,6 +42,19 @@ typedef struct pair {
 uint8_t newDataFlag = 0;
 uint8_t sendDataFlag = 0;
 uint8_t newKeyboardData = 0;
+uint8_t newBroadcastFlag = 0;
+
+uint8_t MYID;
+
+enum states {
+	S_Boot,
+	S_Broadcast,
+	S_Idle,
+	S_GotMail,
+	S_Send
+};
+
+enum states currentState, nextState = S_Boot;
 
 int pointer = 0;
 char charBuffer[MAX_MESSAGE_SIZE] = {0};
@@ -107,50 +120,96 @@ ISR(PORTF_INT0_vect){		//triggers when data is received
 	}
 }
 
-void broadcast_startup(uint8_t id)
+void broadcast_startup(void)
 {
-	uint8_t msg[3] = {BROADCAST,id,'\0'};
+	uint8_t msg[3] = {'b',MYID,'\0'};
 	
 	nrfSend(msg, 3, broadcast_pipe);
 	
+	nrfWrite((uint8_t *) msg, 3);
+
+	nrfStartListening();
+	
 }
-int main(void)
+
+
+
+/* This function will be called when state equals S_Boot.
+	It will run all the initializations of the Xmega. Including I/O,
+	setting MYID, UART stream and nRF */
+void bootFunction(void)
 {
 	init_io();
 
-	const uint8_t MYID = getID();
+	MYID = getID();
 	memmove(initials, get_user_initials(MYID), NUMBER_OF_PREFIX_BYTES);
 
 	init_stream(F_CPU);
 
 	init_nrf(MYID);
 
- 	_delay_ms(200);
+	_delay_ms(200);
 
-   	broadcast_startup(MYID);
+}
 
 
+/* This function will be called when state equals S_GotMail.
+	It will parse the message to determine what kind of message 
+	it is, and what to do with it. */
+void gotmailFunction(void)
+{
+	printf("%s\n", packet);
+	PORTF.OUTTGL = PIN0_bm;
+}
+
+
+int main(void)
+{
     while (1) 
     {
-		if(newDataFlag)
-		{
-	   		newDataFlag = 0;
-			printf("%s\n", packet);
-			PORTF.OUTTGL = PIN0_bm;
+		switch(currentState) {
+			case S_Boot:
+				bootFunction();
+				nextState = S_Broadcast;
+				break;
+			case S_Broadcast:
+				broadcast_startup();
+				nextState = S_Idle;
+				break;
+			case S_GotMail:
+				gotmailFunction();
+				nextState = S_Idle;
+				break;
+			case S_Idle:
+				if(newBroadcastFlag) {
+					newBroadcastFlag = 0;
+					nextState = S_Broadcast;
+				}
+				else if(newDataFlag) {
+					newDataFlag = 0;
+					nextState = S_GotMail;
+				}
+				else if(sendDataFlag) {
+					sendDataFlag = 0;
+					nextState = S_Send;
+				}
+				else {
+					nextState = S_Idle;
+				}
+				break;
+			case S_Send:
+				sendMessage(51);
+				nextState = S_Idle;
+				break;
 		}
-
+		
 		if(newKeyboardData)
 		{
 			newKeyboardData = 0;
 			writeMessage(&message);
 		}
-		
-		if(sendDataFlag)
-		{
-			sendDataFlag = 0;
-			// ** Test code for testing pvt message ** // 
-			sendMessage(51);
-		}
+
+		currentState = nextState;
     }
 }
 
