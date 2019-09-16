@@ -35,21 +35,15 @@ uint8_t* pipe_selector(uint8_t ID){
 	}
 }
 	
-void sendMessage(){
+void sendMessage(uint8_t targetID){
 	memmove(fullMessage, initials, NUMBER_OF_PREFIX_BYTES);
 	memmove(fullMessage+NUMBER_OF_PREFIX_BYTES, message, MAX_MESSAGE_SIZE);
 
 	printf("\r%s\n",(char *)fullMessage);
 	
 	PORTC.OUTSET = PIN0_bm;
-	nrfSend( (uint8_t *) fullMessage);
+	nrfSend( (uint8_t *) fullMessage, MAX_MESSAGE_SIZE, pipe_selector(targetID));
 	PORTC.OUTCLR = PIN0_bm;
 	memset(message, 0 , sizeof(message));
 	memset(fullMessage, 0, sizeof(fullMessage));
-}
-
-void sendPvtMessage(uint8_t targetID){
-	nrfOpenWritingPipe(pipe_selector(targetID));
-	sendMessage();
-	nrfOpenWritingPipe(broadcast_pipe);
 }

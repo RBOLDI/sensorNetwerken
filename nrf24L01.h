@@ -308,7 +308,7 @@ void    nrfSetRetries(uint8_t delay, uint8_t retries);
 uint16_t nrfGetMaxTimeout(void);
 void    nrfClearInterruptBits(void);
 uint8_t nrfVerifySPIConnection(void);
-void nrfSend(uint8_t* send);
+void nrfSend(uint8_t* send, uint8_t length, uint8_t* pipe);
 
 uint8_t  channel;
 uint8_t  broadcast_pipe[5];
