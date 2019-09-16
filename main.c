@@ -25,6 +25,11 @@
 #define		MF !(PORTD.IN & PIN4_bm)
 #define		JG !(PORTD.IN & PIN5_bm)
 
+#define		BROADCAST	0x01
+#define		RRTABLE		0x02
+#define		RXPTABLE	0x03
+#define		BCREPLY		0x04
+
 //Function prototypes
 const uint8_t getID();
 uint8_t writeMessage();
@@ -104,15 +109,9 @@ ISR(PORTF_INT0_vect){		//triggers when data is received
 
 void broadcast_startup(uint8_t id)
 {
-	uint8_t msg[NUMBER_OF_PREFIX_BYTES] = {'b',id,'\0'};
+	uint8_t msg[3] = {BROADCAST,id,'\0'};
 	
-	nrfStopListening();
-
-	nrfOpenWritingPipe(broadcast_pipe);
-	
-	nrfWrite((uint8_t *) msg, NUMBER_OF_PREFIX_BYTES);
-
-	nrfStartListening();
+	nrfSend(msg, 3, broadcast_pipe);
 	
 }
 int main(void)
@@ -150,8 +149,7 @@ int main(void)
 		{
 			sendDataFlag = 0;
 			// ** Test code for testing pvt message ** // 
-			//sendMessage();
-			sendPvtMessage(51);
+			sendMessage(51);
 		}
     }
 }

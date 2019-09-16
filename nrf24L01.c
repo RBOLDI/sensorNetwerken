@@ -32,6 +32,7 @@
  */
 #include "nrf24spiXM2.h"
 #include "nrf24L01.h"
+#include "messages.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -1167,12 +1168,17 @@ uint8_t nrfVerifySPIConnection(void)
   else                 return(0);                  // 0 - Value is different
 }
 
-void nrfSend(uint8_t* send){
+void nrfSend(uint8_t* send, uint8_t length, uint8_t* pipe){
 	nrfStopListening();
 	_delay_ms(5);
-
-	nrfWrite((uint8_t *) send, strlen(send));
+	
+	nrfOpenWritingPipe(pipe);
+	_delay_ms(5);
+	
+	nrfWrite((uint8_t *) send, length);
+	_delay_ms(5);
 	
 	nrfStartListening();
 	_delay_ms(5);
 }
+
