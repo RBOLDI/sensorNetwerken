@@ -122,14 +122,9 @@ ISR(PORTF_INT0_vect){		//triggers when data is received
 
 void broadcast_startup(void)
 {
-	uint8_t msg[3] = {'b',MYID,'\0'};
+	uint8_t msg[3] = {BROADCAST, MYID, '\0'};
 	
 	nrfSend(msg, 3, broadcast_pipe);
-	
-	nrfWrite((uint8_t *) msg, 3);
-
-	nrfStartListening();
-	
 }
 
 
