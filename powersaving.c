@@ -10,7 +10,8 @@
 #include "clksys_driver.h"
 #include "powersaving.h"
 
-void init_lowpower(void){
+void init_lowpower(void)
+{
 	PR.PRGEN   |= PR_USB_bm | PR_AES_bm | PR_RTC_bm | PR_EVSYS_bm | PR_DMA_bm;
 	PR.PRPA	   |= PR_DAC_bm | PR_ADC_bm | PR_AC_bm;
 	PR.PRPB	   |= PR_DAC_bm | PR_ADC_bm | PR_AC_bm;
@@ -24,14 +25,16 @@ void idle(void){
 	SLEEP.CTRL |= SLEEP_MODE_EXT_STANDBY | SLEEP_SEN_bm;
 }
 
-static void InitClocks(void) {
+static void InitClocks(void)
+{
 	CLKSYS_Enable( OSC_RC32MEN_bm );
 	do {} while ( CLKSYS_IsReady( OSC_RC32MRDY_bm ) == 0 );
 	CLKSYS_Main_ClockSource_Select( CLK_SCLKSEL_RC32M_gc );
 	CLKSYS_Disable( OSC_RC2MEN_bm );	
 }
 	
-void init_io(void){
+void init_io(void)
+{
 	PORTF.DIRSET = PIN0_bm | PIN1_bm;
 	PORTC.DIRSET = PIN0_bm;
 	
