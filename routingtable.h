@@ -14,4 +14,7 @@ typedef uint8_t tNodeID;
 void init_routingtable( void );
 void addneighbor(tNodeID NodeID);
 void removeneighbor(tNodeID NodeID);
+tNodeID sendtowho(tNodeID);
+char* GetInitialRoutingString();
+char* AppendtoReceivedRoutingString();
 #endif /* ROUTINGTABLE_H_ */
