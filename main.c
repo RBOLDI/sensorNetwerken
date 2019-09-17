@@ -120,6 +120,16 @@ ISR(PORTF_INT0_vect){		//triggers when data is received
 	}
 }
 
+ISR(PORTD_INT0_vect)
+{
+	uint8_t* routingstring = GetRoutingString(MYID);
+	
+	memcpy(message, routingstring, routingstring[2]);
+	
+	PORTF.OUTTGL = PIN1_bm;
+	sendDataFlag = 1;
+}
+
 void broadcast_startup(void)
 {
 	uint8_t msg[3] = {BROADCAST, MYID, '\0'};
@@ -158,7 +168,7 @@ void parseIncomingData(void)
 	switch(packet[0])
 	{
 		case BROADCAST:
-		 	printf("0x%x %d %s\n", packet[0], packet[1], packet + 2);
+		 	printf("0x%02X %d %s\n", packet[0], packet[1], packet + 2);
 			break;
 		case RRTABLE:
 		case RXPTABLE:
@@ -204,7 +214,7 @@ int main(void)
 				}
 				break;
 			case S_Send:
-				sendMessage(51);
+				nrfSend(message, message[2], pipe_selector(51));
 				nextState = S_Idle;
 				break;
 		}
@@ -225,10 +235,10 @@ uint8_t writeMessage(char* msg){
 	if (c == ENTER)
 	{
 		charBuffer[pointer] = '\0';
-		sendDataFlag = 1;
 		
 		strcpy(msg,charBuffer);
-		
+		sendMessage(51);
+
 		pointer = 0;
 		memset(charBuffer, 0, sizeof(charBuffer));
 		
