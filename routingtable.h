@@ -15,6 +15,5 @@ void init_routingtable( void );
 void addneighbor(tNodeID NodeID);
 void removeneighbor(tNodeID NodeID);
 tNodeID sendtowho(tNodeID);
-char* GetInitialRoutingString();
-char* AppendtoReceivedRoutingString();
+uint8_t* GetRoutingString(uint8_t myID);
 #endif /* ROUTINGTABLE_H_ */
