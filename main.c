@@ -150,13 +150,27 @@ void bootFunction(void)
 
 /* This function will be called when state equals S_GotMail.
 	It will parse the message to determine what kind of message 
-	it is, and what to do with it. */
+	it is, and what to do with it. UMT means Unknown Message Type */
 void gotmailFunction(void)
 {
-	printf("%s\n", packet);
 	PORTF.OUTTGL = PIN0_bm;
-}
 
+	switch(packet[0])
+	{
+		case BROADCAST:
+		 	printf("0x%x %d %s\n", packet[0], packet[1], packet + 2);
+			break;
+		case RRTABLE:
+			break;
+		case RXPTABLE:
+			break;
+		case BCREPLY:
+			break;
+		default:
+		 	printf("UMT: %s\n", packet);
+			break;
+	}
+}
 
 int main(void)
 {
