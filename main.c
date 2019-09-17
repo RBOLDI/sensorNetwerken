@@ -120,12 +120,14 @@ ISR(PORTF_INT0_vect){		//triggers when data is received
 	}
 }
 
-void broadcast_startup(uint8_t * str)
+void broadcast(uint8_t * str)
 {
-	int str_len = strlen(str);
+	int str_len = str[3];
 	uint8_t restValue = str_len%32;
-	while(str_len>restValue){
-		nrfSend	(str+32, 32, broadcast_pipe);
+	
+	while(str_len>restValue)
+	{
+		nrfSend(str+32, 32, broadcast_pipe);
 		str_len = str_len - 32;
 	}
 	nrfSend	(str+32, restValue, broadcast_pipe);
@@ -183,7 +185,7 @@ int main(void)
 				nextState = S_Broadcast;
 				break;
 			case S_Broadcast:
-				broadcast_startup("string");
+				broadcast(GetRoutingString(MYID));
 				nextState = S_Idle;
 				break;
 			case S_GotMail:
