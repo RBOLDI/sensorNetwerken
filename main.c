@@ -122,7 +122,7 @@ ISR(PORTF_INT0_vect){		//triggers when data is received
 
 void broadcast(uint8_t * str)
 {
-	int str_len = str[3];
+	int str_len = str[2];
 	uint8_t restValue = str_len%32;
 	
 	while(str_len>restValue)
@@ -148,6 +148,8 @@ void bootFunction(void)
 	init_stream(F_CPU);
 
 	init_nrf(MYID);
+	
+	init_routingtable();
 
 	_delay_ms(200);
 
@@ -179,13 +181,16 @@ int main(void)
 {
     while (1) 
     {
+		uint8_t * aPointer;
 		switch(currentState) {
 			case S_Boot:
 				bootFunction();
 				nextState = S_Broadcast;
 				break;
 			case S_Broadcast:
-				broadcast(GetRoutingString(MYID));
+				aPointer = GetRoutingString(MYID);
+				printf("Broadcasting:0x%02X, %d, %d\n", aPointer[0], aPointer[1], aPointer[2]);
+				broadcast(aPointer);
 				nextState = S_Idle;
 				break;
 			case S_GotMail:
