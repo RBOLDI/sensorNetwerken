@@ -43,7 +43,7 @@ void init_routingtable( void )
 {
 	aRoutingTable = (tTableElement*) calloc(MAXNEIGHBORS, sizeof(tTableElement));
 	aConnectedNodes = (tNodeID*) calloc(MAXNEIGHBORS, sizeof(tNodeID));
-	aRoutingString = (char*) calloc((MAXNEIGHBORS * 2) + 3, sizeof(char);
+	aRoutingString = (char*) calloc((MAXNEIGHBORS * 2) + 3, sizeof(char));
 }
 
 void addneighbor(tNodeID NodeID)
