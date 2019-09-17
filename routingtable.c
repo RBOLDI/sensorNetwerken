@@ -90,8 +90,10 @@ tNodeID sendtowho(tNodeID TargetID)
 
 uint8_t* GetRoutingString(uint8_t myID)
 {
-	// := berichttype EigenID NodeID Hopcnt
-	// aRoutingTable[0] = ID 1
+	//clear string
+	memset(*aRoutingString, 0, sizeof(aRoutingString)/sizeof(uint8_t));
+	
+	// Messagestruct := berichttype EigenID NodeID Hopcnt
 	uint8_t j = 2;
 	
 	//String prefix
@@ -103,11 +105,11 @@ uint8_t* GetRoutingString(uint8_t myID)
 	{
 		if(aRoutingTable[i].NeighborID != 0 )
 		{
-			aRoutingString[j] = aRoutingTable[i].NeighborID;
-			aRoutingString[j + 1] = aRoutingTable[i].uHops;
-			j++;
+			aRoutingString[++j] = aRoutingTable[i].NeighborID;
+			aRoutingString[++j] = aRoutingTable[i].uHops;
 		}
 	}
+	aRoutingString[2] = j;
 	//Return String
 	return * aRoutingString;
 }
