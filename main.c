@@ -102,21 +102,23 @@ ISR(PORTF_INT0_vect){		//triggers when data is received
 	}
 }
 
-void broadcast(void)
+void nrfSendLongMessage(uint8_t *str, uint8_t str_len, uint8_t *pipe)
 {
-	uint8_t *str = GetRoutingString(MYID);
-	int str_len = str[2];
-	uint8_t restValue = str_len%32;
-	
-	while(str_len>restValue && restValue != 0){
-		nrfSend(str, 32, broadcast_pipe);
+	while(str_len>32)
+	{
+		nrfSend(str, 32, pipe);
 		str += 32;
 		str_len -= 32;
 	}
-	if (restValue == 0)
-		nrfSend	(str, str_len, broadcast_pipe);
-	else
-		nrfSend	(str, restValue, broadcast_pipe);
+	nrfSend(str, str_len, pipe);
+}
+
+void broadcast(void)
+{
+	//uint8_t *str = GetRoutingString(MYID);
+	uint8_t str[100] = {RRTABLE, MYID, 100, 'q', 'w', 'e', 'r', 't', 'y', 'u', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'b', 'h', 'e', 'y', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'b'}; //GetRoutingString(MYID);
+
+	nrfSendLongMessage(str, str[2], broadcast_pipe);
 }
 
 /* This function will be called when state equals S_Boot.
@@ -167,14 +169,12 @@ int main(void)
 {
     while (1) 
     {
-		uint8_t * aPointer;
 		switch(currentState) {
 			case S_Boot:
 				bootFunction();
 				nextState = S_Broadcast;
 				break;
 			case S_Broadcast:
-				//printf("Broadcasting:0x%02X, %d, %d\n", aPointer[0], aPointer[1], aPointer[2]);
 				broadcast();
 				nextState = S_Idle;
 				break;
