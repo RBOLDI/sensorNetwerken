@@ -18,3 +18,4 @@ uint8_t fullMessage[FULL_MESSAGE_SIZE];
 //Function protoypes.
 void sendMessage(uint8_t targetID);
 uint8_t* pipe_selector(uint8_t ID);
+char* get_user_initials(uint8_t id);

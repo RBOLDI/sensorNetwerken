@@ -34,11 +34,6 @@
 const uint8_t getID();
 uint8_t writeMessage();
 
-typedef struct pair {
-	char* initials;
-	uint8_t id;
-} PAIR;
-
 uint8_t newDataFlag = 0;
 uint8_t sendDataFlag = 0;
 uint8_t newKeyboardData = 0;
@@ -59,25 +54,6 @@ enum states currentState, nextState = S_Boot;
 int pointer = 0;
 char charBuffer[MAX_MESSAGE_SIZE] = {0};
 
-const PAIR table[] =
-{
-	{ "FB_",  51 },
-	{ "RB_",  52 },
-	{ "SB_",  53 },
-	{ "JG_",  77 },
-	{ "AO_",  78 },
-	{ "MF_",  83 },
-};
-
-char* get_user_initials(uint8_t id)
-{
-	for (int i = 0; i < sizeof table / sizeof table[0]; ++i)
-	{
-		if(table[i].id == id)
-		return table[i].initials;
-	}
-	return "XX_";		// Niet gevonden
-}
 
 void init_nrf(const uint8_t pvtID){
 	nrfspiInit();
@@ -110,16 +86,6 @@ void init_nrf(const uint8_t pvtID){
 	sei();
 }
 
-ISR(PORTF_INT0_vect){		//triggers when data is received
-	uint8_t  tx_ds, max_rt, rx_dr;
-	memset(packet, 0, sizeof(packet));
-	nrfWhatHappened(&tx_ds, &max_rt, &rx_dr);
-	if(rx_dr){
-		nrfRead(packet, nrfGetDynamicPayloadSize());
-		newDataFlag = 1;
-	}
-}
-
 ISR(PORTD_INT0_vect)
 {
 	uint8_t* routingstring = GetRoutingString(MYID);
@@ -130,13 +96,22 @@ ISR(PORTD_INT0_vect)
 	sendDataFlag = 1;
 }
 
+ISR(PORTF_INT0_vect){		//triggers when data is received
+	uint8_t  tx_ds, max_rt, rx_dr;
+	memset(packet, 0, sizeof(packet));
+	nrfWhatHappened(&tx_ds, &max_rt, &rx_dr);
+	if(rx_dr){
+		nrfRead(packet, nrfGetDynamicPayloadSize());
+		newDataFlag = 1;
+	}
+}
+
 void broadcast_startup(void)
 {
 	uint8_t msg[3] = {BROADCAST, MYID, '\0'};
 	
 	nrfSend(msg, 3, broadcast_pipe);
 }
-
 
 
 /* This function will be called when state equals S_Boot.
