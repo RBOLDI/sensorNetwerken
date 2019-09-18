@@ -12,7 +12,9 @@
 #include "routingtable.h"
 
 #define		MAXNEIGHBORS	255
-#define		RXPTABLE		0x03
+#define		BROADCAST	0x01
+#define		RRTABLE		0x02
+
 /*
 The routingtable is an array of MAXNEIGHBORS structs. 
 The Nth member of the array holds the data for the SensorNode with ID N.
@@ -90,26 +92,28 @@ tNodeID sendtowho(tNodeID TargetID)
 
 uint8_t* GetRoutingString(uint8_t myID)
 {
-	// := berichttype EigenID NodeID Hopcnt
-	// aRoutingTable[0] = ID 1
+	//clear string
+	memset(aRoutingString, 0, sizeof(aRoutingString)/sizeof(uint8_t));
+	
+	// Messagestruct := berichttype EigenID NodeID Hopcnt
 	uint8_t j = 2;
 	
 	//String prefix
-	aRoutingString[0] = RXPTABLE;
+	aRoutingString[0] = RRTABLE;
 	aRoutingString[1] = myID;
-	
+	printf("e1:%s\n", aRoutingString);
 	//Loop through table, filling string NodeID and Hopcnt on the way
 	for(uint8_t i = 1; i == MAXNEIGHBORS; i++)
 	{
 		if(aRoutingTable[i].NeighborID != 0 )
 		{
-			aRoutingString[j] = aRoutingTable[i].NeighborID;
-			aRoutingString[j + 1] = aRoutingTable[i].uHops;
-			j++;
+			aRoutingString[++j] = aRoutingTable[i].NeighborID;
+			aRoutingString[++j] = aRoutingTable[i].uHops;
 		}
 	}
+	aRoutingString[2] = j;
 	//Return String
-	return * aRoutingString;
+	return aRoutingString;
 }
 
 char* AppendtoReceivedRoutingString(char* ReceivedRoutingString)
