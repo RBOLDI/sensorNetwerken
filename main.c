@@ -88,12 +88,8 @@ void init_nrf(const uint8_t pvtID){
 
 ISR(PORTD_INT0_vect)
 {
-	uint8_t* routingstring = GetRoutingString(MYID);
-	
-	memcpy(message, routingstring, routingstring[2]);
-	
 	PORTF.OUTTGL = PIN1_bm;
-	sendDataFlag = 1;
+	newBroadcastFlag = 1;
 }
 
 ISR(PORTF_INT0_vect){		//triggers when data is received
@@ -106,19 +102,22 @@ ISR(PORTF_INT0_vect){		//triggers when data is received
 	}
 }
 
-void broadcast(uint8_t * str)
+void broadcast(void)
 {
+	uint8_t *str = GetRoutingString(MYID);
 	int str_len = str[2];
 	uint8_t restValue = str_len%32;
 	
-	while(str_len>restValue)
-	{
-		nrfSend(str+32, 32, broadcast_pipe);
-		str_len = str_len - 32;
+	while(str_len>restValue && restValue != 0){
+		nrfSend(str, 32, broadcast_pipe);
+		str += 32;
+		str_len -= 32;
 	}
-	nrfSend	(str+32, restValue, broadcast_pipe);
+	if (restValue == 0)
+		nrfSend	(str, str_len, broadcast_pipe);
+	else
+		nrfSend	(str, restValue, broadcast_pipe);
 }
-
 
 /* This function will be called when state equals S_Boot.
 	It will run all the initializations of the Xmega. Including I/O,
@@ -154,6 +153,8 @@ void parseIncomingData(void)
 		 	printf("0x%02X %d %s\n", packet[0], packet[1], packet + 2);
 			break;
 		case RRTABLE:
+			printf("0x%02X %d %d %s\n", packet[0], packet[1], packet[2], packet + 3);
+			break;
 		case RXPTABLE:
 		case BCREPLY:
 		default:
@@ -173,9 +174,8 @@ int main(void)
 				nextState = S_Broadcast;
 				break;
 			case S_Broadcast:
-				aPointer = GetRoutingString(MYID);
-				printf("Broadcasting:0x%02X, %d, %d\n", aPointer[0], aPointer[1], aPointer[2]);
-				broadcast(aPointer);
+				//printf("Broadcasting:0x%02X, %d, %d\n", aPointer[0], aPointer[1], aPointer[2]);
+				broadcast();
 				nextState = S_Idle;
 				break;
 			case S_GotMail:
@@ -191,16 +191,11 @@ int main(void)
 					newDataFlag = 0;
 					nextState = S_GotMail;
 				}
-				else if(sendDataFlag) {
-					sendDataFlag = 0;
-					nextState = S_Send;
-				}
 				else {
 					nextState = S_Idle;
 				}
 				break;
-			case S_Send:
-				nrfSend(message, message[2], pipe_selector(51));
+			default:
 				nextState = S_Idle;
 				break;
 		}
