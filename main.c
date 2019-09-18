@@ -104,19 +104,32 @@ ISR(PORTF_INT0_vect){		//triggers when data is received
 
 void nrfSendLongMessage(uint8_t *str, uint8_t str_len, uint8_t *pipe)
 {
+	PORTC.OUTSET = PIN0_bm;
+	nrfStopListening();
+	_delay_ms(5);
+	
+	nrfOpenWritingPipe(pipe);
+	_delay_ms(5);
+	
 	while(str_len>32)
 	{
-		nrfSend(str, 32, pipe);
+		nrfWrite(str, 32);
 		str += 32;
 		str_len -= 32;
 	}
-	nrfSend(str, str_len, pipe);
+	nrfWrite(str, str_len);
+	
+	nrfStartListening();
+	_delay_ms(5);
+	PORTC.OUTCLR = PIN0_bm;
 }
 
 void broadcast(void)
 {
 	//uint8_t *str = GetRoutingString(MYID);
-	uint8_t str[100] = {RRTABLE, MYID, 100, 'q', 'w', 'e', 'r', 't', 'y', 'u', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'b', 'h', 'e', 'y', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'b'}; //GetRoutingString(MYID);
+	uint8_t str[300] = {RRTABLE, MYID, 300, 'q', 'w', 'e', 'r', 't', 'y', 'u', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'b', 'h', 'e', 'y', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'b',
+						'a', 'a', 'a', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'b', 'h', 'e', 'y', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'c',
+						'a', 'a', 'a', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'b', 'h', 'e', 'y', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'd'};
 
 	nrfSendLongMessage(str, str[2], broadcast_pipe);
 }
