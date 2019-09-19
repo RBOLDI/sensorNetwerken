@@ -11,7 +11,8 @@
 
 #include "routingtable.h"
 
-#define		MAXNEIGHBORS	255
+#define		MAXNODES	255
+
 #define		BROADCAST	0x01
 #define		RRTABLE		0x02
 
@@ -28,96 +29,78 @@ There is a second array called ConectedNodes of all the IDs with which there is 
 typedef struct
 {																
 	uint8_t uHops;
-	tNodeID NeighborID;
+	tNodeID NodeID;
 } tTableElement;
 	
 tTableElement *aRoutingTable = NULL;
+tNodeID *aExtantNodes = NULL;
+uint8_t uExtantNodes;
 
-tNodeID *aConnectedNodes = NULL;
+uint8_t *aRoutingString = NULL;
+
 
 #if (MAXNEIGHBORS > UINT8_MAX)
 #error "MAXNEIGHBORS won't fit in tNodeID. Change type of tNodeID."
 #endif
 
-uint8_t *aRoutingString = NULL;
-
 void init_routingtable( void )
 {
-	aRoutingTable = (tTableElement*) calloc(MAXNEIGHBORS, sizeof(tTableElement));
-	aConnectedNodes = (tNodeID*) calloc(MAXNEIGHBORS, sizeof(tNodeID));
-	aRoutingString = (uint8_t*) calloc((MAXNEIGHBORS * 2) + 2, sizeof(uint8_t));
+	aRoutingTable = (tTableElement*) calloc(MAXNODES, sizeof(tTableElement));
+	aExtantNodes = (tNodeID *) calloc(MAXNODES, sizeof(uint8_t));
+	aRoutingString = (uint8_t*) calloc((MAXNODES * 2) + 2, sizeof(uint8_t));
+	
+	//For testing
+	for (uint8_t i = 1; i < 66; i++)
+	{
+		addneighbor((rand() % 100) + 1);
+	}
 }
 
 void addneighbor(tNodeID NodeID)
 {
-	if (strchr(aConnectedNodes, NodeID) == NULL)
+	aRoutingTable[NodeID - 1].uHops = 1;
+	aRoutingTable[NodeID - 1].NodeID = NodeID;
+	
+	if (strchr((char*) aExtantNodes, NodeID) == NULL)
 	{
-		aConnectedNodes[strlen(aConnectedNodes)] = NodeID;
-		(aRoutingTable + NodeID - 1)->uHops = 1;
-		(aRoutingTable + NodeID - 1)->NeighborID = NodeID;
+		aExtantNodes[strlen((char*) aExtantNodes)] = NodeID;
+		uExtantNodes++;
 	}
 }
 
 void removeneighbor(tNodeID NodeID)
 {
-	tNodeID *pIndex = (tNodeID *) strchr(aConnectedNodes, NodeID);
-	size_t Size = strlen(aConnectedNodes);
-	
-	#if (MAXNEIGHBORS > SIZE_MAX)
-	#error "MAXNEIGHBORS won't fit in size_t. Change type of Size."
-	#endif
-	
-	if (pIndex != NULL)
-	{
-		while (pIndex < (aConnectedNodes + Size))
-		{
-			*pIndex = *(pIndex + 1);
-			pIndex++;
-		}
-		
-		if (Size == MAXNEIGHBORS)
-		{
-			*(aConnectedNodes + MAXNEIGHBORS - 1) = 0;
-		}
-		
-		(aRoutingTable + NodeID - 1)->uHops = 0;						
-		(aRoutingTable + NodeID - 1)->NeighborID = 0x00;
-	}
+	aRoutingTable[NodeID - 1].uHops = 0;
+	aRoutingTable[NodeID - 1].NodeID = 0;
 }
 
 tNodeID sendtowho(tNodeID TargetID)
 {
-	return (aRoutingTable + TargetID - 1)->NeighborID;
+	return aRoutingTable[TargetID - 1].NodeID;
 }
 
 uint8_t* GetRoutingString(uint8_t myID)
 {
-	//clear string
+	//Clear string
 	memset(aRoutingString, 0, sizeof(aRoutingString)/sizeof(uint8_t));
 	
-	// Messagestruct := berichttype EigenID NodeID Hopcnt
+	//RoutingString := berichttype EigenID NodeID Hopcnt
 	uint8_t j = 2;
+	
+	//Walk through aExtantNodes, filling string with NodeID and Hopcnt on the way
+	for(uint8_t i = 0; i < uExtantNodes; i++)
+	{
+		if(aRoutingTable[aExtantNodes[i]].uHops != 0)
+		{
+			aRoutingString[++j] = aRoutingTable[aExtantNodes[i]].NodeID;
+			aRoutingString[++j] = aRoutingTable[aExtantNodes[i]].uHops;
+		}
+	}
 	
 	//String prefix
 	aRoutingString[0] = RRTABLE;
 	aRoutingString[1] = myID;
-	
-	//Loop through table, filling string NodeID and Hopcnt on the way
-	for(uint8_t i = 1; i == MAXNEIGHBORS; i++)
-	{
-		if(aRoutingTable[i].NeighborID != 0 )
-		{
-			aRoutingString[++j] = aRoutingTable[i].NeighborID;
-			aRoutingString[++j] = aRoutingTable[i].uHops;
-		}
-	}
 	aRoutingString[2] = j+1;
-
-	//Return String
+	
 	return aRoutingString;
-}
-
-char* AppendtoReceivedRoutingString(char* ReceivedRoutingString)
-{
-	/*TO DO*/
 }
