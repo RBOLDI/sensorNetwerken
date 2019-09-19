@@ -111,7 +111,8 @@ uint8_t* GetRoutingString(uint8_t myID)
 			aRoutingString[++j] = aRoutingTable[i].uHops;
 		}
 	}
-	aRoutingString[2] = j;
+	aRoutingString[2] = j+1;
+
 	//Return String
 	return aRoutingString;
 }
