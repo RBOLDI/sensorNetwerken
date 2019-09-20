@@ -29,7 +29,7 @@ There is a second array called ConectedNodes of all the IDs with which there is 
 	
 tTableElement *aRoutingTable = NULL;
 uint8_t *aExtantNodes = NULL;
-uint8_t uExtantNodes;
+uint8_t uExtantNodes = 0;
 
 uint8_t *aRoutingString = NULL;
 
@@ -40,21 +40,21 @@ uint8_t *aRoutingString = NULL;
 
 void init_routingtable( void )
 {
-	aRoutingTable = (tTableElement*) calloc(MAXNODES, sizeof(tTableElement));
+	aRoutingTable = (tTableElement*) calloc(MAXNODES + 1, sizeof(tTableElement));
 	aExtantNodes = (uint8_t *) calloc(MAXNODES, sizeof(uint8_t));
-	aRoutingString = (uint8_t*) calloc((MAXNODES * 2) + 2, sizeof(uint8_t));
+	aRoutingString = (uint8_t*) calloc((MAXNODES * 2) + 3, sizeof(uint8_t));
 	
 	//For testing
-	for (uint8_t i = 1; i < 66; i++)
+	for (uint8_t i = 0; i < 20; i++)
 	{
-		addneighbor((rand() % 100) + 1);
+		addneighbor(i+48);
 	}
 }
 
 void addneighbor(uint8_t NodeID)
 {
-	aRoutingTable[NodeID - 1].uHops = 1;
-	aRoutingTable[NodeID - 1].NodeID = NodeID;
+	aRoutingTable[NodeID].uHops = 1;
+	aRoutingTable[NodeID].NodeID = NodeID;
 	
 	if (strchr((char*) aExtantNodes, NodeID) == NULL)
 	{
@@ -65,19 +65,19 @@ void addneighbor(uint8_t NodeID)
 
 void removeneighbor(uint8_t NodeID)
 {
-	aRoutingTable[NodeID - 1].uHops = 0;
-	aRoutingTable[NodeID - 1].NodeID = 0;
+	aRoutingTable[NodeID].uHops = 0;
+	aRoutingTable[NodeID].NodeID = 0;
 }
 
 uint8_t sendtowho(uint8_t TargetID)
 {
-	return aRoutingTable[TargetID - 1].NodeID;
+	return aRoutingTable[TargetID].NodeID;
 }
 
 uint8_t* GetRoutingString(uint8_t myID)
 {
 	//Clear string
-	memset(aRoutingString, 0, sizeof(aRoutingString)/sizeof(uint8_t));
+	memset(aRoutingString, 0, (MAXNODES * 2 + 3) * sizeof(uint8_t));
 	
 	//RoutingString := Berichttype EigenID NodeID Hopcnt
 	uint8_t j = 2;
@@ -87,8 +87,8 @@ uint8_t* GetRoutingString(uint8_t myID)
 	{
 		if(aRoutingTable[aExtantNodes[i]].uHops != 0)
 		{
-			aRoutingString[++j] = aRoutingTable[aExtantNodes[i] - 1].NodeID;
-			aRoutingString[++j] = aRoutingTable[aExtantNodes[i] - 1].uHops;
+			aRoutingString[++j] = aRoutingTable[aExtantNodes[i]].NodeID;
+			aRoutingString[++j] = aRoutingTable[aExtantNodes[i]].uHops;
 		}
 	}
 	
