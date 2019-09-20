@@ -45,16 +45,16 @@ void init_routingtable( void )
 	aRoutingString = (uint8_t*) calloc((MAXNODES * 2) + 3, sizeof(uint8_t));
 	
 	//For testing
-	for (uint8_t i = 0; i < 20; i++)
+	for (uint8_t i = 1; i <= 50; i++)
 	{
-		addneighbor(i+48);
+		addneighbor(i);
 	}
 }
 
 void addneighbor(uint8_t NodeID)
 {
 	aRoutingTable[NodeID].uHops = 1;
-	aRoutingTable[NodeID].NodeID = NodeID;
+	aRoutingTable[NodeID].NeighborID = NodeID;
 	
 	if (strchr((char*) aExtantNodes, NodeID) == NULL)
 	{
@@ -66,12 +66,12 @@ void addneighbor(uint8_t NodeID)
 void removeneighbor(uint8_t NodeID)
 {
 	aRoutingTable[NodeID].uHops = 0;
-	aRoutingTable[NodeID].NodeID = 0;
+	aRoutingTable[NodeID].NeighborID = 0;
 }
 
 uint8_t sendtowho(uint8_t TargetID)
 {
-	return aRoutingTable[TargetID].NodeID;
+	return aRoutingTable[TargetID].NeighborID;
 }
 
 uint8_t* GetRoutingString(uint8_t myID)
@@ -87,7 +87,7 @@ uint8_t* GetRoutingString(uint8_t myID)
 	{
 		if(aRoutingTable[aExtantNodes[i]].uHops != 0)
 		{
-			aRoutingString[++j] = aRoutingTable[aExtantNodes[i]].NodeID;
+			aRoutingString[++j] = aExtantNodes[i];
 			aRoutingString[++j] = aRoutingTable[aExtantNodes[i]].uHops;
 		}
 	}
@@ -98,4 +98,16 @@ uint8_t* GetRoutingString(uint8_t myID)
 	aRoutingString[2] = j+1;
 	
 	return aRoutingString;
+}
+
+void FillRoutingTable(uint8_t *routingstring, uint8_t string_length)
+{
+	if(string_length <= 3) return;
+	
+	memset(aRoutingTable, 0, (MAXNODES + 1) * sizeof(tTableElement) );	// Clear existing values
+
+	for(uint8_t i = 3; i < string_length; i+=2 ) {
+		aRoutingTable[ routingstring[i] ].NeighborID = 255; /* Closest neighbor WIP*/
+		aRoutingTable[ routingstring[i] ].uHops = routingstring[i+1];
+	}
 }

@@ -12,7 +12,7 @@
 typedef struct
 {
 	uint8_t uHops;
-	uint8_t NodeID;
+	uint8_t NeighborID;
 } tTableElement;
 
 void init_routingtable( void );
@@ -20,4 +20,5 @@ void addneighbor(uint8_t NodeID);
 void removeneighbor(uint8_t NodeID);
 uint8_t sendtowho(uint8_t);
 uint8_t* GetRoutingString(uint8_t myID);
+void FillRoutingTable(uint8_t *routingstring, uint8_t string_length);
 #endif /* ROUTINGTABLE_H_ */

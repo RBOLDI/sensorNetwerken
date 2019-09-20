@@ -115,15 +115,11 @@ void nrfSendLongMessage(uint8_t *str, uint8_t str_len, uint8_t *pipe)
 	
 	nrfOpenWritingPipe(pipe);
 
-	printf_hex(str,str_len);
-	
 	while(str_len>32)
 	{
 		nrfStartWrite(str, 32, NRF_W_TX_PAYLOAD_NO_ACK);
-
 		str += 32;
 		str_len -= 32;
-		
 	}
 	nrfStartWrite(str, str_len, NRF_W_TX_PAYLOAD_NO_ACK);
 	
@@ -174,6 +170,7 @@ void parseIncomingData(void)
 			break;
 		case RRTABLE:
 			printf("0x%02X %d %d %s\n", packet[0], packet[1], packet[2], packet + 3);
+			FillRoutingTable(packet,packet[2]);
 			break;
 		case RXPTABLE:
 		case BCREPLY:
@@ -191,9 +188,9 @@ int main(void)
 			case S_Boot:
 				bootFunction();
 				nextState = S_Broadcast;
+				DB_MSG("\n----Debug mode enabled----\n\n");
 				break;
 			case S_Broadcast:
-				DB_MSG("\n----Debug mode enabled----\n\n");
 				broadcast();
 				nextState = S_Idle;
 				break;
