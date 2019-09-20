@@ -26,14 +26,9 @@ There is a second array called ConectedNodes of all the IDs with which there is 
 */
 
 
-typedef struct
-{																
-	uint8_t uHops;
-	tNodeID NodeID;
-} tTableElement;
 	
 tTableElement *aRoutingTable = NULL;
-tNodeID *aExtantNodes = NULL;
+uint8_t *aExtantNodes = NULL;
 uint8_t uExtantNodes;
 
 uint8_t *aRoutingString = NULL;
@@ -46,7 +41,7 @@ uint8_t *aRoutingString = NULL;
 void init_routingtable( void )
 {
 	aRoutingTable = (tTableElement*) calloc(MAXNODES, sizeof(tTableElement));
-	aExtantNodes = (tNodeID *) calloc(MAXNODES, sizeof(uint8_t));
+	aExtantNodes = (uint8_t *) calloc(MAXNODES, sizeof(uint8_t));
 	aRoutingString = (uint8_t*) calloc((MAXNODES * 2) + 2, sizeof(uint8_t));
 	
 	//For testing
@@ -56,7 +51,7 @@ void init_routingtable( void )
 	}
 }
 
-void addneighbor(tNodeID NodeID)
+void addneighbor(uint8_t NodeID)
 {
 	aRoutingTable[NodeID - 1].uHops = 1;
 	aRoutingTable[NodeID - 1].NodeID = NodeID;
@@ -68,13 +63,13 @@ void addneighbor(tNodeID NodeID)
 	}
 }
 
-void removeneighbor(tNodeID NodeID)
+void removeneighbor(uint8_t NodeID)
 {
 	aRoutingTable[NodeID - 1].uHops = 0;
 	aRoutingTable[NodeID - 1].NodeID = 0;
 }
 
-tNodeID sendtowho(tNodeID TargetID)
+uint8_t sendtowho(uint8_t TargetID)
 {
 	return aRoutingTable[TargetID - 1].NodeID;
 }
@@ -92,8 +87,8 @@ uint8_t* GetRoutingString(uint8_t myID)
 	{
 		if(aRoutingTable[aExtantNodes[i]].uHops != 0)
 		{
-			aRoutingString[++j] = aRoutingTable[aExtantNodes[i]].NodeID;
-			aRoutingString[++j] = aRoutingTable[aExtantNodes[i]].uHops;
+			aRoutingString[++j] = aRoutingTable[aExtantNodes[i] - 1].NodeID;
+			aRoutingString[++j] = aRoutingTable[aExtantNodes[i] - 1].uHops;
 		}
 	}
 	
