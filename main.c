@@ -86,6 +86,10 @@ void init_nrf(const uint8_t pvtID){
 	PMIC.CTRL |= PMIC_LOLVLEN_bm;
 	sei();
 }
+ISR(TCE0_OVF_vect)
+{
+	newBroadcastFlag = 1;
+}
 
 ISR(PORTD_INT0_vect)
 {
@@ -190,10 +194,10 @@ int main(void)
 		switch(currentState) {
 			case S_Boot:
 				bootFunction();
+				DB_MSG("\n----Debug mode enabled----\n\n");
 				nextState = S_Broadcast;
 				break;
 			case S_Broadcast:
-				DB_MSG("\n----Debug mode enabled----\n\n");
 				broadcast();
 				nextState = S_Idle;
 				break;
