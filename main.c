@@ -31,6 +31,8 @@
 #define		RXPTABLE	0x03
 #define		BCREPLY		0x04
 
+#define		MESSAGE_BUFFER_SIZE 320
+
 //Function prototypes
 const uint8_t getID();
 uint8_t writeMessage();
@@ -39,15 +41,19 @@ uint8_t newDataFlag = 0;
 uint8_t sendDataFlag = 0;
 uint8_t newKeyboardData = 0;
 uint8_t newBroadcastFlag = 0;
+uint8_t bigMessageFlag = 0;
 
 uint8_t MYID;
+
+tMessage bCast;
 
 enum states {
 	S_Boot,
 	S_Broadcast,
 	S_Idle,
 	S_GotMail,
-	S_Send
+	S_Send,
+	S_Long
 };
 
 enum states currentState, nextState = S_Boot;
@@ -132,38 +138,59 @@ void nrfSendLongMessage(uint8_t *str, uint8_t str_len, uint8_t *pipe)
 	PORTC.OUTCLR = PIN0_bm;
 }
 
-uint8_t* nrfRecieveLongMessage(uint8_t *str)
+bool bigMessage(uint8_t * arr)
 {
-//Make sure message is long
- if (str[2] < 32)
- {
-	 DB_MSG("This message is not considered long.\n");
-	 return NULL;
- }
- else
- {
-	 uint8_t len = str + 2;
-	 uint8_t fullMessage[str[2]];
-	 uint8_t pos = 0;
-	 newDataFlag = 1;
-	 
-	 while(pos <= (len - (len % 32)))
-	 {
-		if(newDataFlag == 1)
-		{
-			fullMessage[pos] = packet[0];
-			pos += 32;
-			newDataFlag = 0;
-		}
-		// Wait for next data packet
-	 }
-	 if(newDataFlag == 1)
-	 {
-		fullMessage[pos] = packet[0];
-		newDataFlag = 0;
-	 }
-	 return fullMessage;
- }
+	uint8_t len = arr[2];
+	if (len > 32) return true;
+	else return false;
+}
+
+void makeBuffer(tMessage *message)
+{
+	message->msgBuffer = (uint8_t *)malloc(MESSAGE_BUFFER_SIZE);
+}
+
+void resetBuffer(tMessage *message){
+	message->buffPos = 0;
+	message->len = 0;
+	memset(&message->msgBuffer[0], 0, sizeof(MESSAGE_BUFFER_SIZE));
+}
+
+uint8_t parseLong(uint8_t *str, tMessage *message, uint8_t flag)
+{
+	PORTF.OUTTGL = PIN0_bm;
+	// The return value rc indicates if the end of the message is reached.
+	int rc = -1;
+	switch (flag)
+	{
+		/*First time function is used, the message length is stored in tMessage
+		 and the first packet is stored in the message buffer.*/
+		case 0:
+			message->len = str[2];
+		
+			message->msgBuffer[message->buffPos] = packet[0];
+			message->buffPos += 32;
+			
+			rc = 0;
+			printf("len=%d\n", message->len);
+			break;
+		/*The rest of the packets will be parsed from here. After the long message
+		is printed, the (long message)flag will be set back to 0. */
+		case 1:
+			if(message->buffPos < (message->len - (message->len % 32))){
+				message->msgBuffer[message->buffPos] = packet[0];
+				message->buffPos += 32;
+				printf("buffPos=%d\n", message->buffPos);
+				rc = 0;
+			}
+			else{
+				message->msgBuffer[message->buffPos] = packet[0];
+				printf("buffPos=%d\n", message->buffPos);
+				rc = 1;
+			}
+			break;
+	}	
+	return rc;
 }
  
 void broadcast(void)
@@ -178,8 +205,10 @@ void broadcast(void)
 	setting MYID, UART stream and nRF */
 void bootFunction(void)
 {
+	makeBuffer(&bCast);
+	
 	init_io();
-
+	
 	MYID = getID();
 	memmove(initials, get_user_initials(MYID), NUMBER_OF_PREFIX_BYTES);
 
@@ -219,7 +248,6 @@ void parseIncomingData(void)
 
 int main(void)
 {
-	uint8_t * payload;
     while (1) 
     {
 		switch(currentState) {
@@ -228,20 +256,36 @@ int main(void)
 				nextState = S_Broadcast;
 				break;
 			case S_Broadcast:
-				DB_MSG("\n----Debug mode enabled----\n\n");
 				broadcast();
 				nextState = S_Idle;
 				break;
 			case S_GotMail:
-				//parseIncomingData();
-				payload = nrfRecieveLongMessage(packet);
-				printf("%d  %d  %d  %s",payload[1],payload[2],payload[3],payload+3);
+				if(bigMessage(packet)){
+					parseLong(packet, &bCast, bigMessageFlag);
+					bigMessageFlag = 1;
+					nextState = S_Long;
+				}
+				else{
+					parseIncomingData();
+					nextState = S_Idle;
+				}
+				break;
+			case S_Long:
+				if(parseLong(packet, &bCast, bigMessageFlag)){
+				printf_hex(bCast.msgBuffer,bCast.len);
+				bigMessageFlag = 0;
+				resetBuffer(&bCast);
+				}
 				nextState = S_Idle;
 				break;
 			case S_Idle:
 				if(newBroadcastFlag) {
 					newBroadcastFlag = 0;
 					nextState = S_Broadcast;
+				}
+				else if(newDataFlag && bigMessageFlag){
+					newDataFlag = 0;
+					nextState = S_Long;
 				}
 				else if(newDataFlag) {
 					newDataFlag = 0;

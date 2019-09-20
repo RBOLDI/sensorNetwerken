@@ -5,6 +5,15 @@
  *  Author: Steph
  */ 
 
+typedef struct
+{
+	uint8_t *msgBuffer;
+	uint8_t buffPos;
+	uint8_t len;
+}tMessage;
+
+
+
 // Defines used by message functions.
 #define FULL_MESSAGE_SIZE 32
 #define NUMBER_OF_PREFIX_BYTES 3
