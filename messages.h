@@ -19,3 +19,4 @@ uint8_t fullMessage[FULL_MESSAGE_SIZE];
 void sendMessage(uint8_t targetID);
 uint8_t* pipe_selector(uint8_t ID);
 char* get_user_initials(uint8_t id);
+void printf_hex(uint8_t *str, uint8_t str_len);

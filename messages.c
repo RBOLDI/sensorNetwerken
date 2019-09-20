@@ -72,3 +72,12 @@ char* get_user_initials(uint8_t id)
 	}
 	return "XX_";		// Niet gevonden
 }
+
+void printf_hex(uint8_t *str, uint8_t str_len)
+{
+	for(int i = 0; i < str_len; i++)
+	{
+		printf("0x%02X ", str[i]);
+	}
+	printf("\n");
+}

@@ -102,35 +102,39 @@ ISR(PORTF_INT0_vect){		//triggers when data is received
 	}
 }
 
+/* This function will allow the microcontroller to send multiple packets
+of 32 bytes each. It uses NO_ACK setting to prevent the mcu from getting
+stuck when receiving acknowledge messages. NO_ACK mode is significantly
+faster than ACK mode.
+*/
 void nrfSendLongMessage(uint8_t *str, uint8_t str_len, uint8_t *pipe)
 {
 	PORTC.OUTSET = PIN0_bm;
 	nrfStopListening();
-	_delay_ms(5);
 	
 	nrfOpenWritingPipe(pipe);
-	_delay_ms(5);
+
+	printf_hex(str,str_len);
 	
 	while(str_len>32)
 	{
-		nrfWrite(str, 32);
+		nrfStartWrite(str, 32, NRF_W_TX_PAYLOAD_NO_ACK);
+
 		str += 32;
 		str_len -= 32;
+		
 	}
-	nrfWrite(str, str_len);
+	nrfStartWrite(str, str_len, NRF_W_TX_PAYLOAD_NO_ACK);
 	
 	nrfStartListening();
-	_delay_ms(5);
+	
 	PORTC.OUTCLR = PIN0_bm;
 }
 
 void broadcast(void)
 {
 	uint8_t *str = GetRoutingString(MYID);
-	/*uint8_t str[255] = {RRTABLE, MYID, 10, 'q', 'w', 'e', 'r', 't', 'y', 'u', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'b', 'h', 'e', 'y', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'b',
-						'a', 'a', 'a', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'b', 'h', 'e', 'y', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'c',
-						'a', 'a', 'a', 'a', 'a', 'b', 'h', 'e', 'y', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'd'};
-	*/			
+
 	nrfSendLongMessage(str, str[2], broadcast_pipe);
 }
 
