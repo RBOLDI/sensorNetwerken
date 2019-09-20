@@ -132,6 +132,40 @@ void nrfSendLongMessage(uint8_t *str, uint8_t str_len, uint8_t *pipe)
 	PORTC.OUTCLR = PIN0_bm;
 }
 
+uint8_t* nrfRecieveLongMessage(uint8_t *str)
+{
+//Make sure message is long
+ if (str[2] < 32)
+ {
+	 DB_MSG("This message is not considered long.\n");
+	 return NULL;
+ }
+ else
+ {
+	 uint8_t len = str + 2;
+	 uint8_t fullMessage[str[2]];
+	 uint8_t pos = 0;
+	 newDataFlag = 1;
+	 
+	 while(pos <= (len - (len % 32)))
+	 {
+		if(newDataFlag == 1)
+		{
+			fullMessage[pos] = packet[0];
+			pos += 32;
+			newDataFlag = 0;
+		}
+		// Wait for next data packet
+	 }
+	 if(newDataFlag == 1)
+	 {
+		fullMessage[pos] = packet[0];
+		newDataFlag = 0;
+	 }
+	 return fullMessage;
+ }
+}
+ 
 void broadcast(void)
 {
 	uint8_t *str = GetRoutingString(MYID);
@@ -185,6 +219,7 @@ void parseIncomingData(void)
 
 int main(void)
 {
+	uint8_t * payload;
     while (1) 
     {
 		switch(currentState) {
@@ -198,7 +233,9 @@ int main(void)
 				nextState = S_Idle;
 				break;
 			case S_GotMail:
-				parseIncomingData();
+				//parseIncomingData();
+				payload = nrfRecieveLongMessage(packet);
+				printf("%d  %d  %d  %s",payload[1],payload[2],payload[3],payload+3);
 				nextState = S_Idle;
 				break;
 			case S_Idle:
