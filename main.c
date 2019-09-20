@@ -18,6 +18,7 @@
 #include "powersaving.h"
 #include "routingtable.h"
 #include "messages.h"
+#include "debug_opts.h" 
 
 #define		FB !(PORTD.IN & PIN1_bm)
 #define		RB !(PORTD.IN & PIN2_bm)
@@ -192,6 +193,7 @@ int main(void)
 				nextState = S_Broadcast;
 				break;
 			case S_Broadcast:
+				DB_MSG("\n----Debug mode enabled----\n\n");
 				broadcast();
 				nextState = S_Idle;
 				break;
