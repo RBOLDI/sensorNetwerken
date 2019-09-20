@@ -143,6 +143,9 @@
     <Compile Include="clksys_driver.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="debug_opts.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="KeyboardCodes.h">
       <SubType>compile</SubType>
     </Compile>
