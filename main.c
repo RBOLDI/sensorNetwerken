@@ -45,7 +45,7 @@ uint8_t bigMessageFlag = 0;
 
 uint8_t MYID;
 
-tMessage bCast;
+tMessage mBrCast;
 
 enum states {
 	S_Boot,
@@ -147,45 +147,47 @@ bool bigMessage(uint8_t * arr)
 
 void makeBuffer(tMessage *message)
 {
-	message->msgBuffer = (uint8_t *)malloc(MESSAGE_BUFFER_SIZE);
+	message->msgBuffer = (uint8_t *)malloc(MESSAGE_BUFFER_SIZE*sizeof(uint8_t));
 }
 
 void resetBuffer(tMessage *message){
+	memset(message->msgBuffer, 0, MESSAGE_BUFFER_SIZE*sizeof(uint8_t));
 	message->buffPos = 0;
 	message->len = 0;
-	memset(&message->msgBuffer[0], 0, sizeof(MESSAGE_BUFFER_SIZE));
 }
 
-uint8_t parseLong(uint8_t *str, tMessage *message, uint8_t flag)
+uint8_t parseLong(uint8_t *arr, tMessage *msg, uint8_t flag)
 {
 	PORTF.OUTTGL = PIN0_bm;
 	// The return value rc indicates if the end of the message is reached.
-	int rc = -1;
+	int rc = 0;
 	switch (flag)
 	{
 		/*First time function is used, the message length is stored in tMessage
 		 and the first packet is stored in the message buffer.*/
 		case 0:
-			message->len = str[2];
-		
-			message->msgBuffer[message->buffPos] = packet[0];
-			message->buffPos += 32;
-			
+			msg->len = arr[2];
+			printf("len=%d, buffPosF0=%d\n", msg->len, msg->buffPos);
+			memcpy(msg->msgBuffer, arr, sizeof(packet));
+			msg->buffPos += 32;
 			rc = 0;
-			printf("len=%d\n", message->len);
 			break;
 		/*The rest of the packets will be parsed from here. After the long message
 		is printed, the (long message)flag will be set back to 0. */
 		case 1:
-			if(message->buffPos < (message->len - (message->len % 32))){
-				message->msgBuffer[message->buffPos] = packet[0];
-				message->buffPos += 32;
-				printf("buffPos=%d\n", message->buffPos);
+			if(msg->buffPos < (msg->len - (msg->len % 32))){
+				msg->msgBuffer += msg->buffPos;
+				memcpy(msg->msgBuffer, arr, sizeof(packet));
+				msg->buffPos += 32;
+				printf("buffPosF0=%d\n", msg->buffPos);
 				rc = 0;
-			}
-			else{
-				message->msgBuffer[message->buffPos] = packet[0];
-				printf("buffPos=%d\n", message->buffPos);
+				
+			}else{
+				msg->msgBuffer += msg->buffPos;
+				memcpy(msg->msgBuffer, arr, (msg->len % 32)*sizeof(uint8_t));
+				printf("buffPosF1=%d\n", msg->buffPos);
+				msg->msgBuffer -= (msg->buffPos);
+				printf("0x%02X %d %d %s\n", msg->msgBuffer[0], msg->msgBuffer[1], msg->msgBuffer[2], msg->msgBuffer + 3);
 				rc = 1;
 			}
 			break;
@@ -205,7 +207,7 @@ void broadcast(void)
 	setting MYID, UART stream and nRF */
 void bootFunction(void)
 {
-	makeBuffer(&bCast);
+	makeBuffer(&mBrCast);
 	
 	init_io();
 	
@@ -261,7 +263,7 @@ int main(void)
 				break;
 			case S_GotMail:
 				if(bigMessage(packet)){
-					parseLong(packet, &bCast, bigMessageFlag);
+					parseLong(packet, &mBrCast, bigMessageFlag);
 					bigMessageFlag = 1;
 					nextState = S_Long;
 				}
@@ -271,11 +273,11 @@ int main(void)
 				}
 				break;
 			case S_Long:
-				if(parseLong(packet, &bCast, bigMessageFlag)){
-				printf_hex(bCast.msgBuffer,bCast.len);
-				bigMessageFlag = 0;
-				resetBuffer(&bCast);
-				}
+				if(parseLong(packet, &mBrCast, bigMessageFlag)){
+					printf_hex(mBrCast.msgBuffer,mBrCast.len);
+					resetBuffer(&mBrCast);
+					bigMessageFlag = 0;
+				}else{};
 				nextState = S_Idle;
 				break;
 			case S_Idle:
