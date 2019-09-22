@@ -31,12 +31,10 @@
 #define		RXPTABLE	0x03
 #define		BCREPLY		0x04
 
-#define		MESSAGE_BUFFER_SIZE 320
-
 //Function prototypes
 const uint8_t getID();
 uint8_t writeMessage();
-
+bool test;
 uint8_t newDataFlag = 0;
 uint8_t sendDataFlag = 0;
 uint8_t newKeyboardData = 0;
@@ -138,23 +136,6 @@ void nrfSendLongMessage(uint8_t *str, uint8_t str_len, uint8_t *pipe)
 	PORTC.OUTCLR = PIN0_bm;
 }
 
-bool bigMessage(uint8_t * arr)
-{
-	uint8_t len = arr[2];
-	if (len > 32) return true;
-	else return false;
-}
-
-void makeBuffer(tMessage *message)
-{
-	message->msgBuffer = (uint8_t *)malloc(MESSAGE_BUFFER_SIZE*sizeof(uint8_t));
-}
-
-void resetBuffer(tMessage *message){
-	memset(message->msgBuffer, 0, MESSAGE_BUFFER_SIZE*sizeof(uint8_t));
-	message->buffPos = 0;
-	message->len = 0;
-}
 
 uint8_t parseLong(uint8_t *arr, tMessage *msg, uint8_t flag)
 {
@@ -167,31 +148,25 @@ uint8_t parseLong(uint8_t *arr, tMessage *msg, uint8_t flag)
 		 and the first packet is stored in the message buffer.*/
 		case 0:
 			msg->len = arr[2];
-			printf("len=%d, buffPosF0=%d\n", msg->len, msg->buffPos);
+			printf("len=%d, buffPosF0=%d\n", msg->len, msg->buffPos); //debug 
 			memcpy(msg->msgBuffer, arr, sizeof(packet));
 			msg->buffPos += 32;
-			rc = 0;
 			break;
-		/*The rest of the packets will be parsed from here. After the long message
-		is printed, the (long message)flag will be set back to 0. */
+		/*The rest of the packets will be copied to the buffer from here. */
 		case 1:
 			if(msg->buffPos < (msg->len - (msg->len % 32))){
-				msg->msgBuffer += msg->buffPos;
-				memcpy(msg->msgBuffer, arr, sizeof(packet));
+				msg->msgBuffer += 32;
 				msg->buffPos += 32;
-				printf("buffPosF0=%d\n", msg->buffPos);
-				rc = 0;
+				memcpy(msg->msgBuffer, arr, sizeof(packet));
 				
 			}else{
-				msg->msgBuffer += msg->buffPos;
+				msg->msgBuffer += 32;
 				memcpy(msg->msgBuffer, arr, (msg->len % 32)*sizeof(uint8_t));
-				printf("buffPosF1=%d\n", msg->buffPos);
-				msg->msgBuffer -= (msg->buffPos);
-				printf("0x%02X %d %d %s\n", msg->msgBuffer[0], msg->msgBuffer[1], msg->msgBuffer[2], msg->msgBuffer + 3);
+				msg->msgBuffer -= msg->buffPos;
 				rc = 1;
 			}
 			break;
-	}	
+	}
 	return rc;
 }
  
@@ -262,6 +237,9 @@ int main(void)
 				nextState = S_Idle;
 				break;
 			case S_GotMail:
+				DB_MSG("Eerste keer\n");
+				printf("%s\n",packet+3);	
+				
 				if(bigMessage(packet)){
 					parseLong(packet, &mBrCast, bigMessageFlag);
 					bigMessageFlag = 1;
@@ -273,6 +251,9 @@ int main(void)
 				}
 				break;
 			case S_Long:
+				DB_MSG("Tweede keer\n");
+				printf("%s\n",packet+3);
+					
 				if(parseLong(packet, &mBrCast, bigMessageFlag)){
 					printf_hex(mBrCast.msgBuffer,mBrCast.len);
 					resetBuffer(&mBrCast);
