@@ -11,5 +11,8 @@
 
 void init_RoutingTable(uint8_t uMyID);
 void addKnownNode(uint8_t uNodeID );
+uint8_t isKnown(uint8_t uNodeID);
 void addNeighbor(uint8_t uNodeID);
+void removeNeighbor(uint8_t uNodeID);
+uint8_t isNeighbor(uint8_t uNodeID);
 #endif /* ROUTINGTABLE_H_ */

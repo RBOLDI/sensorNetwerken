@@ -35,14 +35,14 @@ void init_RoutingTable(uint8_t uMyID)
 
 void addKnownNode(uint8_t uNodeID )
 {
-	if (aRoutingTable[uNodeID] == NULL)
+	if (! isKnown(uNodeID))
 		{
 			aRoutingTable[uNodeID] = (uint8_t*) calloc(MAXNODES + 1, sizeof(uint8_t));
 			uKnownNodes++;
 		}
 }
 
-void isKnown(uint8_t uNodeID)
+uint8_t isKnown(uint8_t uNodeID)
 {
 	return aRoutingTable[uNodeID] != NULL;
 }
@@ -73,8 +73,11 @@ void removeNeighbor(uint8_t uNodeID)
 		{
 			*(aNeighbors + MAXNODES) = 0;
 		}
-		
 		uNeighbors--;
 	}
 }
 
+uint8_t isNeighbor(uint8_t uNodeID)
+{
+	return memchr(aNeighbors, uNodeID, MAXNODES) != NULL;
+}
