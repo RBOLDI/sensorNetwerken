@@ -130,9 +130,9 @@ void nrfSendLongMessage(uint8_t *str, uint8_t str_len, uint8_t *pipe)
 
 void broadcast(void)
 {
-	uint8_t *str = GetRoutingString(MYID);
+	//uint8_t *str = GetRoutingString(MYID);
 
-	nrfSendLongMessage(str, str[2], broadcast_pipe);
+	//nrfSendLongMessage(str, str[2], broadcast_pipe);
 }
 
 /* This function will be called when state equals S_Boot.
@@ -149,7 +149,7 @@ void bootFunction(void)
 
 	init_nrf(MYID);
 	
-	init_routingtable();
+	init_RoutingTable(MYID);
 
 	_delay_ms(200);
 
@@ -170,7 +170,7 @@ void parseIncomingData(void)
 			break;
 		case RRTABLE:
 			printf("0x%02X %d %d %s\n", packet[0], packet[1], packet[2], packet + 3);
-			FillRoutingTable(packet,packet[2]);
+//			FillRoutingTable(packet,packet[2]);
 			break;
 		case RXPTABLE:
 		case BCREPLY:
