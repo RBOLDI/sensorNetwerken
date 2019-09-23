@@ -34,20 +34,21 @@
 //Function prototypes
 const uint8_t getID();
 uint8_t writeMessage();
-
 uint8_t newDataFlag = 0;
 uint8_t sendDataFlag = 0;
 uint8_t newKeyboardData = 0;
 uint8_t newBroadcastFlag = 0;
-
+uint8_t bigMessageFlag = 0;
 uint8_t MYID;
+tMessage mBrCast;
 
 enum states {
 	S_Boot,
 	S_Broadcast,
 	S_Idle,
 	S_GotMail,
-	S_Send
+	S_Send,
+	S_Long
 };
 
 enum states currentState, nextState = S_Boot;
@@ -128,6 +129,45 @@ void nrfSendLongMessage(uint8_t *str, uint8_t str_len, uint8_t *pipe)
 	PORTC.OUTCLR = PIN0_bm;
 }
 
+/* Takes multitple nrf Packets and parses them into one array. Arg pckt 
+should contain a pointer to the nrf Rx buffer(packet[32]), arg msg should contain
+an adress of tMessage element, containing info about message length and 
+pointer position as well as the pointer to the buffer itself. The flag arg
+should be the bigMessageFlag as used in the state machine.
+*/
+uint8_t parseLong(uint8_t *pckt, tMessage *msg, uint8_t flag)
+{
+	PORTF.OUTTGL = PIN0_bm;
+	// The return value rc indicates if the end of the message is reached.
+	int rc = 0;
+	switch (flag)
+	{
+		/*First time function is used, the message length is stored in tMessage
+		 and the first packet is stored in the message buffer.*/
+		case 0:
+			msg->len = pckt[2];
+			printf("len=%d, buffPosF0=%d\n", msg->len, msg->buffPos); //debug 
+			memcpy(msg->msgBuffer, pckt, sizeof(packet));
+			msg->buffPos += 32;
+			break;
+		/*The rest of the packets will be copied to the buffer from here. */
+		case 1:
+			if(msg->buffPos < (msg->len - (msg->len % 32))){
+				msg->msgBuffer += 32;
+				msg->buffPos += 32;
+				memcpy(msg->msgBuffer, pckt, sizeof(packet));
+				
+			}else{
+				msg->msgBuffer += 32;
+				memcpy(msg->msgBuffer, pckt, (msg->len % 32)*sizeof(uint8_t));
+				msg->msgBuffer -= msg->buffPos;
+				rc = 1;
+			}
+			break;
+	}
+	return rc;
+}
+ 
 void broadcast(void)
 {
 	uint8_t *str = GetRoutingString(MYID);
@@ -140,8 +180,10 @@ void broadcast(void)
 	setting MYID, UART stream and nRF */
 void bootFunction(void)
 {
+	makeBuffer(&mBrCast);
+	
 	init_io();
-
+	
 	MYID = getID();
 	memmove(initials, get_user_initials(MYID), NUMBER_OF_PREFIX_BYTES);
 
@@ -195,13 +237,38 @@ int main(void)
 				nextState = S_Idle;
 				break;
 			case S_GotMail:
-				parseIncomingData();
+				DB_MSG("Eerste keer\n");
+				printf("%s\n",packet+3);	
+				
+				if(bigMessage(packet)){
+					parseLong(packet, &mBrCast, bigMessageFlag);
+					bigMessageFlag = 1;
+					nextState = S_Idle;
+				}
+				else{
+					parseIncomingData();
+					nextState = S_Idle;
+				}
+				break;
+			case S_Long:
+				DB_MSG("Tweede keer\n");
+				printf("%s\n",packet+3);
+					
+				if(parseLong(packet, &mBrCast, bigMessageFlag)){
+					printf_hex(mBrCast.msgBuffer,mBrCast.len);
+					resetBuffer(&mBrCast);
+					bigMessageFlag = 0;
+				}else{};
 				nextState = S_Idle;
 				break;
 			case S_Idle:
 				if(newBroadcastFlag) {
 					newBroadcastFlag = 0;
 					nextState = S_Broadcast;
+				}
+				else if(newDataFlag && bigMessageFlag){
+					newDataFlag = 0;
+					nextState = S_Long;
 				}
 				else if(newDataFlag) {
 					newDataFlag = 0;
