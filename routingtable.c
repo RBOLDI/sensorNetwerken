@@ -42,6 +42,11 @@ void addKnownNode(uint8_t uNodeID )
 		}
 }
 
+void isKnown(uint8_t uNodeID)
+{
+	return aRoutingTable[uNodeID] != NULL;
+}
+
 void addNeighbor(uint8_t uNodeID)
 {
 	if (memchr(aNeighbors, uNodeID, MAXNODES) == NULL)
@@ -59,6 +64,17 @@ void removeNeighbor(uint8_t uNodeID)
 	
 	if (pNode != NULL)
 	{
+		for (uint8_t i = 0; i < (MAXNODES - position); i++)
+		{
+			*(pNode + i) = *(pNode + i + 1)
+		}
 		
+		if (uNeighbors == MAXNODES)
+		{
+			*(aNeighbors + MAXNODES) = 0;
+		}
+		
+		uNeighbors--;
 	}
 }
+
