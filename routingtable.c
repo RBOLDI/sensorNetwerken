@@ -62,3 +62,15 @@ void removeNeighbor(uint8_t uNodeID)
 		
 	}
 }
+
+void FillRoutingTable(uint8_t *routingstring, uint8_t string_length)
+{
+	if(string_length <= 3) return;
+	
+	uint8_t NewRoutingArray[256];
+	
+	for(uint8_t i = 3; i < string_length; i+=2 ) {
+		NewRoutingArray[ routingstring[i] ] = routingstring[i+1];
+	}
+	aRoutingTable[routingstring[1]] = NewRoutingArray;
+}
