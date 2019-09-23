@@ -25,17 +25,19 @@ uint8_t uMyID			= 0;
 
 uint8_t *aRoutingString = NULL;
 
-void init_RoutingTable(uint8_t uMyID)
+void init_RoutingTable(uint8_t _myid)
 {
 	aRoutingTable			= (uint8_t**) calloc(MAXNODES + 1, sizeof(uint8_t*));
-	aRoutingTable[uMyID]	= (uint8_t *) calloc(MAXNODES + 1, sizeof(uint8_t));
+	aRoutingTable[_myid]	= (uint8_t *) calloc(MAXNODES + 1, sizeof(uint8_t));
 	aNeighbors				= (uint8_t *) calloc(MAXNODES, sizeof(uint8_t));
 	aRoutingString			= (uint8_t *) calloc(255, sizeof(uint8_t));
+	
+	uMyID = _myid;
 }
 
-void addKnownNode(uint8_t uNodeID )
+void addKnownNode(uint8_t uNodeID)
 {
-	if (! isKnown(uNodeID))
+	if ( (!isKnown(uNodeID)) && (uNodeID != uMyID) )
 		{
 			aRoutingTable[uNodeID] = (uint8_t*) calloc(MAXNODES + 1, sizeof(uint8_t));
 			uKnownNodes++;
@@ -81,12 +83,14 @@ void FillRoutingTable(uint8_t *routingstring, uint8_t string_length)
 {
 	if(string_length <= 3) return;
 	
-	uint8_t NewRoutingArray[256];
+	addNeighbor(routingstring[1]);
 	
 	for(uint8_t i = 3; i < string_length; i+=2 ) {
-		NewRoutingArray[ routingstring[i] ] = routingstring[i+1];
+		
+		addKnownNode(routingstring[i]);
+		
+		aRoutingTable[ routingstring[1] ][ routingstring[i] ] = routingstring[i+1];
 	}
-	aRoutingTable[routingstring[1]] = NewRoutingArray;
 }
 
 uint8_t isNeighbor(uint8_t uNodeID)
