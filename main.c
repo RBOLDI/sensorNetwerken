@@ -266,4 +266,3 @@ const uint8_t getID(){
 	else if(JG) return 77;
 	else return 00;
 }
-
