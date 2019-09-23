@@ -9,10 +9,17 @@
 #ifndef ROUTINGTABLE_H_
 #define ROUTINGTABLE_H_
 
+typedef struct{
+	uint8_t uNeighbor;
+	uint8_t uHops;
+	} tNeighborHops;
+
 void init_RoutingTable(uint8_t uMyID);
 void addKnownNode(uint8_t uNodeID );
 uint8_t isKnown(uint8_t uNodeID);
 void addNeighbor(uint8_t uNodeID);
 void removeNeighbor(uint8_t uNodeID);
 uint8_t isNeighbor(uint8_t uNodeID);
+tNeighborHops findLeastHops(uint8_t uNodeID);
+uint8_t* getRoutingString( void );
 #endif /* ROUTINGTABLE_H_ */

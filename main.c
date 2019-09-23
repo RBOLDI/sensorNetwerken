@@ -130,9 +130,9 @@ void nrfSendLongMessage(uint8_t *str, uint8_t str_len, uint8_t *pipe)
 
 void broadcast(void)
 {
-	//uint8_t *str = GetRoutingString(MYID);
+	uint8_t *str = getRoutingString();
 
-	//nrfSendLongMessage(str, str[2], broadcast_pipe);
+	nrfSendLongMessage(str, str[2], broadcast_pipe);
 }
 
 /* This function will be called when state equals S_Boot.

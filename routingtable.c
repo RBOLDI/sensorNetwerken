@@ -66,7 +66,7 @@ void removeNeighbor(uint8_t uNodeID)
 	{
 		for (uint8_t i = 0; i < (MAXNODES - position); i++)
 		{
-			*(pNode + i) = *(pNode + i + 1)
+			*(pNode + i) = *(pNode + i + 1);
 		}
 		
 		if (uNeighbors == MAXNODES)
@@ -80,4 +80,57 @@ void removeNeighbor(uint8_t uNodeID)
 uint8_t isNeighbor(uint8_t uNodeID)
 {
 	return memchr(aNeighbors, uNodeID, MAXNODES) != NULL;
+}
+
+tNeighborHops findLeastHops(uint8_t uNodeID)
+{
+	tNeighborHops NnH = {0 , UINT8_MAX};
+	
+	if (isNeighbor(uNodeID))
+	{
+		NnH.uHops = 1;
+		NnH.uNeighbor = uNodeID;
+		return NnH;
+	}
+	if (isKnown(uNodeID))
+	{
+		for (uint8_t i = 0; i < uNeighbors; i++)
+		{
+			if ((aRoutingTable[ aNeighbors[i] ][uNodeID] < NnH.uHops) && (aRoutingTable[ aNeighbors[i] ][uNodeID] > 0))
+			{
+				NnH.uHops = aRoutingTable[ aNeighbors[i] ][uNodeID];
+				NnH.uNeighbor = aNeighbors[i];
+			}
+		}
+	}
+	
+	return NnH;
+}
+
+uint8_t* getRoutingString( void )
+{
+	tNeighborHops NnH;
+	uint8_t Idx = 2;
+	
+	memset(aRoutingString, 0, 255);
+	
+	for (uint8_t i = 0; i < 255; i++)
+	{
+		if ( isKnown(i) )
+		{
+			NnH = findLeastHops(i);
+			
+			if (NnH.uNeighbor != 0)
+			{
+				aRoutingString[++Idx]= i;
+				aRoutingString[++Idx] = NnH.uHops;
+			}
+		}
+	}
+	
+	aRoutingString[0] = RRTABLE;
+	aRoutingString[1] = uMyID;
+	aRoutingString[2] = Idx + 1;
+	
+	return aRoutingString;
 }
