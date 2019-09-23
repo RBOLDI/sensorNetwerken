@@ -34,15 +34,12 @@
 //Function prototypes
 const uint8_t getID();
 uint8_t writeMessage();
-bool test;
 uint8_t newDataFlag = 0;
 uint8_t sendDataFlag = 0;
 uint8_t newKeyboardData = 0;
 uint8_t newBroadcastFlag = 0;
 uint8_t bigMessageFlag = 0;
-
 uint8_t MYID;
-
 tMessage mBrCast;
 
 enum states {
@@ -136,8 +133,13 @@ void nrfSendLongMessage(uint8_t *str, uint8_t str_len, uint8_t *pipe)
 	PORTC.OUTCLR = PIN0_bm;
 }
 
-
-uint8_t parseLong(uint8_t *arr, tMessage *msg, uint8_t flag)
+/* Takes multitple nrf Packets and parses them into one array. Arg pckt 
+should contain a pointer to the nrf Rx buffer(packet[32]), arg msg should contain
+an adress of tMessage element, containing info about message length and 
+pointer position as well as the pointer to the buffer itself. The flag arg
+should be the bigMessageFlag as used in the state machine.
+*/
+uint8_t parseLong(uint8_t *pckt, tMessage *msg, uint8_t flag)
 {
 	PORTF.OUTTGL = PIN0_bm;
 	// The return value rc indicates if the end of the message is reached.
@@ -147,9 +149,9 @@ uint8_t parseLong(uint8_t *arr, tMessage *msg, uint8_t flag)
 		/*First time function is used, the message length is stored in tMessage
 		 and the first packet is stored in the message buffer.*/
 		case 0:
-			msg->len = arr[2];
+			msg->len = pckt[2];
 			printf("len=%d, buffPosF0=%d\n", msg->len, msg->buffPos); //debug 
-			memcpy(msg->msgBuffer, arr, sizeof(packet));
+			memcpy(msg->msgBuffer, pckt, sizeof(packet));
 			msg->buffPos += 32;
 			break;
 		/*The rest of the packets will be copied to the buffer from here. */
@@ -157,11 +159,11 @@ uint8_t parseLong(uint8_t *arr, tMessage *msg, uint8_t flag)
 			if(msg->buffPos < (msg->len - (msg->len % 32))){
 				msg->msgBuffer += 32;
 				msg->buffPos += 32;
-				memcpy(msg->msgBuffer, arr, sizeof(packet));
+				memcpy(msg->msgBuffer, pckt, sizeof(packet));
 				
 			}else{
 				msg->msgBuffer += 32;
-				memcpy(msg->msgBuffer, arr, (msg->len % 32)*sizeof(uint8_t));
+				memcpy(msg->msgBuffer, pckt, (msg->len % 32)*sizeof(uint8_t));
 				msg->msgBuffer -= msg->buffPos;
 				rc = 1;
 			}
@@ -243,7 +245,7 @@ int main(void)
 				if(bigMessage(packet)){
 					parseLong(packet, &mBrCast, bigMessageFlag);
 					bigMessageFlag = 1;
-					nextState = S_Long;
+					nextState = S_Idle;
 				}
 				else{
 					parseIncomingData();
