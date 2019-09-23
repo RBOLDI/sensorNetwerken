@@ -66,7 +66,7 @@ void removeNeighbor(uint8_t uNodeID)
 	{
 		for (uint8_t i = 0; i < (MAXNODES - position); i++)
 		{
-			*(pNode + i) = *(pNode + i + 1)
+			*(pNode + i) = *(pNode + i + 1);
 		}
 		
 		if (uNeighbors == MAXNODES)
