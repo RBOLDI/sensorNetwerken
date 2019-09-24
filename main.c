@@ -57,6 +57,53 @@ int pointer = 0;
 char charBuffer[MAX_MESSAGE_SIZE] = {0};
 
 
+uint8_t nrfPacketFifo[5][32] = {0};
+
+void shiftPacketsFifo()
+{
+	for (uint8_t i = 0; i < 4; i++)
+	{
+		memcpy(nrfPacketFifo[i], nrfPacketFifo[i+1], 32);
+	}
+	
+	memset(nrfPacketFifo[4], 0, 32);
+
+	return;
+}
+
+void loadFirstPacketFromFifo()
+{
+	memcpy(packet, nrfPacketFifo[0], 32);
+	
+	shiftPacketsFifo();
+	
+	return;
+}
+
+uint8_t* topPacketFifo()
+{
+	for (uint8_t i = 0; i < 5; i++)
+	{
+		if(nrfPacketFifo[i][0] == NULL)
+		{
+			return nrfPacketFifo[i];
+		}
+	}
+}
+
+uint8_t putPacketInFifo(uint8_t *packet)
+{
+	for (uint8_t i = 0; i < 5; i++)
+	{
+		if(nrfPacketFifo[i][0] == NULL)
+		{
+			memcpy(nrfPacketFifo[i], packet, 32);
+			return 1u;
+		}
+	}
+	return 0u;
+}
+
 void init_nrf(const uint8_t pvtID){
 	nrfspiInit();
 	nrfBegin();
