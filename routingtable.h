@@ -18,6 +18,7 @@ void init_RoutingTable(uint8_t uMyID);
 void addKnownNode(uint8_t uNodeID );
 uint8_t isKnown(uint8_t uNodeID);
 void addNeighbor(uint8_t uNodeID);
+void FillRoutingTable(uint8_t *routingstring, uint8_t string_length);
 void removeNeighbor(uint8_t uNodeID);
 uint8_t isNeighbor(uint8_t uNodeID);
 tNeighborHops findLeastHops(uint8_t uNodeID);
