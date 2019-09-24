@@ -82,21 +82,3 @@ void printf_hex(uint8_t *str, uint8_t str_len)
 	}
 	printf("\n");
 }
-
-uint8_t bigMessage(uint8_t * arr)
-{
-	uint8_t len = arr[2];
-	if (len > 32) return 1;
-	else return 0;
-}
-
-void makeBuffer(tMessage *msg)
-{
-	msg->msgBuffer = (uint8_t *)malloc(MESSAGE_BUFFER_SIZE*sizeof(uint8_t));
-}
-
-void resetBuffer(tMessage *msg){
-	memset(msg->msgBuffer, 0, MESSAGE_BUFFER_SIZE*sizeof(uint8_t));
-	msg->buffPos = 0;
-	msg->len = 0;
-}

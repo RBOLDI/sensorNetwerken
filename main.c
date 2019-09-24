@@ -14,7 +14,6 @@
 #include "nrf24spiXM2.h"
 #include "stream.h"
 #include "uart.h"
-#include "KeyboardCodes.h"
 #include "powersaving.h"
 #include "routingtable.h"
 #include "messages.h"
@@ -32,15 +31,19 @@
 #define		BCREPLY		0x04
 
 //Function prototypes
+void init_nrf(const uint8_t pvtID);
+void nrfSendLongMessage(uint8_t *str, uint8_t str_len, uint8_t *pipe);
+void bootFunction(void);
+void broadcast(void);
+void parseIncomingData(void);
 const uint8_t getID();
 uint8_t writeMessage();
+
+
 uint8_t newDataFlag = 0;
 uint8_t sendDataFlag = 0;
-uint8_t newKeyboardData = 0;
 uint8_t newBroadcastFlag = 0;
-uint8_t bigMessageFlag = 0;
 uint8_t MYID;
-tMessage mBrCast;
 
 enum states {
 	S_Boot,
@@ -48,14 +51,66 @@ enum states {
 	S_Idle,
 	S_GotMail,
 	S_Send,
-	S_Long
 };
 
 enum states currentState, nextState = S_Boot;
 
-int pointer = 0;
 char charBuffer[MAX_MESSAGE_SIZE] = {0};
 
+
+ISR(PORTD_INT0_vect)
+{
+	PORTF.OUTTGL = PIN1_bm;
+	newBroadcastFlag = 1;
+}
+
+ISR(PORTF_INT0_vect){		//triggers when data is received
+	uint8_t  tx_ds, max_rt, rx_dr;
+	memset(packet, 0, sizeof(packet));
+	nrfWhatHappened(&tx_ds, &max_rt, &rx_dr);
+	if(rx_dr){
+		nrfRead(packet, nrfGetDynamicPayloadSize());
+		newDataFlag = 1;
+	}
+}
+
+int main(void)
+{
+	while (1)
+	{
+		switch(currentState) {
+			case S_Boot:
+				bootFunction();
+				nextState = S_Broadcast;
+				break;
+			case S_Broadcast:
+				broadcast();
+				nextState = S_Idle;
+				break;
+			case S_GotMail:
+				parseIncomingData();
+				nextState = S_Idle;
+			break;
+			case S_Idle:
+				if(newBroadcastFlag) {
+					newBroadcastFlag = 0;
+					nextState = S_Broadcast;
+				}
+				else if(newDataFlag) {
+					newDataFlag = 0;
+					nextState = S_GotMail;
+				}
+				else {
+					nextState = S_Idle;
+				}
+			break;
+			default:
+				nextState = S_Idle;
+			break;
+		}
+		currentState = nextState;
+	}
+}
 
 void init_nrf(const uint8_t pvtID){
 	nrfspiInit();
@@ -78,7 +133,7 @@ void init_nrf(const uint8_t pvtID){
 	PORTF.PIN6CTRL  = PORT_ISC_FALLING_gc;
 	PORTF.INTCTRL   = (PORTF.INTCTRL & ~PORT_INT0LVL_gm) | PORT_INT0LVL_LO_gc;
 
-	//Starts in broadcast mode with own pvt ID selected by HW pin.  
+	//Starts in broadcast mode with own pvt ID selected by HW pin.
 	
 	nrfOpenReadingPipe(0, broadcast_pipe);
 	nrfOpenReadingPipe(1, pipe_selector(pvtID));
@@ -88,21 +143,6 @@ void init_nrf(const uint8_t pvtID){
 	sei();
 }
 
-ISR(PORTD_INT0_vect)
-{
-	PORTF.OUTTGL = PIN1_bm;
-	newBroadcastFlag = 1;
-}
-
-ISR(PORTF_INT0_vect){		//triggers when data is received
-	uint8_t  tx_ds, max_rt, rx_dr;
-	memset(packet, 0, sizeof(packet));
-	nrfWhatHappened(&tx_ds, &max_rt, &rx_dr);
-	if(rx_dr){
-		nrfRead(packet, nrfGetDynamicPayloadSize());
-		newDataFlag = 1;
-	}
-}
 
 /* This function will allow the microcontroller to send multiple packets
 of 32 bytes each. It uses NO_ACK setting to prevent the mcu from getting
@@ -129,58 +169,12 @@ void nrfSendLongMessage(uint8_t *str, uint8_t str_len, uint8_t *pipe)
 	PORTC.OUTCLR = PIN0_bm;
 }
 
-/* Takes multitple nrf Packets and parses them into one array. Arg pckt 
-should contain a pointer to the nrf Rx buffer(packet[32]), arg msg should contain
-an adress of tMessage element, containing info about message length and 
-pointer position as well as the pointer to the buffer itself. The flag arg
-should be the bigMessageFlag as used in the state machine.
-*/
-uint8_t parseLong(uint8_t *pckt, tMessage *msg, uint8_t flag)
-{
-	PORTF.OUTTGL = PIN0_bm;
-	// The return value rc indicates if the end of the message is reached.
-	int rc = 0;
-	switch (flag)
-	{
-		/*First time function is used, the message length is stored in tMessage
-		 and the first packet is stored in the message buffer.*/
-		case 0:
-			msg->len = pckt[2];
-			printf("len=%d, buffPosF0=%d\n", msg->len, msg->buffPos); //debug 
-			memcpy(msg->msgBuffer, pckt, sizeof(packet));
-			msg->buffPos += 32;
-			break;
-		/*The rest of the packets will be copied to the buffer from here. */
-		case 1:
-			if(msg->buffPos < (msg->len - (msg->len % 32))){
-				msg->msgBuffer += 32;
-				msg->buffPos += 32;
-				memcpy(msg->msgBuffer, pckt, sizeof(packet));
-				
-			}else{
-				msg->msgBuffer += 32;
-				memcpy(msg->msgBuffer, pckt, (msg->len % 32)*sizeof(uint8_t));
-				msg->msgBuffer -= msg->buffPos;
-				rc = 1;
-			}
-			break;
-	}
-	return rc;
-}
- 
-void broadcast(void)
-{
-	uint8_t *str = GetRoutingString(MYID);
-
-	nrfSendLongMessage(str, str[2], broadcast_pipe);
-}
-
 /* This function will be called when state equals S_Boot.
 	It will run all the initializations of the Xmega. Including I/O,
 	setting MYID, UART stream and nRF */
 void bootFunction(void)
-{
-	makeBuffer(&mBrCast);
+{	
+	DB_MSG("\n----Debug mode enabled----\n\n");
 	
 	init_io();
 	
@@ -194,9 +188,14 @@ void bootFunction(void)
 	init_routingtable();
 
 	_delay_ms(200);
-
 }
 
+void broadcast(void)
+{
+	uint8_t *str = GetRoutingString(MYID);
+
+	nrfSendLongMessage(str, str[2], broadcast_pipe);
+}
 
 /* This function will be called when state equals S_GotMail.
 	It will parse the message to determine what kind of message 
@@ -220,109 +219,6 @@ void parseIncomingData(void)
 		 	printf("UMT: %s\n", packet);
 			break;
 	}
-}
-
-int main(void)
-{
-    while (1) 
-    {
-		switch(currentState) {
-			case S_Boot:
-				bootFunction();
-				nextState = S_Broadcast;
-				DB_MSG("\n----Debug mode enabled----\n\n");
-				break;
-			case S_Broadcast:
-				broadcast();
-				nextState = S_Idle;
-				break;
-			case S_GotMail:
-				DB_MSG("Eerste keer\n");
-				printf("%s\n",packet+3);	
-				
-				if(bigMessage(packet)){
-					parseLong(packet, &mBrCast, bigMessageFlag);
-					bigMessageFlag = 1;
-					nextState = S_Idle;
-				}
-				else{
-					parseIncomingData();
-					nextState = S_Idle;
-				}
-				break;
-			case S_Long:
-				DB_MSG("Tweede keer\n");
-				printf("%s\n",packet+3);
-					
-				if(parseLong(packet, &mBrCast, bigMessageFlag)){
-					printf_hex(mBrCast.msgBuffer,mBrCast.len);
-					resetBuffer(&mBrCast);
-					bigMessageFlag = 0;
-				}else{};
-				nextState = S_Idle;
-				break;
-			case S_Idle:
-				if(newBroadcastFlag) {
-					newBroadcastFlag = 0;
-					nextState = S_Broadcast;
-				}
-				else if(newDataFlag && bigMessageFlag){
-					newDataFlag = 0;
-					nextState = S_Long;
-				}
-				else if(newDataFlag) {
-					newDataFlag = 0;
-					nextState = S_GotMail;
-				}
-				else {
-					nextState = S_Idle;
-				}
-				break;
-			default:
-				nextState = S_Idle;
-				break;
-		}
-		
-		if(newKeyboardData)
-		{
-			newKeyboardData = 0;
-			writeMessage(&message);
-		}
-
-		currentState = nextState;
-    }
-}
-
-uint8_t writeMessage(char* msg){
-	char c = uart_fgetc(&uart_stdinout);
-	
-	if (c == ENTER)
-	{
-		charBuffer[pointer] = '\0';
-		
-		strcpy(msg,charBuffer);
-		sendMessage(51);
-
-		pointer = 0;
-		memset(charBuffer, 0, sizeof(charBuffer));
-		
-		return 1;
-	}
-	else if (c == BACKSPACE)
-	{
-		if(pointer > 0)
-		{
-			charBuffer[pointer--] = 0;
-			printf("\b \b");
-		}
-	}
-	else if (pointer < (MAX_MESSAGE_SIZE - 1))
-	{
-		printf("%c", c);
-		charBuffer[pointer++] = c;
-	}
-	
-	return 0;
 }
 
 const uint8_t getID(){
