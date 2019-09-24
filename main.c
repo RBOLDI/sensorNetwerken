@@ -163,6 +163,8 @@ void parseIncomingData(void)
 {
 	PORTF.OUTTGL = PIN0_bm;
 
+	addNeighbor(packet[1]);
+
 	switch(packet[0])
 	{
 		case BROADCAST:
@@ -170,7 +172,7 @@ void parseIncomingData(void)
 			break;
 		case RRTABLE:
 			printf("0x%02X %d %d %s\n", packet[0], packet[1], packet[2], packet + 3);
-//			FillRoutingTable(packet,packet[2]);
+			FillRoutingTable(packet,packet[2]);
 			break;
 		case RXPTABLE:
 		case BCREPLY:

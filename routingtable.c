@@ -83,8 +83,6 @@ void FillRoutingTable(uint8_t *routingstring, uint8_t string_length)
 {
 	if(string_length <= 3) return;
 	
-	addNeighbor(routingstring[1]);
-	
 	for(uint8_t i = 3; i < string_length; i+=2 ) {
 		
 		addKnownNode(routingstring[i]);
