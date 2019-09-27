@@ -19,6 +19,7 @@
 #include "routingtable.h"
 #include "messages.h"
 #include "debug_opts.h" 
+#include "serialnumber.h"
 
 #define		FB !(PORTD.IN & PIN1_bm)
 #define		RB !(PORTD.IN & PIN2_bm)
@@ -35,7 +36,6 @@
 void init_nrf(const uint8_t pvtID);
 void nrfSendLongMessage(uint8_t *str, uint8_t str_len, uint8_t *pipe);
 void bootFunction(void);
-void broadcast(void);
 void parseIncomingData(void);
 const uint8_t getID();
 uint8_t writeMessage();
@@ -49,6 +49,7 @@ uint8_t maxRTFlag = 0;
 
 
 uint8_t MYID;
+uint8_t device_serial[11];
 
 enum states {
 	S_Boot,
@@ -156,23 +157,17 @@ void bootFunction(void)
 	InitClocks();
 	init_io();
 	
-	MYID = getID();
-	memmove(initials, get_user_initials(MYID), NUMBER_OF_PREFIX_BYTES);
 
 	init_stream(F_CPU);
+
+	NVM_GetDeviceSerial(device_serial);
+	MYID = GetIdFromLookup(device_serial);
 
 	init_nrf(MYID);
 	
 	init_RoutingTable(MYID);
 
 	_delay_ms(200);
-}
-
-void broadcast(void)
-{
-	uint8_t *str = GetRoutingString(MYID);
-
-	nrfSendLongMessage(str, str[2], broadcast_pipe);
 }
 
 /* This function will be called when state equals S_GotMail.
@@ -210,6 +205,8 @@ int main(void)
 			case S_Boot:
 				bootFunction();
 				printf("S_Boot\n");
+				printf_DeviceSerial(device_serial,11);
+
 				nextState = S_Idle;
 				DB_MSG("\n----Debug mode enabled----\n\n");
 				break;

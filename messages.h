@@ -12,14 +12,13 @@
 
 
 // Integers shared by message functions.
-uint8_t initials[NUMBER_OF_PREFIX_BYTES];
 uint8_t message[MAX_MESSAGE_SIZE];
 uint8_t fullMessage[FULL_MESSAGE_SIZE];
 
 //Function protoypes.
-void sendMessage(uint8_t targetID);
 uint8_t* pipe_selector(uint8_t ID);
-char* get_user_initials(uint8_t id);
+uint8_t GetIdFromLookup(uint8_t* serial);
 void printf_hex(uint8_t *str, uint8_t str_len);
 void printf_bin(uint8_t *str, uint8_t str_len);
 void printf_Routing(uint8_t *str, uint8_t str_len);
+void printf_DeviceSerial(uint8_t *str, uint8_t str_len);
