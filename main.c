@@ -91,6 +91,12 @@ void init_nrf(const uint8_t pvtID){
 	sei();
 }
 
+ISR(TCE0_OVF_vect)
+{
+	PORTF.OUTTGL = PIN1_bm;
+	newBroadcastFlag = 1;
+}
+
 ISR(PORTD_INT0_vect)
 {
 	PORTF.OUTTGL = PIN1_bm;
