@@ -25,11 +25,11 @@ void idle(void){
 	SLEEP.CTRL |= SLEEP_MODE_EXT_STANDBY | SLEEP_SEN_bm;
 }
 
-static void InitClocks(void)
+void InitClocks(void)
 {
-	CLKSYS_Enable( OSC_RC32MEN_bm );
-	do {} while ( CLKSYS_IsReady( OSC_RC32MRDY_bm ) == 0 );
-	CLKSYS_Main_ClockSource_Select( CLK_SCLKSEL_RC32M_gc );
+	CLKSYS_Enable( OSC_RC2MEN_bm );
+	do {} while ( CLKSYS_IsReady( OSC_RC2MRDY_bm ) == 0 );
+	CLKSYS_Main_ClockSource_Select( CLK_SCLKSEL_RC2M_gc);
 	CLKSYS_Disable( OSC_RC2MEN_bm );	
 }
 	

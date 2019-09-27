@@ -11,5 +11,6 @@
 
 void init_lowpower();
 void idle();
+void InitClocks(void);
 void init_io(void);
 #endif /* POWERSAVING_H_ */

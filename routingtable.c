@@ -6,10 +6,12 @@
  */ 
 
 #include <avr/io.h>
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
 #include "routingtable.h"
+#include "messages.h"
 
 #define		MAXNODES	255
 
@@ -83,11 +85,14 @@ void FillRoutingTable(uint8_t *routingstring, uint8_t string_length)
 {
 	if(string_length <= 3) return;
 	
-	for(uint8_t i = 3; i < string_length; i+=2 ) {
+	for(uint8_t i = 3; i < string_length; i += 2 ) {
 		
-		addKnownNode(routingstring[i]);
-		
-		aRoutingTable[ routingstring[1] ][ routingstring[i] ] = routingstring[i+1];
+		if ( (routingstring[i] != uMyID) && (routingstring[i]) != 0 )
+				{
+					addKnownNode(routingstring[i]);
+					
+					aRoutingTable[ routingstring[1] ][ routingstring[i] ] = routingstring[ i + 1 ];
+				}
 	}
 }
 
@@ -106,6 +111,7 @@ tNeighborHops findLeastHops(uint8_t uNodeID)
 		NnH.uNeighbor = uNodeID;
 		return NnH;
 	}
+	
 	if (isKnown(uNodeID))
 	{
 		for (uint8_t i = 0; i < uNeighbors; i++)
@@ -128,15 +134,15 @@ uint8_t* getRoutingString( void )
 	
 	memset(aRoutingString, 0, 255);
 	
-	for (uint8_t i = 0; i < 255; i++)
+	for (uint8_t ID = 0; ID < 255; ID++)
 	{
-		if ( isKnown(i) )
+		if ( isKnown(ID) )
 		{
-			NnH = findLeastHops(i);
+			NnH = findLeastHops(ID);
 			
 			if (NnH.uNeighbor != 0)
 			{
-				aRoutingString[++Idx]= i;
+				aRoutingString[++Idx] = ID;
 				aRoutingString[++Idx] = NnH.uHops;
 			}
 		}
@@ -146,5 +152,8 @@ uint8_t* getRoutingString( void )
 	aRoutingString[1] = uMyID;
 	aRoutingString[2] = Idx + 1;
 	
+	
+	printf("Generated Routingstring: ");
+	printf_Routing(aRoutingString, aRoutingString[2]);
 	return aRoutingString;
 }

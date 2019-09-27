@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <avr/interrupt.h>
+#include "clksys_driver.h"
 #include "nrf24L01.h"
 #include "nrf24spiXM2.h"
 #include "stream.h"
@@ -39,12 +40,15 @@ uint8_t newDataFlag = 0;
 uint8_t sendDataFlag = 0;
 uint8_t newKeyboardData = 0;
 uint8_t newBroadcastFlag = 0;
+uint8_t successTXFlag = 0;
+uint8_t maxRTFlag = 0;
+
 
 uint8_t MYID;
 
 enum states {
 	S_Boot,
-	S_Broadcast,
+	S_SendRouting,
 	S_Idle,
 	S_GotMail,
 	S_Send
@@ -66,8 +70,8 @@ void init_nrf(const uint8_t pvtID){
 	nrfSetCRCLength(NRF_CONFIG_CRC_16_gc);
 	nrfSetChannel(channel);
 	nrfSetAutoAck(1);
-	nrfEnableAckPayload();
 	nrfEnableDynamicPayloads();
+	nrfEnableAckPayload();
 	
 	nrfClearInterruptBits();
 	nrfFlushRx();
@@ -95,12 +99,15 @@ ISR(PORTD_INT0_vect)
 
 ISR(PORTF_INT0_vect){		//triggers when data is received
 	uint8_t  tx_ds, max_rt, rx_dr;
-	memset(packet, 0, sizeof(packet));
 	nrfWhatHappened(&tx_ds, &max_rt, &rx_dr);
 	if(rx_dr){
+		PORTF.OUTTGL = PIN0_bm;
+		memset(packet, 0, sizeof(packet));
 		nrfRead(packet, nrfGetDynamicPayloadSize());
 		newDataFlag = 1;
 	}
+	if(tx_ds) successTXFlag = 1;
+	if(max_rt) maxRTFlag = 1;
 }
 
 /* This function will allow the microcontroller to send multiple packets
@@ -108,31 +115,33 @@ of 32 bytes each. It uses NO_ACK setting to prevent the mcu from getting
 stuck when receiving acknowledge messages. NO_ACK mode is significantly
 faster than ACK mode.
 */
-void nrfSendLongMessage(uint8_t *str, uint8_t str_len, uint8_t *pipe)
+void nrfSendMessage(uint8_t *str, uint8_t str_len, uint8_t *pipe)
 {
 	PORTC.OUTSET = PIN0_bm;
 	nrfStopListening();
-	
 	nrfOpenWritingPipe(pipe);
-
-	while(str_len>32)
-	{
-		nrfStartWrite(str, 32, NRF_W_TX_PAYLOAD_NO_ACK);
-		str += 32;
-		str_len -= 32;
-	}
+	delay_us(130);
+	
 	nrfStartWrite(str, str_len, NRF_W_TX_PAYLOAD_NO_ACK);
+	_delay_us(300);
+	
+	for (uint8_t i = 0; i < str_len; i++)
+	{
+		_delay_us(40);
+	}
+	nrfWriteRegister(REG_STATUS, NRF_STATUS_TX_DS_bm|NRF_STATUS_MAX_RT_bm);
 	
 	nrfStartListening();
-	
+	delay_us(130);
 	PORTC.OUTCLR = PIN0_bm;
+	
 }
 
-void broadcast(void)
+void SendRouting( void )
 {
 	uint8_t *str = getRoutingString();
-
-	nrfSendLongMessage(str, str[2], broadcast_pipe);
+	
+	nrfSendMessage(str, str[2], broadcast_pipe);
 }
 
 /* This function will be called when state equals S_Boot.
@@ -140,6 +149,7 @@ void broadcast(void)
 	setting MYID, UART stream and nRF */
 void bootFunction(void)
 {
+	InitClocks();
 	init_io();
 
 	MYID = getID();
@@ -155,29 +165,29 @@ void bootFunction(void)
 
 }
 
-
 /* This function will be called when state equals S_GotMail.
 	It will parse the message to determine what kind of message 
 	it is, and what to do with it. UMT means Unknown Message Type */
-void parseIncomingData(void)
+void parseIncomingData( void )
 {
-	PORTF.OUTTGL = PIN0_bm;
-
-	addNeighbor(packet[1]);
-
 	switch(packet[0])
 	{
 		case BROADCAST:
 		 	printf("0x%02X %d %s\n", packet[0], packet[1], packet + 2);
 			break;
 		case RRTABLE:
-			printf("0x%02X %d %d %s\n", packet[0], packet[1], packet[2], packet + 3);
-			FillRoutingTable(packet,packet[2]);
+			addNeighbor(packet[1]);
+			printf_Routing(packet, packet[2]);
+			FillRoutingTable(packet, packet[2]);
 			break;
 		case RXPTABLE:
+		break;
 		case BCREPLY:
+		break;
 		default:
-		 	printf("UMT: %s\n", packet);
+		 	printf("UMT: ");
+			//printf_hex(packet, sizeof(packet));
+			printf_bin(packet, sizeof(packet));
 			break;
 	}
 }
@@ -189,25 +199,39 @@ int main(void)
 		switch(currentState) {
 			case S_Boot:
 				bootFunction();
-				nextState = S_Broadcast;
+				printf("S_Boot\n");
+				nextState = S_Idle;
 				DB_MSG("\n----Debug mode enabled----\n\n");
 				break;
-			case S_Broadcast:
-				broadcast();
+			case S_SendRouting:
+				printf("S_SendRouting\n");
+				SendRouting();
+				_delay_ms(5);
 				nextState = S_Idle;
 				break;
 			case S_GotMail:
+				printf("S_GotMail\n");
 				parseIncomingData();
 				nextState = S_Idle;
 				break;
 			case S_Idle:
 				if(newBroadcastFlag) {
 					newBroadcastFlag = 0;
-					nextState = S_Broadcast;
+					nextState = S_SendRouting;
 				}
 				else if(newDataFlag) {
 					newDataFlag = 0;
 					nextState = S_GotMail;
+				}
+				else if(successTXFlag) {
+					printf("Succesfull TX.\n");
+					successTXFlag = 0;
+					nextState = S_Idle;
+				}
+				else if(newDataFlag) {
+					printf("Max retries.\n");
+					maxRTFlag = 0;
+					nextState = S_Idle;
 				}
 				else {
 					nextState = S_Idle;
