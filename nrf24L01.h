@@ -310,16 +310,16 @@ void    nrfClearInterruptBits(void);
 uint8_t nrfVerifySPIConnection(void);
 void nrfSend(uint8_t* send, uint8_t length, uint8_t* pipe);
 
-const uint8_t  channel;
-const uint8_t  broadcast_pipe[5];
-volatile uint8_t  private_pipe[5];
-const uint8_t	FB_pipe[5];
-const uint8_t	RB_pipe[5];
-const uint8_t	SB_pipe[5];
-const uint8_t	JG_pipe[5];
-const uint8_t	AO_pipe[5];
-const uint8_t	MF_pipe[5];
-const uint8_t	packet[32];
+uint8_t  channel;
+uint8_t  broadcast_pipe[5];
+uint8_t  private_pipe[5];
+uint8_t  FB_pipe[5];
+uint8_t  RB_pipe[5];
+uint8_t  SB_pipe[5];
+uint8_t  JG_pipe[5];
+uint8_t  AO_pipe[5];
+uint8_t	 MF_pipe[5];
+uint8_t  packet[32];
 
 #endif
 

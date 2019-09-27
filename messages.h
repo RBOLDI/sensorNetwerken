@@ -17,8 +17,8 @@ uint8_t message[MAX_MESSAGE_SIZE];
 uint8_t fullMessage[FULL_MESSAGE_SIZE];
 
 //Function protoypes.
-uint8_t* selPipe(uint8_t ID);
 void sendMessage(uint8_t targetID);
+uint8_t* pipe_selector(uint8_t ID);
 char* get_user_initials(uint8_t id);
 void printf_hex(uint8_t *str, uint8_t str_len);
 void printf_bin(uint8_t *str, uint8_t str_len);

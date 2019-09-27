@@ -28,7 +28,7 @@
 
 #define		BROADCAST	0x01
 #define		RHDR		0x02
-#define		DHDR		0x03
+#define		DHDR	0x03
 #define		BCREPLY		0x04
 
 //Function prototypes
@@ -87,7 +87,7 @@ void init_nrf(const uint8_t pvtID){
 	//Starts in broadcast mode with own pvt ID selected by HW pin.  
 	
 	nrfOpenReadingPipe(0, broadcast_pipe);
-	nrfOpenReadingPipe(1, selPipe(pvtID));
+	nrfOpenReadingPipe(1, pipe_selector(pvtID));
 	nrfStartListening();
 	
 	PMIC.CTRL |= PMIC_LOLVLEN_bm;
@@ -164,9 +164,7 @@ void bootFunction(void)
 	init_nrf(MYID);
 	
 	init_RoutingTable(MYID);
-	
-	printf("Adress:\n");
-	printf_hex(selPipe(83), 5);
+
 	_delay_ms(200);
 }
 
@@ -193,9 +191,9 @@ void parseIncomingData( void )
 			FillRoutingTable(packet, packet[2]);
 			break;
 		case DHDR:
-			break;
+		break;
 		case BCREPLY:
-			break;
+		break;
 		default:
 		 	printf("UMT: ");
 			//printf_hex(packet, sizeof(packet));
@@ -217,7 +215,7 @@ int main(void)
 				break;
 			case S_SendRouting:
 				printf("S_SendRouting\n");
-				//SendRouting();
+				SendRouting();
 				_delay_ms(5);
 				nextState = S_Idle;
 				break;
@@ -253,6 +251,7 @@ int main(void)
 				nextState = S_Idle;
 				break;
 		}
+
 		currentState = nextState;
     }
 }
