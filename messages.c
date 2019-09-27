@@ -33,22 +33,9 @@ const PAIR table[] =
 	{ "MF_",  83 },
 };
 
-// Select Pipe to write to dependent on ID
-uint8_t* pipe_selector(uint8_t ID){
-	switch (ID){
-		case 51:
-		return FB_pipe;
-		case 52:
-		return RB_pipe;
-		case 53:
-		return SB_pipe;
-		case 83:
-		return MF_pipe;
-		case 77:
-		return JG_pipe;
-		default:
-		return 00;
-	}
+uint8_t* selPipe(uint8_t ID){
+		private_pipe[4] = ID;
+		return private_pipe;
 }
 	
 void sendMessage(uint8_t targetID){
@@ -58,7 +45,7 @@ void sendMessage(uint8_t targetID){
 	printf("\r%s\n",(char *)fullMessage);
 	
 	PORTC.OUTSET = PIN0_bm;
-	nrfSend( (uint8_t *) fullMessage, MAX_MESSAGE_SIZE, pipe_selector(targetID));
+	nrfSend( (uint8_t *) fullMessage, MAX_MESSAGE_SIZE, selPipe(targetID));
 	PORTC.OUTCLR = PIN0_bm;
 	memset(message, 0 , sizeof(message));
 	memset(fullMessage, 0, sizeof(fullMessage));

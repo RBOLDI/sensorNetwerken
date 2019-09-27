@@ -36,19 +36,11 @@
 #include <string.h>
 #include <stdio.h>
 
-uint8_t  channel = 111;		//0-128
-uint8_t  broadcast_pipe[5] = {20, 19, 20, 20, 00};
-uint8_t  private_pipe[5] = "FSR69";
-
-// Pipes added per team members xMega each pipe ending with the members unique ID
-uint8_t  FB_pipe[5] = {69, 19, 20, 20, 51};
-uint8_t  RB_pipe[5] = {69, 19, 20, 20, 52};
-uint8_t  SB_pipe[5] = {69, 19, 20, 20, 53};
-uint8_t  JG_pipe[5] = {69, 19, 20, 20, 77};
-uint8_t  AO_pipe[5] = {69, 19, 20, 20, 78};
-uint8_t	 MF_pipe[5] = {69, 19, 20, 20, 83};
-	
-uint8_t  packet[32];		//buffer voor data
+const uint8_t  channel = 111;		//0-128
+const uint8_t  broadcast_pipe[5] = {20, 19, 20, 20, 00};
+volatile uint8_t  private_pipe[5] = {20, 19, 20, 20, 69};
+		
+const uint8_t  packet[32];		//buffer voor data
 
 /*!
  *  \brief Global variables and constants
