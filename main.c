@@ -168,13 +168,6 @@ void bootFunction(void)
 	_delay_ms(200);
 }
 
-void broadcast(void)
-{
-	uint8_t *str = GetRoutingString(MYID);
-
-	nrfSendLongMessage(str, str[2], broadcast_pipe);
-}
-
 /* This function will be called when state equals S_GotMail.
 	It will parse the message to determine what kind of message 
 	it is, and what to do with it. UMT means Unknown Message Type */
