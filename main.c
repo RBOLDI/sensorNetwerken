@@ -27,8 +27,8 @@
 #define		JG !(PORTD.IN & PIN5_bm)
 
 #define		BROADCAST	0x01
-#define		RRTABLE		0x02
-#define		RXPTABLE	0x03
+#define		RHDR		0x02
+#define		DHDR	0x03
 #define		BCREPLY		0x04
 
 //Function prototypes
@@ -68,7 +68,7 @@ void init_nrf(const uint8_t pvtID){
 	nrfBegin();
 
 	nrfSetRetries(NRF_SETUP_ARD_1000US_gc,	NRF_SETUP_ARC_10RETRANSMIT_gc);
-	nrfSetPALevel(NRF_RF_SETUP_PWR_6DBM_gc);
+	nrfSetPALevel(NRF_RF_SETUP_PWR_18DBM_gc);
 	nrfSetDataRate(NRF_RF_SETUP_RF_DR_250K_gc);
 	nrfSetCRCLength(NRF_CONFIG_CRC_16_gc);
 	nrfSetChannel(channel);
@@ -119,11 +119,6 @@ ISR(PORTF_INT0_vect){		//triggers when data is received
 	if(max_rt) maxRTFlag = 1;
 }
 
-/* This function will allow the microcontroller to send multiple packets
-of 32 bytes each. It uses NO_ACK setting to prevent the mcu from getting
-stuck when receiving acknowledge messages. NO_ACK mode is significantly
-faster than ACK mode.
-*/
 void nrfSendMessage(uint8_t *str, uint8_t str_len, uint8_t *pipe)
 {
 	PORTC.OUTSET = PIN0_bm;
@@ -190,12 +185,12 @@ void parseIncomingData( void )
 		case BROADCAST:
 		 	printf("0x%02X %d %s\n", packet[0], packet[1], packet + 2);
 			break;
-		case RRTABLE:
+		case RHDR:
 			addNeighbor(packet[1]);
 			printf_Routing(packet, packet[2]);
 			FillRoutingTable(packet, packet[2]);
 			break;
-		case RXPTABLE:
+		case DHDR:
 		break;
 		case BCREPLY:
 		break;
