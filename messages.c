@@ -35,20 +35,8 @@ const PAIR table[] =
 
 // Select Pipe to write to dependent on ID
 uint8_t* pipe_selector(uint8_t ID){
-	switch (ID){
-		case 51:
-		return FB_pipe;
-		case 52:
-		return RB_pipe;
-		case 53:
-		return SB_pipe;
-		case 83:
-		return MF_pipe;
-		case 77:
-		return JG_pipe;
-		default:
-		return 00;
-	}
+private_pipe[4] = ID;
+return private_pipe;
 }
 	
 void sendMessage(uint8_t targetID){

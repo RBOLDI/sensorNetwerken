@@ -28,7 +28,7 @@
 
 #define		BROADCAST	0x01
 #define		RHDR		0x02
-#define		DHDR	0x03
+#define		DHDR		0x03
 #define		BCREPLY		0x04
 
 //Function prototypes
