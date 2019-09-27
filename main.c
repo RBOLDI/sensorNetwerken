@@ -164,15 +164,10 @@ void bootFunction(void)
 	init_nrf(MYID);
 	
 	init_RoutingTable(MYID);
+	
+	init_lowpower();
 
 	_delay_ms(200);
-}
-
-void broadcast(void)
-{
-	uint8_t *str = GetRoutingString(MYID);
-
-	nrfSendLongMessage(str, str[2], broadcast_pipe);
 }
 
 /* This function will be called when state equals S_GotMail.
