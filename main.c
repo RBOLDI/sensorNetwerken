@@ -119,76 +119,6 @@ ISR(PORTF_INT0_vect){		//triggers when data is received
 	if(max_rt) maxRTFlag = 1;
 }
 
-int main(void)
-{
-	while (1)
-	{
-		switch(currentState) {
-			case S_Boot:
-				bootFunction();
-				nextState = S_Broadcast;
-				break;
-			case S_Broadcast:
-				broadcast();
-				nextState = S_Idle;
-				break;
-			case S_GotMail:
-				parseIncomingData();
-				nextState = S_Idle;
-			break;
-			case S_Idle:
-				if(newBroadcastFlag) {
-					newBroadcastFlag = 0;
-					nextState = S_Broadcast;
-				}
-				else if(newDataFlag) {
-					newDataFlag = 0;
-					nextState = S_GotMail;
-				}
-				else {
-					nextState = S_Idle;
-				}
-			break;
-			default:
-				nextState = S_Idle;
-			break;
-		}
-		currentState = nextState;
-	}
-}
-
-void init_nrf(const uint8_t pvtID){
-	nrfspiInit();
-	nrfBegin();
-
-	nrfSetRetries(NRF_SETUP_ARD_1000US_gc,	NRF_SETUP_ARC_10RETRANSMIT_gc);
-	nrfSetPALevel(NRF_RF_SETUP_PWR_6DBM_gc);
-	nrfSetDataRate(NRF_RF_SETUP_RF_DR_250K_gc);
-	nrfSetCRCLength(NRF_CONFIG_CRC_16_gc);
-	nrfSetChannel(channel);
-	nrfSetAutoAck(1);
-	nrfEnableAckPayload();
-	nrfEnableDynamicPayloads();
-	
-	nrfClearInterruptBits();
-	nrfFlushRx();
-	nrfFlushTx();
-
-	PORTF.INT0MASK |= PIN6_bm;
-	PORTF.PIN6CTRL  = PORT_ISC_FALLING_gc;
-	PORTF.INTCTRL   = (PORTF.INTCTRL & ~PORT_INT0LVL_gm) | PORT_INT0LVL_LO_gc;
-
-	//Starts in broadcast mode with own pvt ID selected by HW pin.
-	
-	nrfOpenReadingPipe(0, broadcast_pipe);
-	nrfOpenReadingPipe(1, pipe_selector(pvtID));
-	nrfStartListening();
-	
-	PMIC.CTRL |= PMIC_LOLVLEN_bm;
-	sei();
-}
-
-
 /* This function will allow the microcontroller to send multiple packets
 of 32 bytes each. It uses NO_ACK setting to prevent the mcu from getting
 stuck when receiving acknowledge messages. NO_ACK mode is significantly
@@ -326,47 +256,9 @@ int main(void)
 				nextState = S_Idle;
 				break;
 		}
-		
-		if(newKeyboardData)
-		{
-			newKeyboardData = 0;
-			writeMessage(&message);
-		}
 
 		currentState = nextState;
     }
-}
-
-uint8_t writeMessage(char* msg){
-	char c = uart_fgetc(&uart_stdinout);
-	
-	if (c == ENTER)
-	{
-		charBuffer[pointer] = '\0';
-		
-		strcpy(msg,charBuffer);
-		sendMessage(51);
-
-		pointer = 0;
-		memset(charBuffer, 0, sizeof(charBuffer));
-		
-		return 1;
-	}
-	else if (c == BACKSPACE)
-	{
-		if(pointer > 0)
-		{
-			charBuffer[pointer--] = 0;
-			printf("\b \b");
-		}
-	}
-	else if (pointer < (MAX_MESSAGE_SIZE - 1))
-	{
-		printf("%c", c);
-		charBuffer[pointer++] = c;
-	}
-	
-	return 0;
 }
 
 const uint8_t getID(){
