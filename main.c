@@ -21,12 +21,6 @@
 #include "debug_opts.h" 
 #include "serialnumber.h"
 
-#define		FB !(PORTD.IN & PIN1_bm)
-#define		RB !(PORTD.IN & PIN2_bm)
-#define		SB !(PORTD.IN & PIN3_bm)
-#define		MF !(PORTD.IN & PIN4_bm)
-#define		JG !(PORTD.IN & PIN5_bm)
-
 #define		BROADCAST	0x01
 #define		RHDR		0x02
 #define		DHDR	0x03
@@ -251,13 +245,4 @@ int main(void)
 
 		currentState = nextState;
     }
-}
-
-const uint8_t getID(){
-	if(FB) return 51;
-	else if(RB) return 52;
-	else if(SB) return 53;
-	else if(MF) return 83;
-	else if(JG) return 77;
-	else return 00;
 }
