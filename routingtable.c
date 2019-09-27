@@ -16,7 +16,7 @@
 #define		MAXNODES	255
 
 #define		BROADCAST	0x01
-#define		RRTABLE		0x02
+#define		RHDR		0x02
 
 
 uint8_t **aRoutingTable	= NULL;
@@ -90,10 +90,7 @@ void FillRoutingTable(uint8_t *routingstring, uint8_t string_length)
 		if ( (routingstring[i] != uMyID) && (routingstring[i]) != 0 )
 				{
 					addKnownNode(routingstring[i]);
-					if ( !isNeighbor(routingstring[i]) )
-					{
-						aRoutingTable[ routingstring[1] ][ routingstring[i] ] = routingstring[ i + 1 ] + 1;
-					}
+					aRoutingTable[ routingstring[1] ][ routingstring[i] ] = routingstring[ i + 1 ] + 1;
 				}
 	}
 }
@@ -150,7 +147,7 @@ uint8_t* getRoutingString( void )
 		}
 	}
 	
-	aRoutingString[0] = RRTABLE;
+	aRoutingString[0] = RHDR;
 	aRoutingString[1] = uMyID;
 	aRoutingString[2] = Idx + 1;
 	

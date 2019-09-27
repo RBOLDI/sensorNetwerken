@@ -164,6 +164,8 @@ void bootFunction(void)
 	init_nrf(MYID);
 	
 	init_RoutingTable(MYID);
+	
+	init_lowpower();
 
 	_delay_ms(200);
 }
