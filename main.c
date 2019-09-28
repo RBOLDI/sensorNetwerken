@@ -97,6 +97,7 @@ void init_nrf(const uint8_t pvtID){
 ISR(TCE0_OVF_vect)
 {
 	PORTF.OUTTGL = PIN1_bm;
+	updateNeighborList();
 	newBroadcastFlag = 1;
 }
 
