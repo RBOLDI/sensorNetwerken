@@ -17,12 +17,12 @@ void init_lowpower(void)
 	PR.PRPB	   |= PR_DAC_bm | PR_ADC_bm | PR_AC_bm;
 	PR.PRPC    |= PR_TWI_bm | PR_USART1_bm | PR_SPI_bm | PR_HIRES_bm | PR_TC1_bm | PR_TC0_bm;					//UART C0 aan voor USB
 	PR.PRPD    |= PR_TWI_bm | PR_USART1_bm | PR_USART0_bm | PR_SPI_bm | PR_HIRES_bm | PR_TC1_bm | PR_TC0_bm;
-	PR.PRPE    |= PR_TWI_bm | PR_USART1_bm | PR_USART0_bm | PR_SPI_bm | PR_HIRES_bm | PR_TC1_bm | PR_TC0_bm;
+	PR.PRPE    |= PR_TWI_bm | PR_USART1_bm | PR_USART0_bm | PR_SPI_bm | PR_HIRES_bm | PR_TC1_bm;
 	PR.PRPF    |= PR_TWI_bm | PR_USART1_bm | PR_SPI_bm | PR_HIRES_bm | PR_TC1_bm | PR_TC0_bm;					//UART F0 aan voor NRF
 }
 
 void idle(void){
-	SLEEP.CTRL |= SLEEP_MODE_EXT_STANDBY | SLEEP_SEN_bm;
+	SLEEP.CTRL |= SLEEP_MODE_IDLE | SLEEP_SEN_bm;
 }
 
 void InitClocks(void)
