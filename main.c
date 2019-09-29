@@ -19,6 +19,7 @@
 #include "routingtable.h"
 #include "messages.h"
 #include "debug_opts.h" 
+#include "serialnumber.h"
 
 #define		FB !(PORTD.IN & PIN1_bm)
 #define		RB !(PORTD.IN & PIN2_bm)
@@ -48,6 +49,7 @@ uint8_t maxRTFlag = 0;
 
 
 uint8_t MYID;
+uint8_t device_serial[11];
 
 enum states {
 	S_Boot,
@@ -177,10 +179,11 @@ void bootFunction(void)
 	InitClocks();
 	init_io();
 	
-	MYID = getID();
-	memmove(initials, get_user_initials(MYID), NUMBER_OF_PREFIX_BYTES);
 
 	init_stream(F_CPU);
+
+	NVM_GetDeviceSerial(device_serial);
+	MYID = GetIdFromLookup(device_serial);
 
 	init_nrf(MYID);
 	
