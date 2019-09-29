@@ -22,15 +22,19 @@ const SerialIdPair SerialIdLookup[] =
 	{ {0,0,0,0,0,0,0,0,0,0,0 } , 53},			// Stephan
 	{ {53,88,48,56,49,49,13,22,0,7,0 } , 77},	// Jannick
 	{ {53,88,48,56,53,56,6,6,0,21,0 } , 83},	// Mike
-	{ {53,88,48,56,49,49,13,5,0,8,0 } , 42},	// One of the Kit's xmega
-	{ {53,88,48,56,49,49,14,15,0,10,0 } , 43}	// The other one of the Kit's xmega
-
+	{ {53,88,48,56,49,49,13,5,0,8,0 } , 42},	// One of the Kit's Xmegas
+	{ {53,88,48,56,49,49,14,15,0,10,0 } , 43}	// The other one of the Kit's Xmegas
 };
 
-	
+/*
+	The GetIdFromLookup function is to retrieve the student dedicated ID by reading 
+	the internal unique serial number each Xmega has stored in its signature memory.
+	If the argument serial matches one in the lookup table SerialIdLookup, it will
+	return the paired ID. This replaces ID dedication by the use of selector pins.
+*/
 uint8_t GetIdFromLookup(uint8_t* serial)
 {
-	for (int i = 0; i < sizeof SerialIdLookup / sizeof SerialIdLookup[0]; i++)
+	for (uint8_t i = 0; i < sizeof SerialIdLookup / sizeof SerialIdLookup[0]; i++)
 	{
 		if(memcmp(SerialIdLookup[i].serial, serial, 11) == 0)
 		{
@@ -40,6 +44,10 @@ uint8_t GetIdFromLookup(uint8_t* serial)
 	return 0;		// Not found
 }
 
+/*
+	The ReadSignatureByte reads a byte of memory at the address that was given as
+	argument. We use it to retrieve the chips serial number.
+*/
 uint8_t ReadSignatureByte(uint16_t Address) {
 	NVM_CMD = NVM_CMD_READ_CALIB_ROW_gc;
 	uint8_t Result;
@@ -48,30 +56,20 @@ uint8_t ReadSignatureByte(uint16_t Address) {
 	return Result;
 }
 
+/*
+	The NVM_GetDeviceSerial function changes the value that was given as argument to
+	the devices serial number, spread over 11 bytes of memory.
+*/
 void NVM_GetDeviceSerial(uint8_t* b) {
-	enum {
-		LOTNUM0=8,  // Lot Number Byte 0, ASCII
-		LOTNUM1,    // Lot Number Byte 1, ASCII
-		LOTNUM2,    // Lot Number Byte 2, ASCII
-		LOTNUM3,    // Lot Number Byte 3, ASCII
-		LOTNUM4,    // Lot Number Byte 4, ASCII
-		LOTNUM5,    // Lot Number Byte 5, ASCII
-		WAFNUM =16, // Wafer Number
-		COORDX0=18, // Wafer Coordinate X Byte 0
-		COORDX1,    // Wafer Coordinate X Byte 1
-		COORDY0,    // Wafer Coordinate Y Byte 0
-		COORDY1,    // Wafer Coordinate Y Byte 1
-	};
-
-	b[0]=ReadSignatureByte(LOTNUM0);
-	b[1]=ReadSignatureByte(LOTNUM1);
-	b[2]=ReadSignatureByte(LOTNUM2);
-	b[3]=ReadSignatureByte(LOTNUM3);
-	b[4]=ReadSignatureByte(LOTNUM4);
-	b[5]=ReadSignatureByte(LOTNUM5);
-	b[6]=ReadSignatureByte(WAFNUM);
-	b[7]=ReadSignatureByte(COORDX0);
-	b[8]=ReadSignatureByte(COORDX1);
-	b[9]=ReadSignatureByte(COORDY0);
-	b[10]=ReadSignatureByte(COORDY1);
+	b[0]=ReadSignatureByte(8);		// Lot Number Byte 0, ASCII
+	b[1]=ReadSignatureByte(9);		// Lot Number Byte 1, ASCII
+	b[2]=ReadSignatureByte(10);		// Lot Number Byte 2, ASCII
+	b[3]=ReadSignatureByte(11);		// Lot Number Byte 3, ASCII
+	b[4]=ReadSignatureByte(12);		// Lot Number Byte 4, ASCII
+	b[5]=ReadSignatureByte(13);		// Lot Number Byte 5, ASCII
+	b[6]=ReadSignatureByte(16);		// Wafer Number
+	b[7]=ReadSignatureByte(18);		// Wafer Coordinate X Byte 0
+	b[8]=ReadSignatureByte(19);		// Wafer Coordinate X Byte 1
+	b[9]=ReadSignatureByte(20);		// Wafer Coordinate Y Byte 0
+	b[10]=ReadSignatureByte(21);	// Wafer Coordinate Y Byte 1
 }
