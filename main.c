@@ -187,7 +187,7 @@ void bootFunction(void)
 	init_nrf(MYID);
 	
 	init_RoutingTable(MYID);
-	
+	init_PrivateComm(MYID);
 	init_lowpower();
 	
 	DB_MSG("\n----Debug mode enabled----\n\n");
