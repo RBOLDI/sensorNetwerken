@@ -29,7 +29,7 @@
 
 #define		BROADCAST	0x01
 #define		RHDR		0x02
-#define		DHDR	0x03
+#define		DHDR		0x03
 #define		BCREPLY		0x04
 
 //Function prototypes
@@ -192,7 +192,6 @@ void bootFunction(void)
 	
 	DB_MSG("\n----Debug mode enabled----\n\n");
 	printf_DeviceSerial(device_serial,11);
-	printf("MYID: %d\n", MYID);
 
 	_delay_ms(200);
 }
