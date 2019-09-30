@@ -2,14 +2,9 @@
  * networkComm.c
  *
  * Created: 30-9-2019 12:23:56
- *  Author: RBOLDI
+ *  Author: RBOLDI & YaBoii Steph
  */ 
-/*
- * networkCommunication.c
- *
- * Created: 30-9-2019 12:10:03
- *  Author: Rowan
- */ 
+
 #include <avr/io.h>
 #include <stdio.h>
 #include <string.h>
@@ -46,31 +41,32 @@ void sendPrivateMSG (uint8_t targetID, uint8_t *data)
 	{
 		aPrivateSendString[i+4] = data[i];
 	}
-	
 	nrfSendMessage(aPrivateSendString, (sensorDataLenght+4), private_pipe);
 }
 
 
 // -- Functions for receiving data--
-//----------------------------------
-ReceiveData(uint8_t MyID, uint8_t *data){
-	//Data header := BerichtType EigenID DoelID PakketLengte Hopcnt Data
-	tNeighborHops BuurRoute;
-	
-	//Hopcnt met 1 verlagen
-	data[4] --;
-	// Check if Message is for me
-	uint8_t recipiant = isMine(MyID, data);
-	if(recipiant == 1){
-		// If is for me load in Rpi ### MUST STILL BE ADDED ###
-	}else{
-		// If not check where to send
-		BuurRoute = findLeastHops(recipiant);
-		//Check least amount of hops to recipiant.
-	}
+
+uint8_t isMine(uint8_t _myid, uint8_t *_data)
+{
+	if(_data[2] == _myid) return 1;
+	else return _data[2];
 }
 
-uint8_t isMine(uint8_t MyID, uint8_t *data){
-	if(data[2] == MyID) return 1;
-	else return data[2];
+//Function checks if privately received data is meant for me
+// if not it calculates the least hopes to the recipiant and sends 
+// message to first node in that path.
+void ReceiveData(uint8_t _myid, uint8_t *_data, uint8_t _size) //Get size from global int PayloadSize in main.c 
+{ 
+	uint8_t recipiant = isMine(_myid, _data);
+	tNeighborHops BuurRoute;
+	_data[4] --;
+	
+	if(recipiant == 1)
+	{
+		// If is for me load in Rpi ### MUST STILL BE ADDED ###
+	}else{
+		BuurRoute = findLeastHops(recipiant);
+		nrfSendMessage(_data, _size, pipe_selector(BuurRoute.uNeighbor)); 
+	}
 }

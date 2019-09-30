@@ -50,6 +50,7 @@ uint8_t maxRTFlag = 0;
 
 uint8_t MYID;
 uint8_t device_serial[11];
+uint8_t PayloadSize;
 
 enum states {
 	S_Boot,
@@ -82,6 +83,7 @@ ISR(PORTF_INT0_vect){		//triggers when data is received
 	if(rx_dr){
 		PORTF.OUTTGL = PIN0_bm;
 		memset(packet, 0, sizeof(packet));
+		PayloadSize = nrfGetDynamicPayloadSize();
 		nrfRead(packet, nrfGetDynamicPayloadSize());
 		newDataFlag = 1;
 	}
