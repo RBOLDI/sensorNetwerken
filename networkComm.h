@@ -14,3 +14,6 @@ void sendPrivateMSG (uint8_t targetID, uint8_t *data);
 
 
 #endif /* NETWORKCOMM_H_ */
+
+uint8_t isMine(uint8_t MyID, uint8_t *data);
+ReceiveData(uint8_t MyID, uint8_t *data);

@@ -2,7 +2,7 @@
  * networkComm.c
  *
  * Created: 30-9-2019 12:23:56
- *  Author: Rowan
+ *  Author: RBOLDI
  */ 
 /*
  * networkCommunication.c
@@ -48,4 +48,29 @@ void sendPrivateMSG (uint8_t targetID, uint8_t *data)
 	}
 	
 	nrfSendMessage(aPrivateSendString, (sensorDataLenght+4), private_pipe);
+}
+
+
+// -- Functions for receiving data--
+//----------------------------------
+ReceiveData(uint8_t MyID, uint8_t *data){
+	//Data header := BerichtType EigenID DoelID PakketLengte Hopcnt Data
+	tNeighborHops BuurRoute;
+	
+	//Hopcnt met 1 verlagen
+	data[4] --;
+	// Check if Message is for me
+	uint8_t recipiant = isMine(MyID, data);
+	if(recipiant == 1){
+		// If is for me load in Rpi ### MUST STILL BE ADDED ###
+	}else{
+		// If not check where to send
+		BuurRoute = findLeastHops(recipiant);
+		//Check least amount of hops to recipiant.
+	}
+}
+
+uint8_t isMine(uint8_t MyID, uint8_t *data){
+	if(data[2] == MyID) return 1;
+	else return data[2];
 }
