@@ -16,12 +16,13 @@
 #define		MAXNODES	255
 
 #define		BROADCAST	0x01
-#define		RRTABLE		0x02
+#define		RHDR		0x02
 
 
 uint8_t **aRoutingTable	= NULL;
 uint8_t *aNeighbors		= NULL;
 uint8_t uNeighbors		= 0;
+uint8_t *aMissedBroadcasts = NULL;
 uint8_t uKnownNodes		= 0;
 uint8_t uMyID			= 0;
 
@@ -32,6 +33,7 @@ void init_RoutingTable(uint8_t _myid)
 	aRoutingTable			= (uint8_t**) calloc(MAXNODES + 1, sizeof(uint8_t*));
 	aRoutingTable[_myid]	= (uint8_t *) calloc(MAXNODES + 1, sizeof(uint8_t));
 	aNeighbors				= (uint8_t *) calloc(MAXNODES, sizeof(uint8_t));
+	aMissedBroadcasts		= (uint8_t *) calloc(MAXNODES + 1, sizeof(uint8_t));
 	aRoutingString			= (uint8_t *) calloc(255, sizeof(uint8_t));
 	
 	uMyID = _myid;
@@ -59,6 +61,8 @@ void addNeighbor(uint8_t uNodeID)
 			aNeighbors[uNeighbors] = uNodeID;
 			uNeighbors++;
 		}
+		
+	aMissedBroadcasts[uNodeID] = 0;
 }
 
 void removeNeighbor(uint8_t uNodeID)
@@ -81,6 +85,19 @@ void removeNeighbor(uint8_t uNodeID)
 	}
 }
 
+void updateNeighborList(void)
+{
+	for (uint8_t i = 0; i < uNeighbors; i++)
+	{
+		aMissedBroadcasts[aNeighbors[i]]++;
+		
+		if (aMissedBroadcasts[aNeighbors[i]] >= 3)
+		{
+			removeNeighbor(aNeighbors[i]);
+		}
+	}
+}
+
 void FillRoutingTable(uint8_t *routingstring, uint8_t string_length)
 {
 	if(string_length <= 3) return;
@@ -90,10 +107,7 @@ void FillRoutingTable(uint8_t *routingstring, uint8_t string_length)
 		if ( (routingstring[i] != uMyID) && (routingstring[i]) != 0 )
 				{
 					addKnownNode(routingstring[i]);
-					if ( !isNeighbor(routingstring[i]) )
-					{
-						aRoutingTable[ routingstring[1] ][ routingstring[i] ] = routingstring[ i + 1 ] + 1;
-					}
+					aRoutingTable[ routingstring[1] ][ routingstring[i] ] = routingstring[ i + 1 ] + 1;
 				}
 	}
 }
@@ -150,7 +164,7 @@ uint8_t* getRoutingString( void )
 		}
 	}
 	
-	aRoutingString[0] = RRTABLE;
+	aRoutingString[0] = RHDR;
 	aRoutingString[1] = uMyID;
 	aRoutingString[2] = Idx + 1;
 	

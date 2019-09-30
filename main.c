@@ -19,6 +19,7 @@
 #include "routingtable.h"
 #include "messages.h"
 #include "debug_opts.h" 
+#include "serialnumber.h"
 
 #define		FB !(PORTD.IN & PIN1_bm)
 #define		RB !(PORTD.IN & PIN2_bm)
@@ -33,12 +34,11 @@
 
 //Function prototypes
 void init_nrf(const uint8_t pvtID);
-void nrfSendLongMessage(uint8_t *str, uint8_t str_len, uint8_t *pipe);
+void nrfSendMessage(uint8_t *str, uint8_t str_len, uint8_t *pipe);
+void SendRouting( void );
 void bootFunction(void);
-void broadcast(void);
 void parseIncomingData(void);
 const uint8_t getID();
-uint8_t writeMessage();
 
 
 uint8_t newDataFlag = 0;
@@ -49,6 +49,7 @@ uint8_t maxRTFlag = 0;
 
 
 uint8_t MYID;
+uint8_t device_serial[11];
 
 enum states {
 	S_Boot,
@@ -62,41 +63,10 @@ enum states currentState, nextState = S_Boot;
 
 char charBuffer[MAX_MESSAGE_SIZE] = {0};
 
-
-void init_nrf(const uint8_t pvtID){
-	nrfspiInit();
-	nrfBegin();
-
-	nrfSetRetries(NRF_SETUP_ARD_1000US_gc,	NRF_SETUP_ARC_10RETRANSMIT_gc);
-	nrfSetPALevel(NRF_RF_SETUP_PWR_18DBM_gc);
-	nrfSetDataRate(NRF_RF_SETUP_RF_DR_250K_gc);
-	nrfSetCRCLength(NRF_CONFIG_CRC_16_gc);
-	nrfSetChannel(channel);
-	nrfSetAutoAck(1);
-	nrfEnableDynamicPayloads();
-	nrfEnableAckPayload();
-	
-	nrfClearInterruptBits();
-	nrfFlushRx();
-	nrfFlushTx();
-
-	PORTF.INT0MASK |= PIN6_bm;
-	PORTF.PIN6CTRL  = PORT_ISC_FALLING_gc;
-	PORTF.INTCTRL   = (PORTF.INTCTRL & ~PORT_INT0LVL_gm) | PORT_INT0LVL_LO_gc;
-
-	//Starts in broadcast mode with own pvt ID selected by HW pin.  
-	
-	nrfOpenReadingPipe(0, broadcast_pipe);
-	nrfOpenReadingPipe(1, pipe_selector(pvtID));
-	nrfStartListening();
-	
-	PMIC.CTRL |= PMIC_LOLVLEN_bm;
-	sei();
-}
-
 ISR(TCE0_OVF_vect)
 {
 	PORTF.OUTTGL = PIN1_bm;
+	updateNeighborList();
 	newBroadcastFlag = 1;
 }
 
@@ -119,6 +89,59 @@ ISR(PORTF_INT0_vect){		//triggers when data is received
 	if(max_rt) maxRTFlag = 1;
 }
 
+int main(void)
+{
+	while (1)
+	{
+		switch(currentState) {
+			case S_Boot:
+			bootFunction();
+			printf("S_Boot\n");
+			nextState = S_Idle;
+			break;
+			case S_SendRouting:
+			printf("S_SendRouting\n");
+			SendRouting();
+			_delay_ms(5);
+			nextState = S_Idle;
+			break;
+			case S_GotMail:
+			printf("S_GotMail\n");
+			parseIncomingData();
+			nextState = S_Idle;
+			break;
+			case S_Idle:
+			idle();
+			if(newBroadcastFlag) {
+				newBroadcastFlag = 0;
+				nextState = S_SendRouting;
+			}
+			else if(newDataFlag) {
+				newDataFlag = 0;
+				nextState = S_GotMail;
+			}
+			else if(successTXFlag) {
+				printf("Succesfull TX.\n");
+				successTXFlag = 0;
+				nextState = S_Idle;
+			}
+			else if(newDataFlag) {
+				printf("Max retries.\n");
+				maxRTFlag = 0;
+				nextState = S_Idle;
+			}
+			else {
+				nextState = S_Idle;
+			}
+			break;
+			default:
+			nextState = S_Idle;
+			break;
+		}
+
+		currentState = nextState;
+	}
+}
 void nrfSendMessage(uint8_t *str, uint8_t str_len, uint8_t *pipe)
 {
 	PORTC.OUTSET = PIN0_bm;
@@ -147,7 +170,6 @@ void SendRouting( void )
 	
 	nrfSendMessage(str, str[2], broadcast_pipe);
 }
-
 /* This function will be called when state equals S_Boot.
 	It will run all the initializations of the Xmega. Including I/O,
 	setting MYID, UART stream and nRF */
@@ -156,23 +178,22 @@ void bootFunction(void)
 	InitClocks();
 	init_io();
 	
-	MYID = getID();
-	memmove(initials, get_user_initials(MYID), NUMBER_OF_PREFIX_BYTES);
 
 	init_stream(F_CPU);
+
+	NVM_GetDeviceSerial(device_serial);
+	MYID = GetIdFromLookup(device_serial);
 
 	init_nrf(MYID);
 	
 	init_RoutingTable(MYID);
+	
+	init_lowpower();
+	
+	DB_MSG("\n----Debug mode enabled----\n\n");
+	printf_DeviceSerial(device_serial,11);
 
 	_delay_ms(200);
-}
-
-void broadcast(void)
-{
-	uint8_t *str = GetRoutingString(MYID);
-
-	nrfSendLongMessage(str, str[2], broadcast_pipe);
 }
 
 /* This function will be called when state equals S_GotMail.
@@ -202,60 +223,6 @@ void parseIncomingData( void )
 	}
 }
 
-int main(void)
-{
-    while (1) 
-    {
-		switch(currentState) {
-			case S_Boot:
-				bootFunction();
-				printf("S_Boot\n");
-				nextState = S_Idle;
-				DB_MSG("\n----Debug mode enabled----\n\n");
-				break;
-			case S_SendRouting:
-				printf("S_SendRouting\n");
-				SendRouting();
-				_delay_ms(5);
-				nextState = S_Idle;
-				break;
-			case S_GotMail:
-				printf("S_GotMail\n");
-				parseIncomingData();
-				nextState = S_Idle;
-				break;
-			case S_Idle:
-				if(newBroadcastFlag) {
-					newBroadcastFlag = 0;
-					nextState = S_SendRouting;
-				}
-				else if(newDataFlag) {
-					newDataFlag = 0;
-					nextState = S_GotMail;
-				}
-				else if(successTXFlag) {
-					printf("Succesfull TX.\n");
-					successTXFlag = 0;
-					nextState = S_Idle;
-				}
-				else if(newDataFlag) {
-					printf("Max retries.\n");
-					maxRTFlag = 0;
-					nextState = S_Idle;
-				}
-				else {
-					nextState = S_Idle;
-				}
-				break;
-			default:
-				nextState = S_Idle;
-				break;
-		}
-
-		currentState = nextState;
-    }
-}
-
 const uint8_t getID(){
 	if(FB) return 51;
 	else if(RB) return 52;
@@ -263,4 +230,35 @@ const uint8_t getID(){
 	else if(MF) return 83;
 	else if(JG) return 77;
 	else return 00;
+}
+
+void init_nrf(const uint8_t pvtID){
+	nrfspiInit();
+	nrfBegin();
+
+	nrfSetRetries(NRF_SETUP_ARD_1000US_gc,	NRF_SETUP_ARC_10RETRANSMIT_gc);
+	nrfSetPALevel(NRF_RF_SETUP_PWR_18DBM_gc);
+	nrfSetDataRate(NRF_RF_SETUP_RF_DR_250K_gc);
+	nrfSetCRCLength(NRF_CONFIG_CRC_16_gc);
+	nrfSetChannel(channel);
+	nrfSetAutoAck(1);
+	nrfEnableDynamicPayloads();
+	nrfEnableAckPayload();
+	
+	nrfClearInterruptBits();
+	nrfFlushRx();
+	nrfFlushTx();
+
+	PORTF.INT0MASK |= PIN6_bm;
+	PORTF.PIN6CTRL  = PORT_ISC_FALLING_gc;
+	PORTF.INTCTRL   = (PORTF.INTCTRL & ~PORT_INT0LVL_gm) | PORT_INT0LVL_LO_gc;
+
+	//Starts in broadcast mode with own pvt ID selected by HW pin.
+	
+	nrfOpenReadingPipe(0, broadcast_pipe);
+	nrfOpenReadingPipe(1, pipe_selector(pvtID));
+	nrfStartListening();
+	
+	PMIC.CTRL |= PMIC_LOLVLEN_bm;
+	sei();
 }
