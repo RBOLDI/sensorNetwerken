@@ -98,7 +98,6 @@ int main(void)
 			bootFunction();
 			printf("S_Boot\n");
 			nextState = S_Idle;
-			DB_MSG("\n----Debug mode enabled----\n\n");
 			break;
 			case S_SendRouting:
 			printf("S_SendRouting\n");
@@ -190,6 +189,10 @@ void bootFunction(void)
 	init_RoutingTable(MYID);
 	
 	init_lowpower();
+	
+	DB_MSG("\n----Debug mode enabled----\n\n");
+	printf_DeviceSerial(device_serial,11);
+	printf("MYID: %d\n", MYID);
 
 	_delay_ms(200);
 }
