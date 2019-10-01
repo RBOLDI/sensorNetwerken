@@ -25,8 +25,7 @@
  */
 #define  clear_screen()     printf("\e[H\e[2J\e[3J");
 
-FILE uart_stdinout;
+FILE uart_stdinout_usb_and_io;
 
-int uart_fgetc(FILE * stream);
 void init_stream(uint32_t fcpu);
 

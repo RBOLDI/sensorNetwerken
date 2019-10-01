@@ -146,9 +146,6 @@
     <Compile Include="debug_opts.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="KeyboardCodes.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="main.c">
       <SubType>compile</SubType>
     </Compile>
@@ -180,6 +177,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="routingtable.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="serialnumber.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="serialnumber.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="stream.c">

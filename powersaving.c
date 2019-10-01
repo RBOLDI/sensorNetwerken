@@ -17,19 +17,19 @@ void init_lowpower(void)
 	PR.PRPB	   |= PR_DAC_bm | PR_ADC_bm | PR_AC_bm;
 	PR.PRPC    |= PR_TWI_bm | PR_USART1_bm | PR_SPI_bm | PR_HIRES_bm | PR_TC1_bm | PR_TC0_bm;					//UART C0 aan voor USB
 	PR.PRPD    |= PR_TWI_bm | PR_USART1_bm | PR_USART0_bm | PR_SPI_bm | PR_HIRES_bm | PR_TC1_bm | PR_TC0_bm;
-	PR.PRPE    |= PR_TWI_bm | PR_USART1_bm | PR_USART0_bm | PR_SPI_bm | PR_HIRES_bm | PR_TC1_bm | PR_TC0_bm;
+	PR.PRPE    |= PR_TWI_bm | PR_USART1_bm | /*PR_USART0_bm |*/ PR_SPI_bm | PR_HIRES_bm | PR_TC1_bm;			//UART E0 aan voor RasPi
 	PR.PRPF    |= PR_TWI_bm | PR_USART1_bm | PR_SPI_bm | PR_HIRES_bm | PR_TC1_bm | PR_TC0_bm;					//UART F0 aan voor NRF
 }
 
 void idle(void){
-	SLEEP.CTRL |= SLEEP_MODE_EXT_STANDBY | SLEEP_SEN_bm;
+	SLEEP.CTRL |= SLEEP_MODE_IDLE | SLEEP_SEN_bm;
 }
 
-static void InitClocks(void)
+void InitClocks(void)
 {
-	CLKSYS_Enable( OSC_RC32MEN_bm );
-	do {} while ( CLKSYS_IsReady( OSC_RC32MRDY_bm ) == 0 );
-	CLKSYS_Main_ClockSource_Select( CLK_SCLKSEL_RC32M_gc );
+	CLKSYS_Enable( OSC_RC2MEN_bm );
+	do {} while ( CLKSYS_IsReady( OSC_RC2MRDY_bm ) == 0 );
+	CLKSYS_Main_ClockSource_Select( CLK_SCLKSEL_RC2M_gc);
 	CLKSYS_Disable( OSC_RC2MEN_bm );	
 }
 	
@@ -74,5 +74,11 @@ void init_io(void)
 	PORTD.INT0MASK = PIN0_bm;
 	PORTD.PIN0CTRL = PORT_OPC_PULLUP_gc | PORT_ISC_FALLING_gc;
 	PORTD.INTCTRL  = PORT_INT0LVL_LO_gc;
+	
+	//Timer
+	TCE0.CTRLB = TC_WGMODE_NORMAL_gc;
+	TCE0.CTRLA = TC_CLKSEL_DIV1024_gc;
+	TCE0.INTCTRLA = TC_OVFINTLVL_LO_gc;	
+	TCE0.PER = 9765;						// PER = (5 * FCPU)/PRESCALER - 1 // t = 5,000192 s
 	
 }

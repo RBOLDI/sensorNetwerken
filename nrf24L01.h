@@ -313,13 +313,7 @@ void nrfSend(uint8_t* send, uint8_t length, uint8_t* pipe);
 uint8_t  channel;
 uint8_t  broadcast_pipe[5];
 uint8_t  private_pipe[5];
-uint8_t  FB_pipe[5];
-uint8_t  RB_pipe[5];
-uint8_t  SB_pipe[5];
-uint8_t  JG_pipe[5];
-uint8_t  AO_pipe[5];
-uint8_t	 MF_pipe[5];
-uint8_t  packet[32];
+uint8_t	packet[32];
 
 #endif
 

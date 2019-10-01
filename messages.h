@@ -9,25 +9,16 @@
 #define		FULL_MESSAGE_SIZE 32
 #define		NUMBER_OF_PREFIX_BYTES 3
 #define		MAX_MESSAGE_SIZE FULL_MESSAGE_SIZE - NUMBER_OF_PREFIX_BYTES // Waarvan de laatste is '\0'
-#define		MESSAGE_BUFFER_SIZE 320
 
-typedef struct
-{
-	uint8_t *msgBuffer;
-	uint8_t buffPos;
-	uint8_t len;
-}tMessage;
 
 // Integers shared by message functions.
-uint8_t initials[NUMBER_OF_PREFIX_BYTES];
 uint8_t message[MAX_MESSAGE_SIZE];
 uint8_t fullMessage[FULL_MESSAGE_SIZE];
 
 //Function protoypes.
-void sendMessage(uint8_t targetID);
 uint8_t* pipe_selector(uint8_t ID);
-char* get_user_initials(uint8_t id);
+uint8_t GetIdFromLookup(uint8_t* serial);
 void printf_hex(uint8_t *str, uint8_t str_len);
-uint8_t bigMessage(uint8_t * arr);
-void makeBuffer(tMessage *msg);
-void resetBuffer(tMessage *msg);
+void printf_bin(uint8_t *str, uint8_t str_len);
+void printf_Routing(uint8_t *str, uint8_t str_len);
+void printf_DeviceSerial(uint8_t *str, uint8_t str_len);

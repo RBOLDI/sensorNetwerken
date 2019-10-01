@@ -6,10 +6,5 @@
  */ 
 
 
-#ifndef KEYBOARDCODES_H_
-#define KEYBOARDCODES_H_
-
-#define ENTER '\r'
-#define BACKSPACE '\b'
 
 #endif /* KEYBOARDCODES_H_ */
