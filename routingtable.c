@@ -100,6 +100,8 @@ void updateNeighborList(void)
 
 void FillRoutingTable(uint8_t *routingstring, uint8_t string_length)
 {
+	memset( aRoutingTable[ routingstring[1] ], 0, MAXNODES + 1 );
+	
 	if(string_length <= 3) return;
 	
 	for(uint8_t i = 3; i < string_length; i += 2 ) {
@@ -120,16 +122,16 @@ uint8_t isNeighbor(uint8_t uNodeID)
 tNeighborHops findLeastHops(uint8_t uNodeID)
 {
 	tNeighborHops NnH = {0 , UINT8_MAX};
-	
-	if (isNeighbor(uNodeID))
-	{
-		NnH.uHops = 1;
-		NnH.uNeighbor = uNodeID;
-		return NnH;
-	}
-	
+		
 	if (isKnown(uNodeID))
 	{
+		if (isNeighbor(uNodeID))
+		{
+			NnH.uHops = 1;
+			NnH.uNeighbor = uNodeID;
+			return NnH;
+		}
+
 		for (uint8_t i = 0; i < uNeighbors; i++)
 		{
 			if ((aRoutingTable[ aNeighbors[i] ][uNodeID] < NnH.uHops) && (aRoutingTable[ aNeighbors[i] ][uNodeID] > 0))
