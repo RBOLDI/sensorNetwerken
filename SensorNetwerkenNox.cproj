@@ -179,6 +179,12 @@
     <Compile Include="routingtable.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="serialnumber.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="serialnumber.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="stream.c">
       <SubType>compile</SubType>
     </Compile>

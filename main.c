@@ -19,6 +19,7 @@
 #include "routingtable.h"
 #include "messages.h"
 #include "debug_opts.h" 
+#include "serialnumber.h"
 
 #define		FB !(PORTD.IN & PIN1_bm)
 #define		RB !(PORTD.IN & PIN2_bm)
@@ -28,7 +29,7 @@
 
 #define		BROADCAST	0x01
 #define		RHDR		0x02
-#define		DHDR	0x03
+#define		DHDR		0x03
 #define		BCREPLY		0x04
 
 //Function prototypes
@@ -48,6 +49,7 @@ uint8_t maxRTFlag = 0;
 
 
 uint8_t MYID;
+uint8_t device_serial[11];
 
 enum states {
 	S_Boot,
@@ -96,7 +98,6 @@ int main(void)
 			bootFunction();
 			printf("S_Boot\n");
 			nextState = S_Idle;
-			DB_MSG("\n----Debug mode enabled----\n\n");
 			break;
 			case S_SendRouting:
 			printf("S_SendRouting\n");
@@ -177,16 +178,20 @@ void bootFunction(void)
 	InitClocks();
 	init_io();
 	
-	MYID = getID();
-	memmove(initials, get_user_initials(MYID), NUMBER_OF_PREFIX_BYTES);
 
 	init_stream(F_CPU);
+
+	NVM_GetDeviceSerial(device_serial);
+	MYID = GetIdFromLookup(device_serial);
 
 	init_nrf(MYID);
 	
 	init_RoutingTable(MYID);
 	
 	init_lowpower();
+	
+	DB_MSG("\n----Debug mode enabled----\n\n");
+	printf_DeviceSerial(device_serial,11);
 
 	_delay_ms(200);
 }
