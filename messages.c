@@ -20,8 +20,8 @@ uint8_t fullMessage[FULL_MESSAGE_SIZE] = {0};
 
 // Select Pipe to write to dependent on ID
 uint8_t* pipe_selector(uint8_t ID){
-private_pipe[4] = ID;
-return private_pipe;
+	private_pipe[0] = ID;
+	return private_pipe;
 }
 
 void printf_hex(uint8_t *str, uint8_t str_len)

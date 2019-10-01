@@ -85,8 +85,19 @@ ISR(PORTF_INT0_vect){		//triggers when data is received
 		nrfRead(packet, nrfGetDynamicPayloadSize());
 		newDataFlag = 1;
 	}
-	if(tx_ds) successTXFlag = 1;
-	if(max_rt) maxRTFlag = 1;
+	
+	if(tx_ds)
+	{
+		nrfStartListening();
+		PORTC.OUTCLR = PIN0_bm;
+		successTXFlag = 1;
+	}
+	
+	if(max_rt){
+		nrfStartListening();
+		PORTC.OUTCLR = PIN0_bm;
+		maxRTFlag = 1;
+	}
 }
 
 int main(void)
@@ -102,7 +113,6 @@ int main(void)
 			case S_SendRouting:
 			printf("S_SendRouting\n");
 			SendRouting();
-			_delay_ms(5);
 			nextState = S_Idle;
 			break;
 			case S_GotMail:
@@ -142,6 +152,7 @@ int main(void)
 		currentState = nextState;
 	}
 }
+
 void nrfSendMessage(uint8_t *str, uint8_t str_len, uint8_t *pipe)
 {
 	PORTC.OUTSET = PIN0_bm;
@@ -150,18 +161,6 @@ void nrfSendMessage(uint8_t *str, uint8_t str_len, uint8_t *pipe)
 	delay_us(130);
 	
 	nrfStartWrite(str, str_len, NRF_W_TX_PAYLOAD_NO_ACK);
-	_delay_us(300);
-	
-	for (uint8_t i = 0; i < str_len; i++)
-	{
-		_delay_us(40);
-	}
-	nrfWriteRegister(REG_STATUS, NRF_STATUS_TX_DS_bm|NRF_STATUS_MAX_RT_bm);
-	
-	nrfStartListening();
-	delay_us(130);
-	PORTC.OUTCLR = PIN0_bm;
-	
 }
 
 void SendRouting( void )
@@ -170,6 +169,7 @@ void SendRouting( void )
 	
 	nrfSendMessage(str, str[2], broadcast_pipe);
 }
+
 /* This function will be called when state equals S_Boot.
 	It will run all the initializations of the Xmega. Including I/O,
 	setting MYID, UART stream and nRF */
@@ -234,8 +234,6 @@ const uint8_t getID(){
 
 void init_nrf(const uint8_t pvtID){
 	nrfspiInit();
-	nrfBegin();
-
 	nrfSetRetries(NRF_SETUP_ARD_1000US_gc,	NRF_SETUP_ARC_10RETRANSMIT_gc);
 	nrfSetPALevel(NRF_RF_SETUP_PWR_18DBM_gc);
 	nrfSetDataRate(NRF_RF_SETUP_RF_DR_250K_gc);

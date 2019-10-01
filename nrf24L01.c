@@ -37,8 +37,8 @@
 #include <stdio.h>
 
 uint8_t  channel = 59;		//0-128
-uint8_t  broadcast_pipe[5] = {20, 19, 20, 20, 00};
-uint8_t  private_pipe[5] = {20, 19, 20, 20, 51};
+uint8_t  broadcast_pipe[5] = {00, 20, 19, 20, 20};
+uint8_t  private_pipe[5]   = {51, 20, 19, 20, 20};
 uint8_t  packet[32];		//buffer voor data
 
 /*!
