@@ -121,6 +121,7 @@ int main(void)
 				printf("S_SendSensorData");
 				sendPrivateMSG (53, sampleData);
 				nextState = S_Idle;
+			break;
 			case S_GotMail:
 				printf("S_GotMail\n");
 				parseIncomingData();
@@ -156,10 +157,9 @@ int main(void)
 				}
 				break;
 				default:
-				nextState = S_Idle;
+					nextState = S_Idle;
 				break;
 			}
-
 		currentState = nextState;
 	}
 }
@@ -233,6 +233,8 @@ void parseIncomingData( void )
 			FillRoutingTable(packet, packet[2]);
 			break;
 		case DHDR:
+			DB_MSG("Received Data");
+			ReceiveData(MYID, packet, PayloadSize);	
 		break;
 		case BCREPLY:
 		break;
