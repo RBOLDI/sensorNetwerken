@@ -49,7 +49,7 @@ void sendPrivateMSG (uint8_t targetID, uint8_t *data)
 
 uint8_t isMine(uint8_t _myid, uint8_t *_data)
 {
-	uint8_t recipiant = _data[2]
+	uint8_t recipiant = _data[2];
 	if(recipiant == _myid) return 1;
 	else return recipiant;
 }
