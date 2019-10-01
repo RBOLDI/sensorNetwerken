@@ -54,6 +54,7 @@ volatile uint8_t sampleCounter		= 0;
 uint8_t MYID;
 uint8_t device_serial[11];
 uint8_t PayloadSize;
+int c;
 
 enum states {
 	S_Boot,
@@ -101,6 +102,10 @@ ISR(PORTF_INT0_vect){		//triggers when data is received
 	if(max_rt) maxRTFlag = 1;
 }
 
+ISR(ADCA_CH0_vect){
+	res = ADCA.CH0.RES;
+}
+
 int main(void)
 {
 	while (1)
@@ -129,6 +134,8 @@ int main(void)
 			break;
 			case S_Idle:
 				idle();
+				c = res;
+				printf("res:%d\n", c);
 				if(newBroadcastFlag) {
 					newBroadcastFlag = 0;
 					nextState = S_SendRouting;
@@ -197,8 +204,6 @@ void bootFunction(void)
 {
 	InitClocks();
 	init_io();
-	
-
 	init_stream(F_CPU);
 
 	NVM_GetDeviceSerial(device_serial);
@@ -210,6 +215,7 @@ void bootFunction(void)
 	init_PrivateComm(MYID);
 	init_lowpower();
 	init_adc();
+	ADC_timer();
 	
 	DB_MSG("\n----Debug mode enabled----\n\n");
 	printf_DeviceSerial(device_serial,11);
