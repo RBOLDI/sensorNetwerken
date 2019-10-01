@@ -20,6 +20,7 @@
 #include "stream.h"
 
 #define ENABLE_UART_F0   1         //!< UART0 from PORTF
+#define ENABLE_UART_E0   1         //!< UART0 from PORTE
 #include "uart.h"
 
 /*! \brief Write a byte to the circular transmit buffer.
@@ -32,32 +33,23 @@
  */
 int uart_fputc(char c, FILE *stream)
 {
+  // uartF0
   while( ! USART_TXBuffer_FreeSpace(&uartF0) );
 
   if (c == '\n') uart_putc(&uartF0, '\r');
   uart_putc(&uartF0, c);
 
+  // uartE0
+  while( ! USART_TXBuffer_FreeSpace(&uartE0) );
+
+  if (c == '\n') uart_putc(&uartE0, '\r');
+  uart_putc(&uartE0, c);
+
   return 0;
 }
 
-/*! \brief Get a byte from the circular receive buffer
- *         This function is necessary for a standard stream
- *
- *  \param  stream  file pointer
- *
- *  \return received byte from circulair buffer (low byte) or
- *          UART_NO_DATA if buffer is empty
- */
-int uart_fgetc(FILE * stream)
-{
-  int c;
 
-  while ( (c = uart_getc(&uartF0)) == UART_NO_DATA) ;
-
-  return c;
-}
-
-FILE uart_stdinout = FDEV_SETUP_STREAM(uart_fputc, uart_fgetc, _FDEV_SETUP_RW);  //!< FILE structure for standard streams
+FILE uart_stdinout_usb_and_io = FDEV_SETUP_STREAM(uart_fputc, NULL, _FDEV_SETUP_WRITE);  //!< FILE structure for standard streams
 
 /*! \brief Initialize a standard in/out stream
  *         It uses USART0 of port F, the baud rate is BAUD,
@@ -72,7 +64,9 @@ FILE uart_stdinout = FDEV_SETUP_STREAM(uart_fputc, uart_fgetc, _FDEV_SETUP_RW); 
 void init_stream(uint32_t fcpu)
 {
   init_uart(&uartF0, &USARTF0, fcpu, BAUD, CLK2X);
-  stdout = stdin = &uart_stdinout;
+  init_uart(&uartE0, &USARTE0, fcpu, BAUD, CLK2X);
+  
+  stdout = &uart_stdinout_usb_and_io;
 
   PMIC.CTRL |= PMIC_LOLVLEN_bm;           // Low level interrupt
 }
