@@ -36,7 +36,7 @@
         <documentation help="" />
         <offline-documentation help="" />
         <dependencies>
-          <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.26.0" />
+          <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.39.0" />
         </dependencies>
       </framework-data>
     </AsfFrameworkConfig>
@@ -54,6 +54,17 @@
       <ToolNumber>000200212345</ToolNumber>
       <ToolName>AVRISP mkII</ToolName>
     </com_atmel_avrdbg_tool_ispmk2>
+    <custom>
+      <ToolOptions xmlns="">
+        <InterfaceProperties>
+        </InterfaceProperties>
+        <InterfaceName>PDI</InterfaceName>
+      </ToolOptions>
+      <ToolType xmlns="">custom</ToolType>
+      <ToolNumber xmlns="">
+      </ToolNumber>
+      <ToolName xmlns="">Custom Programming Tool</ToolName>
+    </custom>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <ToolchainSettings>
@@ -134,6 +145,12 @@
     </ToolchainSettings>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="ADC.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="ADC.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="avr_compiler.h">
       <SubType>compile</SubType>
     </Compile>
@@ -153,6 +170,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="messages.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="networkComm.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="networkComm.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="nrf24L01.c">

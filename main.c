@@ -20,6 +20,8 @@
 #include "messages.h"
 #include "debug_opts.h" 
 #include "serialnumber.h"
+#include "ADC.h"
+#include "networkComm.h"
 
 #define		FB !(PORTD.IN & PIN1_bm)
 #define		RB !(PORTD.IN & PIN2_bm)
@@ -41,19 +43,22 @@ void parseIncomingData(void);
 const uint8_t getID();
 
 
-uint8_t newDataFlag = 0;
-uint8_t sendDataFlag = 0;
-uint8_t newBroadcastFlag = 0;
-uint8_t successTXFlag = 0;
-uint8_t maxRTFlag = 0;
+volatile uint8_t newDataFlag		= 0;
+volatile uint8_t newBroadcastFlag	= 0;
+volatile uint8_t successTXFlag		= 0;
+volatile uint8_t maxRTFlag			= 0;
+volatile uint8_t sampleCounter		= 0;
 
 
 uint8_t MYID;
 uint8_t device_serial[11];
+uint8_t PayloadSize;
+int c;
 
 enum states {
 	S_Boot,
 	S_SendRouting,
+	S_SendSensorData,
 	S_Idle,
 	S_GotMail,
 	S_Send,
@@ -106,49 +111,57 @@ int main(void)
 	{
 		switch(currentState) {
 			case S_Boot:
-			bootFunction();
-			printf("S_Boot\n");
-			nextState = S_Idle;
+				bootFunction();
+				printf("S_Boot\n");
+				nextState = S_Idle;
 			break;
 			case S_SendRouting:
 			printf("S_SendRouting\n");
 			SendRouting();
 			nextState = S_Idle;
 			break;
+			case S_SendSensorData:
+				printf("S_SendSensorData\n");
+				sendPrivateMSG (53, sampleData);
+				nextState = S_Idle;
+			break;
 			case S_GotMail:
-			printf("S_GotMail\n");
-			parseIncomingData();
-			nextState = S_Idle;
+				printf("S_GotMail\n");
+				parseIncomingData();
+				nextState = S_Idle;
 			break;
 			case S_Idle:
-			idle();
-			if(newBroadcastFlag) {
-				newBroadcastFlag = 0;
-				nextState = S_SendRouting;
+				idle();
+				if(newBroadcastFlag) {
+					newBroadcastFlag = 0;
+					nextState = S_SendRouting;
+				}
+				else if (ADC_sample())
+				{
+					nextState = S_SendSensorData;
+				}
+				else if(newDataFlag) {
+					newDataFlag = 0;
+					nextState = S_GotMail;
+				}
+				else if(successTXFlag) {
+					printf("Succesfull TX.\n");
+					successTXFlag = 0;
+					nextState = S_Idle;
+				}
+				else if(newDataFlag) {
+					printf("Max retries.\n");
+					maxRTFlag = 0;
+					nextState = S_Idle;
+				}
+				else {
+					nextState = S_Idle;
+				}
+				break;
+				default:
+					nextState = S_Idle;
+				break;
 			}
-			else if(newDataFlag) {
-				newDataFlag = 0;
-				nextState = S_GotMail;
-			}
-			else if(successTXFlag) {
-				printf("Succesfull TX.\n");
-				successTXFlag = 0;
-				nextState = S_Idle;
-			}
-			else if(newDataFlag) {
-				printf("Max retries.\n");
-				maxRTFlag = 0;
-				nextState = S_Idle;
-			}
-			else {
-				nextState = S_Idle;
-			}
-			break;
-			default:
-			nextState = S_Idle;
-			break;
-		}
-
 		currentState = nextState;
 	}
 }
@@ -156,6 +169,7 @@ int main(void)
 void nrfSendMessage(uint8_t *str, uint8_t str_len, uint8_t *pipe)
 {
 	PORTC.OUTSET = PIN0_bm;
+	printf("SendMessage\n");
 	nrfStopListening();
 	nrfOpenWritingPipe(pipe);
 	delay_us(130);
@@ -177,8 +191,6 @@ void bootFunction(void)
 {
 	InitClocks();
 	init_io();
-	
-
 	init_stream(F_CPU);
 
 	NVM_GetDeviceSerial(device_serial);
@@ -187,9 +199,11 @@ void bootFunction(void)
 	init_nrf(MYID);
 	
 	init_RoutingTable(MYID);
-	
+	init_PrivateComm(MYID);
 	init_lowpower();
-	
+	init_adc();
+	ADC_timer();
+	sendMSG_Ptr = nrfSendMessage;
 	DB_MSG("\n----Debug mode enabled----\n\n");
 	printf_DeviceSerial(device_serial,11);
 
@@ -212,6 +226,8 @@ void parseIncomingData( void )
 			FillRoutingTable(packet, packet[2]);
 			break;
 		case DHDR:
+			DB_MSG("Received Data");
+			ReceiveData(MYID, packet, PayloadSize);	
 		break;
 		case BCREPLY:
 		break;

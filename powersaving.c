@@ -12,13 +12,13 @@
 
 void init_lowpower(void)
 {
-	PR.PRGEN   |= PR_USB_bm | PR_AES_bm | PR_RTC_bm | PR_EVSYS_bm | PR_DMA_bm;
-	PR.PRPA	   |= PR_DAC_bm | PR_ADC_bm | PR_AC_bm;
+	PR.PRGEN   |= PR_USB_bm | PR_AES_bm | PR_RTC_bm | /*PR_EVSYS_bm |*/ PR_DMA_bm;
+	//PR.PRPA	   |= PR_DAC_bm | PR_ADC_bm | PR_AC_bm;
 	PR.PRPB	   |= PR_DAC_bm | PR_ADC_bm | PR_AC_bm;
 	PR.PRPC    |= PR_TWI_bm | PR_USART1_bm | PR_SPI_bm | PR_HIRES_bm | PR_TC1_bm | PR_TC0_bm;					//UART C0 aan voor USB
-	PR.PRPD    |= PR_TWI_bm | PR_USART1_bm | PR_USART0_bm | PR_SPI_bm | PR_HIRES_bm | PR_TC1_bm | PR_TC0_bm;
 	PR.PRPE    |= PR_TWI_bm | PR_USART1_bm | /*PR_USART0_bm |*/ PR_SPI_bm | PR_HIRES_bm | PR_TC1_bm;			//UART E0 aan voor RasPi
-	PR.PRPF    |= PR_TWI_bm | PR_USART1_bm | PR_SPI_bm | PR_HIRES_bm | PR_TC1_bm | PR_TC0_bm;					//UART F0 aan voor NRF
+	PR.PRPD    |= PR_TWI_bm | PR_USART1_bm | PR_USART0_bm | PR_SPI_bm | PR_HIRES_bm | PR_TC1_bm; //| PR_TC0_bm;
+	PR.PRPF    |= PR_TWI_bm | PR_USART1_bm | PR_SPI_bm | PR_HIRES_bm | PR_TC1_bm |PR_TC0_bm;					//UART F0 aan voor NRF
 }
 
 void idle(void){
@@ -49,14 +49,14 @@ void init_io(void)
 	PORTD.PIN5CTRL = PORT_OPC_PULLUP_gc;
 	
 	//Define unused pins to save energy
-	PORTA.DIRCLR = PIN0_bm | PIN1_bm | PIN2_bm | PIN3_bm | PIN4_bm | PIN5_bm | PIN6_bm | PIN7_bm;
+	PORTA.DIRCLR = PIN0_bm | PIN1_bm | /*PIN2_bm | PIN3_bm | */PIN4_bm | PIN5_bm | PIN6_bm | PIN7_bm;
 	PORTB.DIRCLR = PIN0_bm | PIN1_bm | PIN2_bm | PIN3_bm | PIN4_bm | PIN5_bm | PIN6_bm | PIN7_bm;
 	PORTD.DIRCLR = PIN4_bm | PIN5_bm | PIN6_bm | PIN7_bm;
 	PORTE.DIRCLR = PIN0_bm | PIN1_bm | PIN4_bm | PIN5_bm;
 	
 	//Intern Pull-ups
 	PORTA.PIN0CTRL = PORT_OPC_PULLUP_gc;	PORTA.PIN1CTRL = PORT_OPC_PULLUP_gc;
-	PORTA.PIN2CTRL = PORT_OPC_PULLUP_gc;	PORTA.PIN3CTRL = PORT_OPC_PULLUP_gc;
+	//PORTA.PIN2CTRL = PORT_OPC_PULLUP_gc;	PORTA.PIN3CTRL = PORT_OPC_PULLUP_gc;
 	PORTA.PIN4CTRL = PORT_OPC_PULLUP_gc;	PORTA.PIN5CTRL = PORT_OPC_PULLUP_gc;
 	PORTA.PIN6CTRL = PORT_OPC_PULLUP_gc;	PORTA.PIN7CTRL = PORT_OPC_PULLUP_gc;
 	
