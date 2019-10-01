@@ -44,7 +44,6 @@ const uint8_t getID();
 
 
 volatile uint8_t newDataFlag		= 0;
-volatile uint8_t sampleFlag	= 0;
 volatile uint8_t newBroadcastFlag	= 0;
 volatile uint8_t successTXFlag		= 0;
 volatile uint8_t maxRTFlag			= 0;
@@ -73,13 +72,7 @@ ISR(TCE0_OVF_vect)
 {
 	PORTF.OUTTGL = PIN1_bm;
 	updateNeighborList();
-	sampleFlag = 0;
 	newBroadcastFlag = 1;
-	sampleCounter = sampleCounter+5;
-	if (sampleCounter > 5) {
-		sampleFlag = 1;
-		sampleCounter = 0;
-	}
 }
 
 ISR(PORTD_INT0_vect)
@@ -102,10 +95,6 @@ ISR(PORTF_INT0_vect){		//triggers when data is received
 	if(max_rt) maxRTFlag = 1;
 }
 
-ISR(ADCA_CH0_vect){
-	res = ADCA.CH0.RES;
-}
-
 int main(void)
 {
 	while (1)
@@ -123,7 +112,7 @@ int main(void)
 				nextState = S_Idle;
 			break;
 			case S_SendSensorData:
-				printf("S_SendSensorData");
+				printf("S_SendSensorData\n");
 				sendPrivateMSG (53, sampleData);
 				nextState = S_Idle;
 			break;
@@ -134,15 +123,12 @@ int main(void)
 			break;
 			case S_Idle:
 				idle();
-				c = res;
-				printf("res:%d\n", c);
 				if(newBroadcastFlag) {
 					newBroadcastFlag = 0;
 					nextState = S_SendRouting;
 				}
-				else if (ADC_sample(sampleFlag))
+				else if (ADC_sample())
 				{
-					sampleFlag = 0;
 					nextState = S_SendSensorData;
 				}
 				else if(newDataFlag) {
@@ -173,6 +159,7 @@ int main(void)
 void nrfSendMessage(uint8_t *str, uint8_t str_len, uint8_t *pipe)
 {
 	PORTC.OUTSET = PIN0_bm;
+	printf("SendMessage\n");
 	nrfStopListening();
 	nrfOpenWritingPipe(pipe);
 	delay_us(130);
@@ -216,7 +203,7 @@ void bootFunction(void)
 	init_lowpower();
 	init_adc();
 	ADC_timer();
-	
+	sendMSG_Ptr = nrfSendMessage;
 	DB_MSG("\n----Debug mode enabled----\n\n");
 	printf_DeviceSerial(device_serial,11);
 

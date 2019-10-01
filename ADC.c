@@ -10,6 +10,8 @@
 #include <stddef.h>             // definition of offsetof
 #include <avr/interrupt.h>
 #include <util/delay.h>
+#include <avr/interrupt.h>
+#include <stdio.h>
 #include "ADC.h"
 
 //Function prototypes
@@ -17,6 +19,8 @@ uint16_t readCalibrationWord(uint8_t index);
 
 //Variable for res.
 volatile uint16_t res = 0;
+volatile uint8_t sampleFlag = 0;
+//Sample
 uint8_t sampleData[2];
 
 //-------------------------------------------------
@@ -55,10 +59,10 @@ void init_adc(void){
 
 //Take sample function
 //Returns 0 if new sample is taken, 1 when there is no new sample.
-uint8_t ADC_sample(uint8_t takeSample){
+uint8_t ADC_sample(void){
 	uint16_t copyData;
-	if(takeSample){
-		res = ADCA.CH0.RES;
+	if(sampleFlag){
+		sampleFlag = 0;
 		copyData = res & 0xFF00; copyData = copyData >> 8;
 		sampleData[0] = copyData;
 		copyData = res & 0x00FF; 
@@ -70,8 +74,13 @@ uint8_t ADC_sample(uint8_t takeSample){
 }
 
 void ADC_timer(void){
-	TCD0.PER      = 31249;						// Tper =  8 * (31249 +1) / 2M = 0.125 s
-	TCD0.CTRLA    = TC_CLKSEL_DIV8_gc;          // Prescaling 8
+	TCD0.PER      = 31249;						// Tper =  256 * (31249 +1) / 2M = 4s
+	TCD0.CTRLA    = TC_CLKSEL_DIV256_gc;        // Prescaling 8
 	TCD0.CTRLB    = TC_WGMODE_NORMAL_gc;        // Normal mode
 	TCD0.INTCTRLA = TC_OVFINTLVL_OFF_gc;        // Interrupt overflow off
+}
+
+ISR(ADCA_CH0_vect){
+	res = ADCA.CH0.RES;
+	sampleFlag = 1;
 }

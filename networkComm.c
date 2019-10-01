@@ -16,13 +16,14 @@
 
 #define PRIVATE_MSG 0x03
 
+void (*sendMSG_Ptr)(uint8_t*, uint8_t, uint8_t*);
 uint8_t *aPrivateSendString = NULL;
 uint8_t MyID = NULL;
 uint8_t sensorDataLenght = 2;
 
 void init_PrivateComm(uint8_t _myid)
 {
-		aPrivateSendString			= (uint8_t *) calloc(32, sizeof(uint8_t));
+		aPrivateSendString = (uint8_t *) calloc(32, sizeof(uint8_t));
 		MyID = _myid;
 }
 
@@ -41,7 +42,7 @@ void sendPrivateMSG (uint8_t targetID, uint8_t *data)
 	{
 		aPrivateSendString[i+4] = data[i];
 	}
-	nrfSendMessage(aPrivateSendString, (sensorDataLenght+4), private_pipe);
+	sendMSG_Ptr(aPrivateSendString, (sensorDataLenght+4), private_pipe);
 }
 
 
@@ -68,6 +69,6 @@ void ReceiveData(uint8_t _myid, uint8_t *_data, uint8_t _size) //Get size from g
 		// If is for me load in Rpi ### MUST STILL BE ADDED ###
 	}else{
 		BuurRoute = findLeastHops(recipiant);
-		nrfSendMessage(_data, _size, pipe_selector(BuurRoute.uNeighbor)); 
+		sendMSG_Ptr(_data, _size, pipe_selector(BuurRoute.uNeighbor));
 	}
 }
