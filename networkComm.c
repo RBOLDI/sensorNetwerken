@@ -62,7 +62,7 @@ void ReceiveData(uint8_t _myid, uint8_t *_data, uint8_t _size) //Get size from g
 { 
 	uint8_t recipiant = isMine(_myid, _data);
 	tNeighborHops BuurRoute;
-	_data[4] --;
+	_data[3] --;
 	
 	if(recipiant == 1)
 	{
