@@ -86,14 +86,14 @@ ISR(PORTF_INT0_vect){		//triggers when data is received
 		newDataFlag = 1;
 	}
 	
-	if(tx_ds)
+	else if(tx_ds)
 	{
 		nrfStartListening();
 		PORTC.OUTCLR = PIN0_bm;
 		successTXFlag = 1;
 	}
 	
-	if(max_rt){
+	else if(max_rt){
 		nrfStartListening();
 		PORTC.OUTCLR = PIN0_bm;
 		maxRTFlag = 1;
