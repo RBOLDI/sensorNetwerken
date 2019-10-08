@@ -285,7 +285,7 @@ uint8_t nrfGetDynamicPayloadSize(void);
 void    nrfWriteAckPayload(uint8_t pipe, uint8_t* buf, uint8_t len);
 void    nrfStartWrite( const void* buf, uint8_t len, uint8_t multicast);
 uint8_t nrfRead( void* buf, uint8_t len );
-void    nrfWhatHappened(uint8_t *tx_ok, uint8_t *tx_fail, uint8_t *rx_ready);
+uint8_t nrfWhatHappened();
 void    nrfOpen64WritingPipe(uint64_t value);
 void    nrfOpenWritingPipe(uint8_t *address);
 void    nrfOpen64ReadingPipe(uint8_t child, uint64_t address);

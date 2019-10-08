@@ -65,24 +65,27 @@ ISR(PORTD_INT0_vect)
 	newBroadcastFlag = 1;
 }
 
-ISR(PORTF_INT0_vect){		//triggers when data is received
-	uint8_t  tx_ds, max_rt, rx_dr;
-	nrfWhatHappened(&tx_ds, &max_rt, &rx_dr);
-	if(rx_dr){
+ISR(PORTF_INT0_vect){
+	uint8_t status;
+	status = nrfWhatHappened();
+
+	if(status & NRF_STATUS_RX_DR_bm)			// RX Data Ready
+	{
 		PORTF.OUTTGL = PIN0_bm;
 		memset(packet, 0, sizeof(packet));
 		nrfRead(packet, nrfGetDynamicPayloadSize());
 		newDataFlag = 1;
 	}
-	
-	else if(tx_ds)
+
+	if(status & NRF_STATUS_TX_DS_bm)			// TX Data Sent
 	{
 		nrfStartListening();
 		PORTC.OUTCLR = PIN0_bm;
 		successTXFlag = 1;
 	}
-	
-	else if(max_rt){
+
+	if(status & NRF_STATUS_MAX_RT_bm)			// Max Retries
+	{
 		nrfStartListening();
 		PORTC.OUTCLR = PIN0_bm;
 		maxRTFlag = 1;
