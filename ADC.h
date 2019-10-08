@@ -13,6 +13,7 @@ void init_adc(void);
 void ADC_timer(void);
 uint8_t ADC_sample(void);
 uint8_t sampleData[2];
+volatile uint8_t sampleFlag; 
 volatile uint16_t res;
 
 

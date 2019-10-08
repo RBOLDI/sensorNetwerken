@@ -49,7 +49,7 @@ volatile uint8_t successTXFlag		= 0;
 volatile uint8_t maxRTFlag			= 0;
 volatile uint8_t sampleCounter		= 0;
 
-
+uint8_t ADCCounter = 0;
 uint8_t MYID;
 uint8_t device_serial[11];
 uint8_t PayloadSize;
@@ -73,6 +73,9 @@ ISR(TCE0_OVF_vect)
 	PORTF.OUTTGL = PIN1_bm;
 	updateNeighborList();
 	newBroadcastFlag = 1;
+	ADCCounter ++;
+	if (ADCCounter % 2 == 0) sampleFlag = 1;
+	else if (ADCCounter == 255) ADCCounter = 0;
 }
 
 ISR(PORTD_INT0_vect)
@@ -116,12 +119,13 @@ int main(void)
 				nextState = S_Idle;
 			break;
 			case S_SendRouting:
-			printf("S_SendRouting\n");
-			SendRouting();
-			nextState = S_Idle;
+				printf("S_SendRouting\n");
+				SendRouting();
+				nextState = S_Idle;
 			break;
 			case S_SendSensorData:
 				printf("S_SendSensorData\n");
+				printf("sample data:%s ADC flag :%d ", sampleData, ADCCounter);
 				sendPrivateMSG (53, sampleData);
 				nextState = S_Idle;
 			break;
@@ -145,7 +149,7 @@ int main(void)
 					nextState = S_GotMail;
 				}
 				else if(successTXFlag) {
-					printf("Succesfull TX.\n");
+					printf("Successful TX.\n");
 					successTXFlag = 0;
 					nextState = S_Idle;
 				}
@@ -180,7 +184,6 @@ void nrfSendMessage(uint8_t *str, uint8_t str_len, uint8_t *pipe)
 void SendRouting( void )
 {
 	uint8_t *str = getRoutingString();
-	
 	nrfSendMessage(str, str[2], broadcast_pipe);
 }
 

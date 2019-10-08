@@ -7,6 +7,7 @@
 #include "routingtable.h"
 #include "messages.h"
 #include "nrf24L01.h"
+#include "debug_opts.h"
 
 #define PRIVATE_MSG 0x03
 
@@ -60,9 +61,12 @@ void ReceiveData(uint8_t _myid, uint8_t *_data, uint8_t _size) //Get size from g
 	
 	if(recipiant == 1)
 	{
+		printf("Data is for me\n");
 		// If is for me load in Rpi ### MUST STILL BE ADDED ###
 	}else{
+		printf("Data is for");
 		BuurRoute = findLeastHops(recipiant);
 		sendMSG_Ptr(_data, _size, pipe_selector(BuurRoute.uNeighbor));
+		printf("%d",BuurRoute.uNeighbor);
 	}
 }
