@@ -106,7 +106,6 @@ int main(void)
 			break;
 			case S_SendSensorData:
 				printf("S_SendSensorData\n");
-				printf("sample data: 0x%02X0x%02X ADC flag :%d ", sampleData[0], sampleData[1], ADCCounter);
 				sendPrivateMSG (105, sampleData);
 				nextState = S_Idle;
 			break;
@@ -130,12 +129,10 @@ int main(void)
 					nextState = S_GotMail;
 				}
 				else if(successTXFlag) {
-					printf("Successful TX.\n");
 					successTXFlag = 0;
 					nextState = S_Idle;
 				}
 				else if(maxRTFlag) {
-					printf("Max retries.\n");
 					maxRTFlag = 0;
 					nextState = S_Idle;
 				}
@@ -200,7 +197,7 @@ void parseIncomingData( void )
 		case DHDR:
 			DB_MSG("Received Data");
 			ReceiveData(packet, packet[2]);	
-			printf("0x%02X %d %s\n", packet[0], packet[1], packet + 2);
+			printf("0x%02X %d %d\n", packet[0], packet[1], ((uint16_t)packet[2] << 8) + packet[3]);
 		break;
 		case BCREPLY:
 		break;

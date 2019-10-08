@@ -21,19 +21,20 @@ void init_PrivateComm(uint8_t _myid)
 void sendPrivateMSG (uint8_t targetID, uint8_t *data)
 {
 	tNeighborHops messageInfo = findLeastHops(targetID);
-	memset(aPrivateSendString, 0, 32);
-	
-	aPrivateSendString[0] = DHDR;
-	aPrivateSendString[1] = MyID;
-	aPrivateSendString[2] = targetID;
-	aPrivateSendString[3] = messageInfo.uHops;
-	
-	for(uint8_t i = 0; i < SENSORDATALENGTH; i++)
-	{
-		aPrivateSendString[i+4] = data[i];
+	if(messageInfo.uNeighbor != 0){
+		memset(aPrivateSendString, 0, 32);
+		
+		aPrivateSendString[0] = DHDR;
+		aPrivateSendString[1] = MyID;
+		aPrivateSendString[2] = targetID;
+		aPrivateSendString[3] = messageInfo.uHops;
+		
+		for(uint8_t i = 0; i < SENSORDATALENGTH; i++)
+		{
+			aPrivateSendString[i+4] = data[i];
+		}
+		nrfSendMessage(aPrivateSendString, (SENSORDATALENGTH + 4), pipe_selector(messageInfo.uNeighbor));
 	}
-	
-	nrfSendMessage(aPrivateSendString, (SENSORDATALENGTH + 4), pipe_selector(messageInfo.uNeighbor));
 }
 
 //Function checks if privately received data is meant for me
@@ -63,6 +64,5 @@ void nrfSendMessage(uint8_t *str, uint8_t str_len, uint8_t *pipe)
 	nrfStopListening();
 	nrfOpenWritingPipe(pipe);
 	delay_us(130);
-	
 	nrfStartWrite(str, str_len, NRF_W_TX_PAYLOAD_NO_ACK);
 }
