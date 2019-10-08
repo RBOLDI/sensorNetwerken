@@ -587,11 +587,11 @@ uint8_t nrfAvailable(uint8_t* pipe_num)
  *
  * \param[out]  status    Get RX_DR & TX_DS & MAX_RT statusses
  */
-void nrfWhatHappened(uint8_t *status)
+uint8_t nrfWhatHappened()
 {
   // Read the status & reset the status in one easy call
   // Or is that such a good idea?
-  *status = nrfWriteRegister(REG_STATUS, NRF_STATUS_RX_DR_bm | NRF_STATUS_TX_DS_bm | NRF_STATUS_MAX_RT_bm );
+  return nrfWriteRegister(REG_STATUS, NRF_STATUS_RX_DR_bm | NRF_STATUS_TX_DS_bm | NRF_STATUS_MAX_RT_bm );
 }
 
 /*!

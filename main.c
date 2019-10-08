@@ -67,7 +67,7 @@ ISR(PORTD_INT0_vect)
 
 ISR(PORTF_INT0_vect){
 	uint8_t status;
-	nrfWhatHappened(&status);
+	status = nrfWhatHappened();
 
 	if(status & NRF_STATUS_RX_DR_bm)			// RX Data Ready
 	{
