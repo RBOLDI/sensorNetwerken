@@ -5,18 +5,10 @@
  *  Author: Steph
  */ 
 
-#include <avr/io.h>
-#include <stdio.h> 
-#include <stdbool.h>
-#include <stdlib.h>
-#include <string.h>
+#include <stdio.h>
 
 #include "messages.h"
 #include "nrf24L01.h"
-
-uint8_t message[MAX_MESSAGE_SIZE] = {0};
-uint8_t fullMessage[FULL_MESSAGE_SIZE] = {0};
-
 
 // Select Pipe to write to dependent on ID
 uint8_t* pipe_selector(uint8_t ID){
