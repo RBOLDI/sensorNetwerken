@@ -23,20 +23,12 @@
 #include "ADC.h"
 #include "networkComm.h"
 
-#define		FB !(PORTD.IN & PIN1_bm)
-#define		RB !(PORTD.IN & PIN2_bm)
-#define		SB !(PORTD.IN & PIN3_bm)
-#define		MF !(PORTD.IN & PIN4_bm)
-#define		JG !(PORTD.IN & PIN5_bm)
-
 //Function prototypes
 void init_nrf(const uint8_t pvtID);
 void nrfSendMessage(uint8_t *str, uint8_t str_len, uint8_t *pipe);
 void SendRouting( void );
 void bootFunction(void);
 void parseIncomingData(void);
-const uint8_t getID();
-
 
 volatile uint8_t newDataFlag		= 0;
 volatile uint8_t newBroadcastFlag	= 0;
@@ -232,15 +224,6 @@ void parseIncomingData( void )
 			printf_bin(packet, sizeof(packet));
 			break;
 	}
-}
-
-const uint8_t getID(){
-	if(FB) return 51;
-	else if(RB) return 52;
-	else if(SB) return 53;
-	else if(MF) return 83;
-	else if(JG) return 77;
-	else return 00;
 }
 
 void init_nrf(const uint8_t pvtID){
