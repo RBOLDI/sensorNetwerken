@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <util/atomic.h>
 
 #include "routingtable.h"
 #include "messages.h"
@@ -37,11 +38,13 @@ void init_RoutingTable(uint8_t _myid)
 
 void addKnownNode(uint8_t uNodeID)
 {
+	ATOMIC_BLOCK(ATOMIC_FORCEON);
 	if ( (!isKnown(uNodeID)) && (uNodeID != uMyID) )
 		{
 			aRoutingTable[uNodeID] = (uint8_t*) calloc(MAXNODES + 1, sizeof(uint8_t));
 			uKnownNodes++;
 		}
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE);
 }
 
 uint8_t isKnown(uint8_t uNodeID)
@@ -51,6 +54,7 @@ uint8_t isKnown(uint8_t uNodeID)
 
 void addNeighbor(uint8_t uNodeID)
 {
+	ATOMIC_BLOCK(ATOMIC_FORCEON);
 	if (memchr(aNeighbors, uNodeID, MAXNODES) == NULL)
 		{
 			addKnownNode(uNodeID);
@@ -59,10 +63,12 @@ void addNeighbor(uint8_t uNodeID)
 		}
 		
 	aMissedBroadcasts[uNodeID] = 0;
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE);
 }
 
 void removeNeighbor(uint8_t uNodeID)
 {
+	ATOMIC_BLOCK(ATOMIC_FORCEON);
 	uint8_t *pNode = memchr(aNeighbors, uNodeID, MAXNODES);
 	uint8_t position = pNode - aNeighbors;
 	
@@ -79,6 +85,7 @@ void removeNeighbor(uint8_t uNodeID)
 		}
 		uNeighbors--;
 	}
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE);
 }
 
 void updateNeighborList(void)
@@ -96,6 +103,7 @@ void updateNeighborList(void)
 
 void FillRoutingTable(uint8_t *routingstring, uint8_t string_length)
 {
+	ATOMIC_BLOCK(ATOMIC_FORCEON);
 	memset( aRoutingTable[ routingstring[1] ], 0, MAXNODES + 1 );
 	
 	if(string_length > 3)
@@ -112,6 +120,7 @@ void FillRoutingTable(uint8_t *routingstring, uint8_t string_length)
 			}
 		}
 	}
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE);
 }
 
 uint8_t isNeighbor(uint8_t uNodeID)
@@ -121,6 +130,7 @@ uint8_t isNeighbor(uint8_t uNodeID)
 
 tNeighborHops findLeastHops(uint8_t uNodeID)
 {
+	ATOMIC_BLOCK(ATOMIC_FORCEON);
 	tNeighborHops NnH = {0 , UINT8_MAX};
 		
 	if (isKnown(uNodeID))
@@ -141,12 +151,13 @@ tNeighborHops findLeastHops(uint8_t uNodeID)
 			}
 		}
 	}
-	
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE);
 	return NnH;
 }
 
 uint8_t* getRoutingString( void )
 {
+	ATOMIC_BLOCK(ATOMIC_FORCEON);
 	tNeighborHops NnH;
 	uint8_t Idx = 2;
 	
@@ -172,5 +183,6 @@ uint8_t* getRoutingString( void )
 	
 	printf("Generated Routingstring: ");
 	printf_Routing(aRoutingString, aRoutingString[2]);
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE);
 	return aRoutingString;
 }

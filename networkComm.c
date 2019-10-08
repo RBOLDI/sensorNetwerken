@@ -33,6 +33,7 @@ void sendPrivateMSG (uint8_t targetID, uint8_t *data)
 		{
 			aPrivateSendString[i+4] = data[i];
 		}
+		
 		nrfSendMessage(aPrivateSendString, (SENSORDATALENGTH + 4), pipe_selector(messageInfo.uNeighbor));
 	}
 }
@@ -43,13 +44,14 @@ void sendPrivateMSG (uint8_t targetID, uint8_t *data)
 void ReceiveData(uint8_t *_data, uint8_t _size) //Get size from global int PayloadSize in main.c 
 { 
 	tNeighborHops BuurRoute;
-	_data[3]--;
 	
 	if(_data[2] == MyID)
 	{
 		printf("Data is for me\n");
 		// If is for me load in Rpi ### MUST STILL BE ADDED ###
-	}else{
+	}
+	else if (--_data[3] > 0)
+	{
 		BuurRoute = findLeastHops(_data[2]);
 		nrfSendMessage(_data, _size, pipe_selector(BuurRoute.uNeighbor));
 		printf("Data is for");
