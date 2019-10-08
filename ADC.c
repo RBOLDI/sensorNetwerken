@@ -4,12 +4,9 @@
  * Created: 1-10-2019 09:26:56
  *  Author: Rowan
  */ 
-#define F_CPU 2000000UL
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 #include <stddef.h>             // definition of offsetof
-#include <avr/interrupt.h>
-#include <util/delay.h>
 #include <avr/interrupt.h>
 #include <stdio.h>
 #include "ADC.h"
