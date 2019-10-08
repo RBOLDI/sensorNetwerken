@@ -49,7 +49,6 @@ volatile uint8_t successTXFlag		= 0;
 volatile uint8_t maxRTFlag			= 0;
 volatile uint8_t sampleCounter		= 0;
 
-uint8_t ADCCounter = 0;
 uint8_t MYID;
 uint8_t device_serial[11];
 uint8_t PayloadSize;
@@ -73,9 +72,7 @@ ISR(TCE0_OVF_vect)
 	PORTF.OUTTGL = PIN1_bm;
 	updateNeighborList();
 	newBroadcastFlag = 1;
-	ADCCounter ++;
-	if (ADCCounter % 2 == 0) sampleFlag = 1;
-	else if (ADCCounter == 255) ADCCounter = 0;
+	ADC_timer();
 }
 
 ISR(PORTD_INT0_vect)
@@ -125,8 +122,8 @@ int main(void)
 			break;
 			case S_SendSensorData:
 				printf("S_SendSensorData\n");
-				printf("rest :%d sample data: 0x%02X0x%02X ADC flag :%d ", res, sampleData[0], sampleData[1], ADCCounter);
-				sendPrivateMSG (53, sampleData);
+				printf("sample data: 0x%02X0x%02X ADC flag :%d ", sampleData[0], sampleData[1], ADCCounter);
+				sendPrivateMSG (105, sampleData);
 				nextState = S_Idle;
 			break;
 			case S_GotMail:
@@ -231,6 +228,7 @@ void parseIncomingData( void )
 		case DHDR:
 			DB_MSG("Received Data");
 			ReceiveData(MYID, packet, PayloadSize);	
+			printf("0x%02X %d %s\n", packet[0], packet[1], packet + 2);
 		break;
 		case BCREPLY:
 		break;

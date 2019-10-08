@@ -78,8 +78,7 @@ uint8_t ADC_sample(void){
 }
 
 void ADC_timer(void){
-	TCD0.PER      = 31249;						// Tper =  256 * (31249 +1) / 2M = 4s
-	TCD0.CTRLA    = TC_CLKSEL_DIV256_gc;        // Prescaling 8
-	TCD0.CTRLB    = TC_WGMODE_NORMAL_gc;        // Normal mode
-	TCD0.INTCTRLA = TC_OVFINTLVL_OFF_gc;        // Interrupt overflow off
+	ADCCounter ++;
+	if (ADCCounter % 2 == 0) sampleFlag = 1;
+	else if (ADCCounter == 255) ADCCounter = 0;
 }
