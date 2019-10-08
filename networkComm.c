@@ -10,7 +10,7 @@
 
 void (*sendMSG_Ptr)(uint8_t*, uint8_t, uint8_t*);
 uint8_t *aPrivateSendString = NULL;
-uint8_t MyID = NULL;
+uint8_t MyID = 0;
 uint8_t sensorDataLenght = 2;
 
 void init_PrivateComm(uint8_t _myid)
