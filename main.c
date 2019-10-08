@@ -53,8 +53,6 @@ enum states {
 
 enum states currentState, nextState = S_Boot;
 
-char charBuffer[MAX_MESSAGE_SIZE] = {0};
-
 ISR(TCE0_OVF_vect)
 {
 	PORTF.OUTTGL = PIN1_bm;
