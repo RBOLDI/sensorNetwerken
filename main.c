@@ -25,7 +25,6 @@
 
 //Function prototypes
 void init_nrf(const uint8_t pvtID);
-void nrfSendMessage(uint8_t *str, uint8_t str_len, uint8_t *pipe);
 void SendRouting( void );
 void bootFunction(void);
 void parseIncomingData(void);
@@ -150,18 +149,6 @@ int main(void)
 		currentState = nextState;
 	}
 }
-
-void nrfSendMessage(uint8_t *str, uint8_t str_len, uint8_t *pipe)
-{
-	PORTC.OUTSET = PIN0_bm;
-	printf("SendMessage\n");
-	nrfStopListening();
-	nrfOpenWritingPipe(pipe);
-	delay_us(130);
-	
-	nrfStartWrite(str, str_len, NRF_W_TX_PAYLOAD_NO_ACK);
-}
-
 void SendRouting( void )
 {
 	uint8_t *str = getRoutingString();
@@ -188,7 +175,7 @@ void bootFunction(void)
 	init_lowpower();
 	init_adc();
 	ADC_timer();
-	sendMSG_Ptr = nrfSendMessage;
+	
 	DB_MSG("\n----Debug mode enabled----\n\n");
 	printf_DeviceSerial(device_serial,11);
 
