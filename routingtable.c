@@ -15,10 +15,6 @@
 
 #define		MAXNODES	255
 
-#define		BROADCAST	0x01
-#define		RHDR		0x02
-
-
 uint8_t **aRoutingTable	= NULL;
 uint8_t *aNeighbors		= NULL;
 uint8_t uNeighbors		= 0;

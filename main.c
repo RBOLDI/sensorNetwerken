@@ -29,11 +29,6 @@
 #define		MF !(PORTD.IN & PIN4_bm)
 #define		JG !(PORTD.IN & PIN5_bm)
 
-#define		BROADCAST	0x01
-#define		RHDR		0x02
-#define		DHDR		0x03
-#define		BCREPLY		0x04
-
 //Function prototypes
 void init_nrf(const uint8_t pvtID);
 void nrfSendMessage(uint8_t *str, uint8_t str_len, uint8_t *pipe);

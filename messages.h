@@ -10,6 +10,10 @@
 #define		NUMBER_OF_PREFIX_BYTES 3
 #define		MAX_MESSAGE_SIZE FULL_MESSAGE_SIZE - NUMBER_OF_PREFIX_BYTES // Waarvan de laatste is '\0'
 
+#define		BROADCAST	0x01
+#define		RHDR		0x02
+#define		DHDR		0x03
+#define		BCREPLY		0x04
 
 // Integers shared by message functions.
 uint8_t message[MAX_MESSAGE_SIZE];
