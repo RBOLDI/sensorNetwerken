@@ -1,14 +1,14 @@
-
 #include <avr/io.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
-#include "routingtable.h"
-#include "messages.h"
+#include "networkComm.h"
 #include "nrf24L01.h"
+#include "avr_compiler.h"
+#include "messages.h"
+#include "routingtable.h"
 
-void (*sendMSG_Ptr)(uint8_t*, uint8_t, uint8_t*);
 uint8_t *aPrivateSendString = NULL;
 uint8_t MyID = 0;
 uint8_t sensorDataLenght = 2;
@@ -34,7 +34,7 @@ void sendPrivateMSG (uint8_t targetID, uint8_t *data)
 	{
 		aPrivateSendString[i+4] = data[i];
 	}
-	sendMSG_Ptr(aPrivateSendString, (sensorDataLenght+4), private_pipe);
+	nrfSendMessage(aPrivateSendString, (sensorDataLenght+4), private_pipe);
 }
 
 
@@ -61,6 +61,17 @@ void ReceiveData(uint8_t _myid, uint8_t *_data, uint8_t _size) //Get size from g
 		// If is for me load in Rpi ### MUST STILL BE ADDED ###
 	}else{
 		BuurRoute = findLeastHops(recipiant);
-		sendMSG_Ptr(_data, _size, pipe_selector(BuurRoute.uNeighbor));
+		nrfSendMessage(_data, _size, pipe_selector(BuurRoute.uNeighbor));
 	}
+}
+
+void nrfSendMessage(uint8_t *str, uint8_t str_len, uint8_t *pipe)
+{
+	PORTC.OUTSET = PIN0_bm;
+	printf("SendMessage\n");
+	nrfStopListening();
+	nrfOpenWritingPipe(pipe);
+	delay_us(130);
+	
+	nrfStartWrite(str, str_len, NRF_W_TX_PAYLOAD_NO_ACK);
 }
