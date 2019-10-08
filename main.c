@@ -136,7 +136,7 @@ int main(void)
 					successTXFlag = 0;
 					nextState = S_Idle;
 				}
-				else if(newDataFlag) {
+				else if(maxRTFlag) {
 					printf("Max retries.\n");
 					maxRTFlag = 0;
 					nextState = S_Idle;
