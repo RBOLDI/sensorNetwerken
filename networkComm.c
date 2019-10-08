@@ -11,7 +11,6 @@
 
 uint8_t *aPrivateSendString = NULL;
 uint8_t MyID = 0;
-uint8_t sensorDataLenght = 2;
 
 void init_PrivateComm(uint8_t _myid)
 {
@@ -21,7 +20,6 @@ void init_PrivateComm(uint8_t _myid)
 
 void sendPrivateMSG (uint8_t targetID, uint8_t *data)
 {
-	private_pipe[4] = targetID;
 	tNeighborHops messageInfo = findLeastHops(targetID);
 	memset(aPrivateSendString, 0, 32);
 	
@@ -30,37 +28,26 @@ void sendPrivateMSG (uint8_t targetID, uint8_t *data)
 	aPrivateSendString[2] = targetID;
 	aPrivateSendString[3] = messageInfo.uHops;
 	
-	for(uint8_t i = 0; i < sensorDataLenght; i++)
+	for(uint8_t i = 0; i < SENSORDATALENGTH; i++)
 	{
 		aPrivateSendString[i+4] = data[i];
 	}
 	nrfSendMessage(aPrivateSendString, (sensorDataLenght+4), private_pipe);
 }
 
-
-// -- Functions for receiving data--
-
-uint8_t isMine(uint8_t _myid, uint8_t *_data)
-{
-	uint8_t recipiant = _data[2];
-	if(recipiant == _myid) return 1;
-	else return recipiant;
-}
-
 //Function checks if privately received data is meant for me
 // if not it calculates the least hopes to the recipiant and sends 
 // message to first node in that path.
-void ReceiveData(uint8_t _myid, uint8_t *_data, uint8_t _size) //Get size from global int PayloadSize in main.c 
+void ReceiveData(uint8_t *_data, uint8_t _size) //Get size from global int PayloadSize in main.c 
 { 
-	uint8_t recipiant = isMine(_myid, _data);
 	tNeighborHops BuurRoute;
-	_data[3] --;
+	_data[3]--;
 	
-	if(recipiant == 1)
+	if(_data[2] == MyID)
 	{
 		// If is for me load in Rpi ### MUST STILL BE ADDED ###
 	}else{
-		BuurRoute = findLeastHops(recipiant);
+		BuurRoute = findLeastHops(_data[2]);
 		nrfSendMessage(_data, _size, pipe_selector(BuurRoute.uNeighbor));
 	}
 }

@@ -106,7 +106,7 @@ int main(void)
 			break;
 			case S_SendSensorData:
 				printf("S_SendSensorData\n");
-				sendPrivateMSG (53, sampleData);
+				sendPrivateMSG (MYID, sampleData);
 				nextState = S_Idle;
 			break;
 			case S_GotMail:
@@ -199,7 +199,7 @@ void parseIncomingData( void )
 			break;
 		case DHDR:
 			DB_MSG("Received Data");
-			ReceiveData(MYID, packet, PayloadSize);	
+			ReceiveData(packet, PayloadSize);	
 		break;
 		case BCREPLY:
 		break;
