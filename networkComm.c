@@ -32,7 +32,8 @@ void sendPrivateMSG (uint8_t targetID, uint8_t *data)
 	{
 		aPrivateSendString[i+4] = data[i];
 	}
-	nrfSendMessage(aPrivateSendString, (SENSORDATALENGTH+4), private_pipe);
+	
+	nrfSendMessage(aPrivateSendString, (SENSORDATALENGTH + 4), pipe_selector(messageInfo.uNeighbor));
 }
 
 //Function checks if privately received data is meant for me
