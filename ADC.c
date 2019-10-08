@@ -64,9 +64,11 @@ uint16_t read_adc(void)
 uint8_t ADC_sample(void){
 	uint16_t copyData;
 	if(sampleFlag){
+		res = read_adc();
 		sampleFlag = 0;
 		copyData = res & 0xFF00; copyData = copyData >> 8;
 		sampleData[0] = copyData;
+		copyData = 0;
 		copyData = res & 0x00FF; 
 		sampleData[1] = copyData;
 		return 1;

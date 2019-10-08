@@ -125,7 +125,7 @@ int main(void)
 			break;
 			case S_SendSensorData:
 				printf("S_SendSensorData\n");
-				printf("sample data:%s ADC flag :%d ", sampleData, ADCCounter);
+				printf("rest :%d sample data: 0x%02X0x%02X ADC flag :%d ", res, sampleData[0], sampleData[1], ADCCounter);
 				sendPrivateMSG (53, sampleData);
 				nextState = S_Idle;
 			break;
