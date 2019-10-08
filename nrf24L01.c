@@ -582,24 +582,16 @@ uint8_t nrfAvailable(uint8_t* pipe_num)
 /*!
  * \brief   Call this to find out which interrupt occured
  *
- * \details Tells you what caused the interrupt, and clears the state of
+ * \details Returns the status what caused the interrupt, and clears the state of
  *          interrupts.
- *          The retuend values are not equal to 0 if the interrupt occured.
  *
- * \param[out]  tx_ok    The send was successful (TX_DS)
- * \param[out]  tx_fail  The send failed, too many retries (MAX_RT)
- * \param[out]  rx_ready There is a message waiting to be read (RX_DR)
+ * \param[out]  status    Get RX_DR & TX_DS & MAX_RT statusses
  */
-void nrfWhatHappened(uint8_t *tx_ok, uint8_t *tx_fail, uint8_t *rx_ready)
+void nrfWhatHappened(uint8_t *status)
 {
   // Read the status & reset the status in one easy call
   // Or is that such a good idea?
-  uint8_t status = nrfWriteRegister(REG_STATUS, NRF_STATUS_RX_DR_bm | NRF_STATUS_TX_DS_bm | NRF_STATUS_MAX_RT_bm );
-
-  // Report to the user what happened
-  *tx_ok    = status & NRF_STATUS_TX_DS_bm;
-  *tx_fail  = status & NRF_STATUS_MAX_RT_bm;
-  *rx_ready = status & NRF_STATUS_RX_DR_bm;
+  *status = nrfWriteRegister(REG_STATUS, NRF_STATUS_RX_DR_bm | NRF_STATUS_TX_DS_bm | NRF_STATUS_MAX_RT_bm );
 }
 
 /*!
