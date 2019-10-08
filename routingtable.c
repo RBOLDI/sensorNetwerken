@@ -98,15 +98,19 @@ void FillRoutingTable(uint8_t *routingstring, uint8_t string_length)
 {
 	memset( aRoutingTable[ routingstring[1] ], 0, MAXNODES + 1 );
 	
-	if(string_length <= 3) return;
-	
-	for(uint8_t i = 3; i < string_length; i += 2 ) {
+	if(string_length > 3)
+	{
+		for(uint8_t i = 3; i < string_length; i += 2 ) {
 		
-		if ( (routingstring[i] != uMyID) && (routingstring[i]) != 0 )
+			if ( (routingstring[i] != uMyID) && (routingstring[i] != 0) && !isNeighbor( routingstring[i] ) )
+			{
+				if (routingstring[ i + 1] <= uKnownNodes)
 				{
-					addKnownNode(routingstring[i]);
+					addKnownNode( routingstring[i] );
 					aRoutingTable[ routingstring[1] ][ routingstring[i] ] = routingstring[ i + 1 ] + 1;
 				}
+			}
+		}
 	}
 }
 
@@ -165,7 +169,6 @@ uint8_t* getRoutingString( void )
 	aRoutingString[0] = RHDR;
 	aRoutingString[1] = uMyID;
 	aRoutingString[2] = Idx + 1;
-	
 	
 	printf("Generated Routingstring: ");
 	printf_Routing(aRoutingString, aRoutingString[2]);
