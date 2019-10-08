@@ -1,9 +1,3 @@
-/*
- * networkComm.h
- *
- * Created: 30-9-2019 12:24:22
- *  Author: RBOLDI & YaBoii Steph
- */ 
 
 
 #ifndef NETWORKCOMM_H_
