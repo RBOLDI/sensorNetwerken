@@ -23,6 +23,7 @@
  *           -   MISO  - SPI MOSI           | PC2
  *
  */
+#include <util/atomic.h>
 #include "nrf24spiXM2.h"
 
 /*! \brief   Initialization of SPI
@@ -63,9 +64,11 @@ void nrfspiInit(void)
  */
 uint8_t nrfspiTransfer(uint8_t iData)
 {
+  ATOMIC_BLOCK(ATOMIC_FORCEON);
   USARTC0.DATA = iData;
   while( !(USARTC0.STATUS & USART_TXCIF_bm) );
   USARTC0.STATUS |= USART_TXCIF_bm;
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE);
 
   return USARTC0.DATA;
 }

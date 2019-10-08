@@ -79,9 +79,12 @@ ISR(PORTF_INT0_vect){
 
 	if(status & NRF_STATUS_TX_DS_bm)			// TX Data Sent
 	{
-		nrfStartListening();
-		PORTC.OUTCLR = PIN0_bm;
-		successTXFlag = 1;
+		if (nrfReadRegister(REG_FIFO_STATUS) & NRF_FIFO_STATUS_TX_EMPTY_bm)
+		{
+			nrfStartListening();
+			PORTC.OUTCLR = PIN0_bm;
+			successTXFlag = 1;
+		}
 	}
 
 	if(status & NRF_STATUS_MAX_RT_bm)			// Max Retries
