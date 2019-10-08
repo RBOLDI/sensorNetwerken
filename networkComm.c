@@ -8,8 +8,6 @@
 #include "messages.h"
 #include "nrf24L01.h"
 
-#define PRIVATE_MSG 0x03
-
 void (*sendMSG_Ptr)(uint8_t*, uint8_t, uint8_t*);
 uint8_t *aPrivateSendString = NULL;
 uint8_t MyID = NULL;
@@ -27,7 +25,7 @@ void sendPrivateMSG (uint8_t targetID, uint8_t *data)
 	tNeighborHops messageInfo = findLeastHops(targetID);
 	memset(aPrivateSendString, 0, 32);
 	
-	aPrivateSendString[0] = PRIVATE_MSG;
+	aPrivateSendString[0] = DHDR;
 	aPrivateSendString[1] = MyID;
 	aPrivateSendString[2] = targetID;
 	aPrivateSendString[3] = messageInfo.uHops;
