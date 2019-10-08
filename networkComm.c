@@ -46,10 +46,13 @@ void ReceiveData(uint8_t *_data, uint8_t _size) //Get size from global int Paylo
 	
 	if(_data[2] == MyID)
 	{
+		printf("Data is for me\n");
 		// If is for me load in Rpi ### MUST STILL BE ADDED ###
 	}else{
 		BuurRoute = findLeastHops(_data[2]);
 		nrfSendMessage(_data, _size, pipe_selector(BuurRoute.uNeighbor));
+		printf("Data is for");
+        printf("%d\n",BuurRoute.uNeighbor);
 	}
 }
 
