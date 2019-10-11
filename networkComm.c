@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <util/atomic.h>
 
 #include "networkComm.h"
 #include "nrf24L01.h"
@@ -61,10 +62,12 @@ void ReceiveData(uint8_t *_data, uint8_t _size) //Get size from global int Paylo
 
 void nrfSendMessage(uint8_t *str, uint8_t str_len, uint8_t *pipe)
 {
+	ATOMIC_BLOCK(ATOMIC_FORCEON);
 	PORTC.OUTSET = PIN0_bm;
 	printf("SendMessage\n");
 	nrfStopListening();
 	nrfOpenWritingPipe(pipe);
 	delay_us(130);
 	nrfStartWrite(str, str_len, NRF_W_TX_PAYLOAD_NO_ACK);
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE);
 }
