@@ -407,9 +407,6 @@ void nrfStartListening(void)
     nrfWriteRegisterMulti(REG_RX_ADDR_P0, (uint8_t *)(&pipe0_reading_address), addr_width);
   }
 
-  nrfFlushRx();
-  nrfFlushTx();
-
   nrfCE(NRF_ENABLE);
   _delay_us(130);
 }

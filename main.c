@@ -11,6 +11,7 @@
 #include <string.h>
 #include <avr/interrupt.h>
 #include <util/atomic.h>
+#include <stdbool.h>
 #include "clksys_driver.h"
 #include "nrf24L01.h"
 #include "nrf24spiXM2.h"
@@ -91,6 +92,7 @@ ISR(PORTF_INT0_vect){
 
 	if(status & NRF_STATUS_MAX_RT_bm)			// Max Retries
 	{
+		nrfFlushTx();
 		nrfStartListening();
 		PORTC.OUTCLR = PIN0_bm;
 		maxRTFlag = 1;
@@ -159,7 +161,7 @@ int main(void)
 void SendRouting( void )
 {
 	uint8_t *str = getRoutingString();
-	nrfSendMessage(str, str[2], broadcast_pipe);
+	nrfSendMessage(str, str[2], broadcast_pipe, false);
 }
 
 /* This function will be called when state equals S_Boot.
@@ -207,7 +209,7 @@ void parseIncomingData( void )
 		case DHDR:
 			DB_MSG("Received Data");
 			ReceiveData(packet, packet[2]);	
-			printf("0x%02X %d %d\n", packet[0], packet[1], (( (uint16_t) packet[2] ) << 8) & packet[3]);
+			printf("0x%02X %d %d\n", packet[0], packet[1], (( (uint16_t) packet[2] ) << 8) | packet[3]);
 		break;
 		case BCREPLY:
 		break;

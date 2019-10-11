@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <util/atomic.h>
+#include <stdbool.h>
 
 #include "networkComm.h"
 #include "nrf24L01.h"
@@ -35,7 +36,7 @@ void sendPrivateMSG (uint8_t targetID, uint8_t *data)
 			aPrivateSendString[i+4] = data[i];
 		}
 		
-		nrfSendMessage(aPrivateSendString, (SENSORDATALENGTH + 4), pipe_selector(messageInfo.uNeighbor));
+		nrfSendMessage(aPrivateSendString, (SENSORDATALENGTH + 4), pipe_selector(messageInfo.uNeighbor), true);
 	}
 }
 
@@ -54,20 +55,26 @@ void ReceiveData(uint8_t *_data, uint8_t _size) //Get size from global int Paylo
 	else if (--_data[3] > 0)
 	{
 		BuurRoute = findLeastHops(_data[2]);
-		nrfSendMessage(_data, _size, pipe_selector(BuurRoute.uNeighbor));
+		nrfSendMessage(_data, _size, pipe_selector(BuurRoute.uNeighbor), true);
 		printf("Data is for");
         printf("%d\n",BuurRoute.uNeighbor);
 	}
 }
 
-void nrfSendMessage(uint8_t *str, uint8_t str_len, uint8_t *pipe)
+void nrfSendMessage(uint8_t *str, uint8_t str_len, uint8_t *pipe, bool ack)
 {
 	ATOMIC_BLOCK(ATOMIC_FORCEON);
 	PORTC.OUTSET = PIN0_bm;
-	printf("SendMessage\n");
 	nrfStopListening();
 	nrfOpenWritingPipe(pipe);
 	delay_us(130);
-	nrfStartWrite(str, str_len, NRF_W_TX_PAYLOAD_NO_ACK);
+	if (ack)
+	{
+		nrfStartWrite(str, str_len, NRF_W_TX_PAYLOAD);
+	}
+	else 
+	{
+		nrfStartWrite(str, str_len, NRF_W_TX_PAYLOAD_NO_ACK);
+	}
 	ATOMIC_BLOCK(ATOMIC_RESTORESTATE);
 }
