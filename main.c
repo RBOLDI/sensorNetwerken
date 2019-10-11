@@ -67,6 +67,7 @@ ISR(PORTD_INT0_vect)
 }
 
 ISR(PORTF_INT0_vect){
+	ATOMIC_BLOCK(ATOMIC_FORCEON);
 	uint8_t status;
 	status = nrfWhatHappened();
 
@@ -94,6 +95,7 @@ ISR(PORTF_INT0_vect){
 		PORTC.OUTCLR = PIN0_bm;
 		maxRTFlag = 1;
 	}
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE);
 }
 
 int main(void)
