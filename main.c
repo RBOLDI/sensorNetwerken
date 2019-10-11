@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <avr/interrupt.h>
+#include <util/atomic.h>
 #include "clksys_driver.h"
 #include "nrf24L01.h"
 #include "nrf24spiXM2.h"
@@ -112,7 +113,7 @@ int main(void)
 			break;
 			case S_SendSensorData:
 				printf("S_SendSensorData\n");
-				sendPrivateMSG (105, sampleData);
+				//sendPrivateMSG (105, sampleData);
 				nextState = S_Idle;
 			break;
 			case S_GotMail:
@@ -190,6 +191,7 @@ void bootFunction(void)
 	it is, and what to do with it. UMT means Unknown Message Type */
 void parseIncomingData( void )
 {
+	ATOMIC_BLOCK(ATOMIC_FORCEON);
 	switch(packet[0])
 	{
 		case BROADCAST:
@@ -213,6 +215,7 @@ void parseIncomingData( void )
 			printf_bin(packet, sizeof(packet));
 			break;
 	}
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE);
 }
 
 void init_nrf(const uint8_t pvtID){
