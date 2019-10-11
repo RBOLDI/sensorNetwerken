@@ -75,7 +75,7 @@ uint8_t ADC_sample(void){
 }
 
 void ADC_timer(void){
-	ADCCounter ++;
-	if (ADCCounter % 2 == 0) sampleFlag = 1;
+	ADCCounter++;
+	if (ADCCounter % 6 == 0) sampleFlag = 1;
 	else if (ADCCounter == 255) ADCCounter = 0;
 }

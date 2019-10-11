@@ -108,13 +108,18 @@ void FillRoutingTable(uint8_t *routingstring, uint8_t string_length)
 	
 	if(string_length > 3)
 	{
+		if (string_length > 32) 
+		{
+			string_length = 32;
+		}
+		
 		for(uint8_t i = 3; i < string_length; i += 2 ) {
 		
 			if ( (routingstring[i] != uMyID) && (routingstring[i] != 0) && !isNeighbor( routingstring[i] ) )
 			{
+				addKnownNode( routingstring[i] );
 				if (routingstring[ i + 1] <= uKnownNodes)
 				{
-					addKnownNode( routingstring[i] );
 					aRoutingTable[ routingstring[1] ][ routingstring[i] ] = routingstring[ i + 1 ] + 1;
 				}
 			}

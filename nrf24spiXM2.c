@@ -46,8 +46,8 @@ void nrfspiInit(void)
   USARTC0.CTRLB = USART_TXEN_bm | USART_RXEN_bm;
   USARTC0.CTRLC = USART_CMODE_MSPI_gc;
 
-  USARTC0.BAUDCTRLB = 0b11110000 | 0b00001000;
-  USARTC0.BAUDCTRLA = 0b00101110;   // F_CPU/(2*(BSEL+1))  is 8MHz on 32MHz CPU
+  USARTC0.BAUDCTRLB = 0 | 0;
+  USARTC0.BAUDCTRLA = 0;   // F_CPU/(2*(BSEL+1))  is 8MHz on 32MHz CPU
 }
 
 /*! \brief SPI transfer
@@ -65,9 +65,11 @@ void nrfspiInit(void)
 uint8_t nrfspiTransfer(uint8_t iData)
 {
   ATOMIC_BLOCK(ATOMIC_FORCEON);
+  
   USARTC0.DATA = iData;
   while( !(USARTC0.STATUS & USART_TXCIF_bm) );
   USARTC0.STATUS |= USART_TXCIF_bm;
+  
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE);
 
   return USARTC0.DATA;
