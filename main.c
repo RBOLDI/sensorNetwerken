@@ -113,7 +113,7 @@ int main(void)
 			break;
 			case S_SendSensorData:
 				printf("S_SendSensorData\n");
-				//sendPrivateMSG (105, sampleData);
+				sendPrivateMSG (105, sampleData);
 				nextState = S_Idle;
 			break;
 			case S_GotMail:
