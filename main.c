@@ -198,16 +198,16 @@ void parseIncomingData( void )
 	{
 		case BROADCAST:
 		 	printf("0x%02X %d %s\n", packet[0], packet[1], packet + 2);
-			break;
+		break;
 		case RHDR:
 			addNeighbor(packet[1]);
 			printf_Routing(packet, packet[2]);
 			FillRoutingTable(packet, packet[2]);
-			break;
+		break;
 		case DHDR:
 			DB_MSG("Received Data");
 			ReceiveData(packet, packet[2]);	
-			printf("0x%02X %d %d\n", packet[0], packet[1], ((uint16_t)packet[2] << 8) + packet[3]);
+			printf("0x%02X %d %d\n", packet[0], packet[1], (( (uint16_t) packet[2] ) << 8) & packet[3]);
 		break;
 		case BCREPLY:
 		break;
