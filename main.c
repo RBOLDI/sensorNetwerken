@@ -75,8 +75,6 @@ ISR(PORTF_INT0_vect){
 	if(status & NRF_STATUS_RX_DR_bm)			// RX Data Ready
 	{
 		PORTF.OUTTGL = PIN0_bm;
-		memset(packet, 0, sizeof(packet));
-		nrfRead(packet, nrfGetDynamicPayloadSize());
 		newDataFlag = 1;
 	}
 
@@ -136,6 +134,8 @@ int main(void)
 					nextState = S_SendSensorData;
 				}
 				else if(newDataFlag) {
+					memset(packet, 0, sizeof(packet));
+					nrfRead(packet, nrfGetDynamicPayloadSize());
 					newDataFlag = 0;
 					nextState = S_GotMail;
 				}
@@ -150,10 +150,10 @@ int main(void)
 				else {
 					nextState = S_Idle;
 				}
-				break;
-				default:
+			break;
+			default:
 					nextState = S_Idle;
-				break;
+			break;
 			}
 		currentState = nextState;
 	}

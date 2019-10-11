@@ -56,18 +56,15 @@ uint16_t read_adc(void)
 
 	return res;                                          // return measured value
 }
+
 //Take sample function
 //Returns 0 if new sample is taken, 1 when there is no new sample.
 uint8_t ADC_sample(void){
-	uint16_t copyData;
 	if(sampleFlag){
 		res = read_adc();
 		sampleFlag = 0;
-		copyData = res & 0xFF00; copyData = copyData >> 8;
-		sampleData[0] = copyData;
-		copyData = 0;
-		copyData = res & 0x00FF; 
-		sampleData[1] = copyData;
+		sampleData[0] = (res & 0xFF00) >> 8;
+		sampleData[1] = res & 0x00FF;
 		return 1;
 	} 
 	else

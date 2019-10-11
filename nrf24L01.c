@@ -420,8 +420,6 @@ void nrfStartListening(void)
 void nrfStopListening(void)
 {
   nrfCE(NRF_DISABLE);
-  nrfFlushRx();
-  nrfFlushTx();
 }
 
 

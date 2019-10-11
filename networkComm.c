@@ -45,8 +45,6 @@ void sendPrivateMSG (uint8_t targetID, uint8_t *data)
 // message to first node in that path.
 void ReceiveData(uint8_t *_data, uint8_t _size) //Get size from global int PayloadSize in main.c 
 { 
-	tNeighborHops BuurRoute;
-	
 	if(_data[2] == MyID)
 	{
 		printf("Data is for me\n");
@@ -54,7 +52,7 @@ void ReceiveData(uint8_t *_data, uint8_t _size) //Get size from global int Paylo
 	}
 	else if (--_data[3] > 0)
 	{
-		BuurRoute = findLeastHops(_data[2]);
+		tNeighborHops BuurRoute = findLeastHops(_data[2]);
 		nrfSendMessage(_data, _size, pipe_selector(BuurRoute.uNeighbor), true);
 		printf("Data is for");
         printf("%d\n",BuurRoute.uNeighbor);
