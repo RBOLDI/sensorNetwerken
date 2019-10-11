@@ -55,7 +55,7 @@ enum states currentState, nextState = S_Boot;
 
 ISR(TCE0_OVF_vect)
 {
-	PORTF.OUTTGL = PIN1_bm;
+	PORTF.OUTSET = PIN1_bm;
 	updateNeighborList();
 	newBroadcastFlag = 1;
 	ADC_timer();
@@ -63,7 +63,7 @@ ISR(TCE0_OVF_vect)
 
 ISR(PORTD_INT0_vect)
 {
-	PORTF.OUTTGL = PIN1_bm;
+	PORTF.OUTSET = PIN1_bm;
 	newBroadcastFlag = 1;
 }
 
@@ -74,7 +74,7 @@ ISR(PORTF_INT0_vect){
 
 	if(status & NRF_STATUS_RX_DR_bm)			// RX Data Ready
 	{
-		PORTF.OUTTGL = PIN0_bm;
+		PORTF.OUTSET = PIN0_bm;
 		newDataFlag = 1;
 	}
 
@@ -111,16 +111,19 @@ int main(void)
 			case S_SendRouting:
 				printf("S_SendRouting\n");
 				SendRouting();
+				PORTF.OUTCLR = PIN1_bm;
 				nextState = S_Idle;
 			break;
 			case S_SendSensorData:
 				printf("S_SendSensorData\n");
 				sendPrivateMSG (105, sampleData);
+				PORTF.OUTCLR = PIN1_bm;
 				nextState = S_Idle;
 			break;
 			case S_GotMail:
 				printf("S_GotMail\n");
 				parseIncomingData();
+				PORTF.OUTCLR = PIN0_bm;
 				nextState = S_Idle;
 			break;
 			case S_Idle:
