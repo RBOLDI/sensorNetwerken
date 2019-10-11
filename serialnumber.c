@@ -23,7 +23,8 @@ const SerialIdPair SerialIdLookup[] =
 	{ {53,88,48,56,49,49,13,22,0,7,0 } , 77},	// Jannick
 	{ {53,88,48,56,53,56,6,6,0,21,0 } , 83},	// Mike
 	{ {53,88,48,56,49,49,13,5,0,8,0 } , 105},	// Base station xmega
-	{ {53,88,48,56,49,49,14,15,0,10,0 } , 43}	// Anchor station xmega (not used)
+	{ {53,88,48,56,49,49,14,15,0,10,0 } , 43},	// Anchor station xmega (not used)
+	{ {53,88,48,56,49,49,14,15,0,7,0 } , 40}	// Rowan 2e
 };
 
 /*
