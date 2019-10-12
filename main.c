@@ -68,7 +68,6 @@ ISR(PORTD_INT0_vect)
 }
 
 ISR(PORTF_INT0_vect){
-	ATOMIC_BLOCK(ATOMIC_FORCEON);
 	uint8_t status;
 	status = nrfWhatHappened();
 
@@ -80,7 +79,7 @@ ISR(PORTF_INT0_vect){
 
 	if(status & NRF_STATUS_TX_DS_bm)			// TX Data Sent
 	{
-		if (nrfReadRegister(REG_FIFO_STATUS) & NRF_FIFO_STATUS_TX_EMPTY_bm)
+		if ( nrfReadRegister(REG_FIFO_STATUS) & NRF_FIFO_STATUS_TX_EMPTY_bm )
 		{
 			nrfStartListening();
 			PORTC.OUTCLR = PIN0_bm;
@@ -95,7 +94,6 @@ ISR(PORTF_INT0_vect){
 		PORTC.OUTCLR = PIN0_bm;
 		maxRTFlag = 1;
 	}
-	ATOMIC_BLOCK(ATOMIC_RESTORESTATE);
 }
 
 int main(void)
@@ -137,9 +135,15 @@ int main(void)
 					nextState = S_SendSensorData;
 				}
 				else if(newDataFlag) {
-					memset(packet, 0, sizeof(packet));
-					nrfRead(packet, nrfGetDynamicPayloadSize());
-					newDataFlag = 0;
+					ATOMIC_BLOCK(ATOMIC_FORCEON);
+					memset(packet.content, 0, sizeof(packet.content));
+					packet.size = nrfGetDynamicPayloadSize();
+					nrfRead(packet.content, packet.size);
+					if ( nrfReadRegister(REG_FIFO_STATUS) & NRF_FIFO_STATUS_RX_EMPTY_bm )
+					{
+						newDataFlag = 0;
+					}
+					ATOMIC_BLOCK(ATOMIC_RESTORESTATE);
 					nextState = S_GotMail;
 				}
 				else if(successTXFlag) {
@@ -198,31 +202,23 @@ void bootFunction(void)
 	it is, and what to do with it. UMT means Unknown Message Type */
 void parseIncomingData( void )
 {
-	ATOMIC_BLOCK(ATOMIC_FORCEON);
-	switch(packet[0])
+	switch(packet.content[0])
 	{
-		case BROADCAST:
-		 	printf("0x%02X %d %s\n", packet[0], packet[1], packet + 2);
+		case ROUTINGHEADER:
+			addNeighbor(packet.content[1]);
+			printf_Routing(packet.content, packet.size);
+			FillRoutingTable(packet.content, packet.size);
 		break;
-		case RHDR:
-			addNeighbor(packet[1]);
-			printf_Routing(packet, packet[2]);
-			FillRoutingTable(packet, packet[2]);
-		break;
-		case DHDR:
+		case DATAHEADER:
 			DB_MSG("Received Data");
-			ReceiveData(packet, packet[2]);	
-			printf("0x%02X %d %d\n", packet[0], packet[1], (( (uint16_t) packet[2] ) << 8) | packet[3]);
-		break;
-		case BCREPLY:
+			ReceiveData(packet.content, packet.size);	
+			printf("0x%02X %d %d\n", packet.content[0], packet.content[1], (( (uint16_t) packet.content[2] ) << 8) | packet.content[3]);
 		break;
 		default:
 		 	printf("UMT: ");
-			//printf_hex(packet, sizeof(packet));
-			printf_bin(packet, sizeof(packet));
-			break;
+			printf_hex(packet.content, sizeof(packet.content));
+		break;
 	}
-	ATOMIC_BLOCK(ATOMIC_RESTORESTATE);
 }
 
 void init_nrf(const uint8_t pvtID){

@@ -310,10 +310,15 @@ void    nrfClearInterruptBits(void);
 uint8_t nrfVerifySPIConnection(void);
 void nrfSend(uint8_t* send, uint8_t length, uint8_t* pipe);
 
+struct Packet {
+	uint8_t size;
+	uint8_t content[32];
+};
+
 uint8_t  channel;
 uint8_t  broadcast_pipe[5];
 uint8_t  private_pipe[5];
-uint8_t	packet[32];
+struct Packet packet;
 
 #endif
 

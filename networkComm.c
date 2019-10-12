@@ -26,7 +26,7 @@ void sendPrivateMSG (uint8_t targetID, uint8_t *data)
 	if(messageInfo.uNeighbor != 0){
 		memset(aPrivateSendString, 0, 32);
 		
-		aPrivateSendString[0] = DHDR;
+		aPrivateSendString[0] = DATAHEADER;
 		aPrivateSendString[1] = MyID;
 		aPrivateSendString[2] = targetID;
 		aPrivateSendString[3] = messageInfo.uHops;

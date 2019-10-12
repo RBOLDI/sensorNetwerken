@@ -182,7 +182,7 @@ uint8_t* getRoutingString( void )
 		}
 	}
 	
-	aRoutingString[0] = RHDR;
+	aRoutingString[0] = ROUTINGHEADER;
 	aRoutingString[1] = uMyID;
 	aRoutingString[2] = Idx + 1;
 	
