@@ -112,6 +112,7 @@ int main(void)
 			break;
 			case S_WaitforTX:
 				if(successTXFlag) {
+					TXCounter = 0;
 					if ( nrfReadRegister(REG_FIFO_STATUS) & NRF_FIFO_STATUS_TX_EMPTY_bm )
 					{
 						nrfWriteRegister(REG_STATUS, NRF_STATUS_TX_DS_bm );
@@ -125,6 +126,7 @@ int main(void)
 					
 				}
 				else if(maxRTFlag) {
+					TXCounter = 0;
 					nrfWriteRegister(REG_STATUS, NRF_STATUS_MAX_RT_bm );
 					nrfFlushTx();
 					TCD0.CTRLFSET = TC_CMD_RESTART_gc;
