@@ -40,7 +40,7 @@ volatile uint8_t sampleCounter		= 0;
 uint8_t MYID;
 uint8_t device_serial[11];
 uint8_t PayloadSize;
-int c;
+uint8_t TXCounter = 0;
 
 enum states {
 	S_Boot,
@@ -48,7 +48,7 @@ enum states {
 	S_SendSensorData,
 	S_Idle,
 	S_GotMail,
-	S_Send,
+	S_WaitforTX,
 };
 
 enum states currentState, nextState = S_Boot;
@@ -69,7 +69,7 @@ ISR(PORTD_INT0_vect)
 
 ISR(PORTF_INT0_vect){
 	uint8_t status;
-	status = nrfWhatHappened();
+	status = nrfReadRegister(REG_STATUS);
 
 	if(status & NRF_STATUS_RX_DR_bm)			// RX Data Ready
 	{
@@ -79,19 +79,11 @@ ISR(PORTF_INT0_vect){
 
 	if(status & NRF_STATUS_TX_DS_bm)			// TX Data Sent
 	{
-		if ( nrfReadRegister(REG_FIFO_STATUS) & NRF_FIFO_STATUS_TX_EMPTY_bm )
-		{
-			nrfStartListening();
-			PORTC.OUTCLR = PIN0_bm;
-			successTXFlag = 1;
-		}
+		successTXFlag = 1;
 	}
 
 	if(status & NRF_STATUS_MAX_RT_bm)			// Max Retries
 	{
-		nrfFlushTx();
-		nrfStartListening();
-		PORTC.OUTCLR = PIN0_bm;
 		maxRTFlag = 1;
 	}
 }
@@ -104,19 +96,61 @@ int main(void)
 			case S_Boot:
 				bootFunction();
 				printf("S_Boot\n");
-				nextState = S_Idle;
+				nextState = S_SendRouting;
 			break;
 			case S_SendRouting:
 				printf("S_SendRouting\n");
 				SendRouting();
 				PORTF.OUTCLR = PIN1_bm;
-				nextState = S_Idle;
+				nextState = S_WaitforTX;
 			break;
 			case S_SendSensorData:
 				printf("S_SendSensorData\n");
 				sendPrivateMSG (105, sampleData);
 				PORTF.OUTCLR = PIN1_bm;
-				nextState = S_Idle;
+				nextState = S_WaitforTX;
+			break;
+			case S_WaitforTX:
+				if(successTXFlag) {
+					if ( nrfReadRegister(REG_FIFO_STATUS) & NRF_FIFO_STATUS_TX_EMPTY_bm )
+					{
+						nrfWriteRegister(REG_STATUS, NRF_STATUS_TX_DS_bm );
+						nrfStartListening();
+						PORTC.OUTCLR = PIN0_bm;
+						TCD0.CTRLFSET = TC_CMD_RESTART_gc;
+						successTXFlag = 0;
+						printf("Succesfull TX\n");
+						nextState = S_Idle;
+					}
+					
+				}
+				else if(maxRTFlag) {
+					nrfWriteRegister(REG_STATUS, NRF_STATUS_MAX_RT_bm );
+					nrfFlushTx();
+					TCD0.CTRLFSET = TC_CMD_RESTART_gc;
+					nrfStartListening();
+					_delay_us(130);
+					PORTC.OUTCLR = PIN0_bm;
+					maxRTFlag = 0;
+					printf("Max Retries\n");
+					nextState = S_Idle;
+				}
+				else if ( TXCounter > 250 )
+				{
+					TXCounter = 0;
+					nrfWriteRegister(REG_STATUS, NRF_STATUS_MAX_RT_bm | NRF_STATUS_TX_DS_bm );
+					nrfFlushTx();
+					TCD0.CTRLFSET = TC_CMD_RESTART_gc;
+					nrfStartListening();
+					_delay_us(130);
+					PORTC.OUTCLR = PIN0_bm;
+					printf("TX Failed\n");
+					nextState = S_Idle;
+				}
+				else 
+				{
+					TXCounter++;
+				}
 			break;
 			case S_GotMail:
 				printf("S_GotMail\n");
@@ -130,7 +164,7 @@ int main(void)
 					newBroadcastFlag = 0;
 					nextState = S_SendRouting;
 				}
-				else if (ADC_sample())
+				else if ( ADC_sample() && MYID != 105 )
 				{
 					nextState = S_SendSensorData;
 				}
@@ -138,21 +172,13 @@ int main(void)
 					ATOMIC_BLOCK(ATOMIC_FORCEON);
 					memset(packet.content, 0, sizeof(packet.content));
 					packet.size = nrfGetDynamicPayloadSize();
-					nrfRead(packet.content, packet.size);
-					if ( nrfReadRegister(REG_FIFO_STATUS) & NRF_FIFO_STATUS_RX_EMPTY_bm )
+					if ( nrfRead(packet.content, packet.size) )
 					{
+						nrfWriteRegister(REG_STATUS, NRF_STATUS_RX_DR_bm );
 						newDataFlag = 0;
 					}
 					ATOMIC_BLOCK(ATOMIC_RESTORESTATE);
 					nextState = S_GotMail;
-				}
-				else if(successTXFlag) {
-					successTXFlag = 0;
-					nextState = S_Idle;
-				}
-				else if(maxRTFlag) {
-					maxRTFlag = 0;
-					nextState = S_Idle;
 				}
 				else {
 					nextState = S_Idle;
@@ -228,7 +254,8 @@ void init_nrf(const uint8_t pvtID){
 	nrfSetDataRate(NRF_RF_SETUP_RF_DR_250K_gc);
 	nrfSetCRCLength(NRF_CONFIG_CRC_16_gc);
 	nrfSetChannel(channel);
-	nrfSetAutoAck(1);
+	nrfSetAutoAck(0);
+	nrfSetAutoAckPipe(1, true);
 	nrfEnableDynamicPayloads();
 	nrfEnableAckPayload();
 	

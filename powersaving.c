@@ -23,7 +23,7 @@ void init_lowpower(void)
 
 void idle(void)
 {
-	SLEEP.CTRL |= SLEEP_MODE_IDLE | SLEEP_SEN_bm;
+	SLEEP.CTRL = SLEEP_MODE_IDLE | SLEEP_SEN_bm;
 }
 
 void InitClocks(void)

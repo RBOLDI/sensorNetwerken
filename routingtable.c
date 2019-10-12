@@ -38,13 +38,11 @@ void init_RoutingTable(uint8_t _myid)
 
 void addKnownNode(uint8_t uNodeID)
 {
-	ATOMIC_BLOCK(ATOMIC_FORCEON);
 	if ( (!isKnown(uNodeID)) && (uNodeID != uMyID) )
-		{
-			aRoutingTable[uNodeID] = (uint8_t*) calloc(MAXNODES + 1, sizeof(uint8_t));
-			uKnownNodes++;
-		}
-	ATOMIC_BLOCK(ATOMIC_RESTORESTATE);
+	{
+		aRoutingTable[uNodeID] = (uint8_t*) calloc(MAXNODES + 1, sizeof(uint8_t));
+		uKnownNodes++;
+	}
 }
 
 uint8_t isKnown(uint8_t uNodeID)
@@ -162,7 +160,6 @@ tNeighborHops findLeastHops(uint8_t uNodeID)
 
 uint8_t* getRoutingString( void )
 {
-	ATOMIC_BLOCK(ATOMIC_FORCEON);
 	tNeighborHops NnH;
 	uint8_t Idx = 2;
 	
@@ -188,6 +185,5 @@ uint8_t* getRoutingString( void )
 	
 	printf("Generated Routingstring: ");
 	printf_Routing(aRoutingString, aRoutingString[2]);
-	ATOMIC_BLOCK(ATOMIC_RESTORESTATE);
 	return aRoutingString;
 }

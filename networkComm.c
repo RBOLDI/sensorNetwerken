@@ -61,11 +61,10 @@ void ReceiveData(uint8_t *_data, uint8_t _size) //Get size from global int Paylo
 
 void nrfSendMessage(uint8_t *str, uint8_t str_len, uint8_t *pipe, bool ack)
 {
-	ATOMIC_BLOCK(ATOMIC_FORCEON);
 	PORTC.OUTSET = PIN0_bm;
 	nrfStopListening();
 	nrfOpenWritingPipe(pipe);
-	delay_us(130);
+	_delay_us(130);
 	if (ack)
 	{
 		nrfStartWrite(str, str_len, NRF_W_TX_PAYLOAD);
@@ -74,5 +73,4 @@ void nrfSendMessage(uint8_t *str, uint8_t str_len, uint8_t *pipe, bool ack)
 	{
 		nrfStartWrite(str, str_len, NRF_W_TX_PAYLOAD_NO_ACK);
 	}
-	ATOMIC_BLOCK(ATOMIC_RESTORESTATE);
 }
