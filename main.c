@@ -29,7 +29,7 @@
 void init_nrf(const uint8_t pvtID);
 void SendRouting( void );
 void bootFunction(void);
-void parseIncomingData(void);
+uint8_t parseIncomingData(void);
 
 volatile uint8_t newDataFlag		= 0;
 volatile uint8_t newBroadcastFlag	= 0;
@@ -149,13 +149,22 @@ int main(void)
 				}
 			break;
 			case S_GotMail:
-				parseIncomingData();
-				PORTF.OUTCLR = PIN0_bm;
-				nextState = S_Idle;
+				if (parseIncomingData())
+				{
+					PORTF.OUTCLR = PIN0_bm;
+					nextState = S_WaitforTX;
+				}
+				else
+				{
+					PORTF.OUTCLR = PIN0_bm;
+					nextState = S_Idle;
+				}
+				
 			break;
 			case S_Idle:
 				idle();
-				if(newBroadcastFlag) {
+				if(newBroadcastFlag) 
+				{
 					updateNeighborList();
 					newBroadcastFlag = 0;
 					nextState = S_SendRouting;
@@ -164,7 +173,8 @@ int main(void)
 				{
 					nextState = S_SendSensorData;
 				}
-				else if(newDataFlag) {
+				else if(newDataFlag) 
+				{
 					ATOMIC_BLOCK(ATOMIC_FORCEON);
 					memset(packet.content, 0, sizeof(packet.content));
 					packet.size = nrfGetDynamicPayloadSize();
@@ -176,7 +186,8 @@ int main(void)
 					ATOMIC_BLOCK(ATOMIC_RESTORESTATE);
 					nextState = S_GotMail;
 				}
-				else {
+				else 
+				{
 					nextState = S_Idle;
 				}
 			break;
@@ -229,9 +240,11 @@ void bootFunction(void)
 
 /* This function will be called when state equals S_GotMail.
 	It will parse the message to determine what kind of message 
-	it is, and what to do with it. UMT means Unknown Message Type */
-void parseIncomingData( void )
+	it is, and what to do with it. UMT means Unknown Message Type.
+	Function returns 1 if message is relayed 0 if not*/
+uint8_t parseIncomingData( void )
 {
+	uint8_t res = 0;
 	switch(packet.content[0])
 	{
 		case ROUTINGHEADER:
@@ -241,14 +254,15 @@ void parseIncomingData( void )
 		break;
 		case DATAHEADER:
 			DB_MSG("Received Data ");
-			ReceiveData(packet.content, packet.size);	
-			printf("0x%02X %d %d\r\n", packet.content[0], packet.content[1], (( (uint16_t) packet.content[2] ) << 8) | packet.content[3]);
+			res = ReceiveData(packet.content, packet.size);
+			printf("0x%02X %d %d %d %d\r\n", packet.content[0], packet.content[1], packet.content[2], packet.content[3], (( (uint16_t) packet.content[4] ) << 8) | packet.content[5]);
 		break;
 		default:
 		 	printf("UMT: ");
 			printf_hex(packet.content, sizeof(packet.content));
 		break;
 	}
+	return res;
 }
 
 void init_nrf(const uint8_t pvtID){
