@@ -13,7 +13,7 @@
 #define COLOR_GREEN			"\033[0;32m"
 #define COLOR_BOLD_GREEN	"\033[1;32m"
 #define COLOR_YELLOW		"\033[0;33m"
-#define COLOR_BOLD_YELLOW	"\033[01;33m"
+#define COLOR_BOLD_YELLOW	"\033[1;33m"
 #define COLOR_BLUE			"\033[0;34m"
 #define COLOR_BOLD_BLUE		"\033[1;34m"
 #define COLOR_MAGENTA		"\033[0;35m"
