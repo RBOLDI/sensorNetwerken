@@ -58,6 +58,7 @@ void addNeighbor(uint8_t uNodeID)
 			addKnownNode(uNodeID);
 			aNeighbors[uNeighbors] = uNodeID;
 			uNeighbors++;
+			printf("New Neighbor: %d\r\n", uNodeID);
 		}
 		
 	aMissedBroadcasts[uNodeID] = 0;
@@ -80,6 +81,7 @@ void removeNeighbor(uint8_t uNodeID)
 			*(aNeighbors + MAXNODES) = 0;
 		}
 		uNeighbors--;
+		printf("Lost Neighbor: %d\r\n", uNodeID);
 	}
 }
 
