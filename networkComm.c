@@ -48,7 +48,8 @@ uint8_t ReceiveData(uint8_t *_data, uint8_t _size) //Get size from global int Pa
 	if(_data[2] == MyID)
 	{
 		printf("Data is for me\r\n");
-		// If is for me load in Rpi ### MUST STILL BE ADDED ###
+		uint8_t datatopi[5] = {'!', 3, _data[1], _data[4], _data[5]};
+		printf("%s", datatopi);
 	}
 	else if (--_data[3] > 0)
 	{
