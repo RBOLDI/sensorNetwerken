@@ -94,17 +94,14 @@ int main(void)
 		switch(currentState) {
 			case S_Boot:
 				bootFunction();
-				printf("S_Boot\r\n");
 				nextState = S_SendRouting;
 			break;
 			case S_SendRouting:
-				printf("S_SendRouting\r\n");
 				SendRouting();
 				PORTF.OUTCLR = PIN1_bm;
 				nextState = S_WaitforTX;
 			break;
 			case S_SendSensorData:
-				printf("S_SendSensorData\r\n");
 				sendPrivateMSG (105, sampleData);
 				PORTF.OUTCLR = PIN1_bm;
 				nextState = S_WaitforTX;
@@ -119,7 +116,6 @@ int main(void)
 						PORTC.OUTCLR = PIN0_bm;
 						TCD0.CTRLFSET = TC_CMD_RESTART_gc;
 						successTXFlag = 0;
-						printf("Succesfull TX\r\n");
 						nextState = S_Idle;
 					}
 					
@@ -145,7 +141,7 @@ int main(void)
 					nrfStartListening();
 					_delay_us(130);
 					PORTC.OUTCLR = PIN0_bm;
-					printf("TX Failed\r\n");
+					printf("TX TIMEOUT\r\n");
 					nextState = S_Idle;
 				}
 				else 
@@ -154,7 +150,6 @@ int main(void)
 				}
 			break;
 			case S_GotMail:
-				printf("S_GotMail\r\n");
 				parseIncomingData();
 				PORTF.OUTCLR = PIN0_bm;
 				nextState = S_Idle;
@@ -195,7 +190,7 @@ int main(void)
 void SendRouting( void )
 {
 	uint8_t *str = getRoutingString();
-	nrfSendMessage(str, str[2], broadcast_pipe, false);
+	nrfSendMessage(str, uRoutingStringLength, broadcast_pipe, false);
 }
 
 /* This function will be called when state equals S_Boot.
@@ -245,7 +240,7 @@ void parseIncomingData( void )
 			FillRoutingTable(packet.content, packet.size);
 		break;
 		case DATAHEADER:
-			DB_MSG("Received Data");
+			DB_MSG("Received Data ");
 			ReceiveData(packet.content, packet.size);	
 			printf("0x%02X %d %d\r\n", packet.content[0], packet.content[1], (( (uint16_t) packet.content[2] ) << 8) | packet.content[3]);
 		break;

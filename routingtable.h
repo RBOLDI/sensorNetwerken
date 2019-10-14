@@ -14,6 +14,7 @@ typedef struct{
 	uint8_t uHops;
 	} tNeighborHops;
 
+uint8_t uRoutingStringLength;
 void init_RoutingTable(uint8_t uMyID);
 void addKnownNode(uint8_t uNodeID );
 uint8_t isKnown(uint8_t uNodeID);

@@ -9,7 +9,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <util/atomic.h>
 
 #include "routingtable.h"
 #include "messages.h"
@@ -24,6 +23,8 @@ uint8_t uKnownNodes		= 0;
 uint8_t uMyID			= 0;
 
 uint8_t *aRoutingString = NULL;
+uint8_t uRoutingStringLength = 0;
+
 
 void init_RoutingTable(uint8_t _myid)
 {
@@ -52,7 +53,6 @@ uint8_t isKnown(uint8_t uNodeID)
 
 void addNeighbor(uint8_t uNodeID)
 {
-	ATOMIC_BLOCK(ATOMIC_FORCEON);
 	if (memchr(aNeighbors, uNodeID, MAXNODES) == NULL)
 		{
 			addKnownNode(uNodeID);
@@ -61,12 +61,10 @@ void addNeighbor(uint8_t uNodeID)
 		}
 		
 	aMissedBroadcasts[uNodeID] = 0;
-	ATOMIC_BLOCK(ATOMIC_RESTORESTATE);
 }
 
 void removeNeighbor(uint8_t uNodeID)
 {
-	ATOMIC_BLOCK(ATOMIC_FORCEON);
 	uint8_t *pNode = memchr(aNeighbors, uNodeID, MAXNODES);
 	uint8_t position = pNode - aNeighbors;
 	
@@ -83,7 +81,6 @@ void removeNeighbor(uint8_t uNodeID)
 		}
 		uNeighbors--;
 	}
-	ATOMIC_BLOCK(ATOMIC_RESTORESTATE);
 }
 
 void updateNeighborList(void)
@@ -101,18 +98,17 @@ void updateNeighborList(void)
 
 void FillRoutingTable(uint8_t *routingstring, uint8_t string_length)
 {
-	ATOMIC_BLOCK(ATOMIC_FORCEON);
 	memset( aRoutingTable[ routingstring[1] ], 0, MAXNODES + 1 );
 	
-	if(string_length > 3)
+	if(string_length > 2)
 	{
 		if (string_length > 32) 
 		{
 			string_length = 32;
 		}
 		
-		for(uint8_t i = 3; i < string_length; i += 2 ) {
-		
+		for(uint8_t i = 2; i < string_length; i += 2 ) 
+		{
 			if ( (routingstring[i] != uMyID) && (routingstring[i] != 0) && !isNeighbor( routingstring[i] ) )
 			{
 				addKnownNode( routingstring[i] );
@@ -123,7 +119,6 @@ void FillRoutingTable(uint8_t *routingstring, uint8_t string_length)
 			}
 		}
 	}
-	ATOMIC_BLOCK(ATOMIC_RESTORESTATE);
 }
 
 uint8_t isNeighbor(uint8_t uNodeID)
@@ -133,7 +128,6 @@ uint8_t isNeighbor(uint8_t uNodeID)
 
 tNeighborHops findLeastHops(uint8_t uNodeID)
 {
-	ATOMIC_BLOCK(ATOMIC_FORCEON);
 	tNeighborHops NnH = {0 , UINT8_MAX};
 		
 	if (isKnown(uNodeID))
@@ -154,14 +148,13 @@ tNeighborHops findLeastHops(uint8_t uNodeID)
 			}
 		}
 	}
-	ATOMIC_BLOCK(ATOMIC_RESTORESTATE);
 	return NnH;
 }
 
 uint8_t* getRoutingString( void )
 {
 	tNeighborHops NnH;
-	uint8_t Idx = 2;
+	uint8_t Idx = 1;
 	
 	memset(aRoutingString, 0, 255);
 	
@@ -181,9 +174,7 @@ uint8_t* getRoutingString( void )
 	
 	aRoutingString[0] = ROUTINGHEADER;
 	aRoutingString[1] = uMyID;
-	aRoutingString[2] = Idx + 1;
-	
-	printf("Generated Routingstring: ");
-	printf_Routing(aRoutingString, aRoutingString[2]);
+	uRoutingStringLength = Idx + 1;
+	printf_Routing(aRoutingString, uRoutingStringLength);
 	return aRoutingString;
 }

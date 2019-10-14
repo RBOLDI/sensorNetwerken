@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <util/atomic.h>
 #include <stdbool.h>
 
 #include "networkComm.h"
@@ -54,7 +53,7 @@ void ReceiveData(uint8_t *_data, uint8_t _size) //Get size from global int Paylo
 	{
 		tNeighborHops BuurRoute = findLeastHops(_data[2]);
 		nrfSendMessage(_data, _size, pipe_selector(BuurRoute.uNeighbor), true);
-		printf("Data is for");
+		printf("Data is for ");
         printf("%d\r\n",BuurRoute.uNeighbor);
 	}
 }
