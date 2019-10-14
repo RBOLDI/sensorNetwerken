@@ -59,3 +59,8 @@ void printf_DeviceSerial(uint8_t *str, uint8_t str_len)
 
 	printf("|---------------DeviceSerial--------------|\r\n");
 }
+
+void printf_SetColor(char* cc)
+{
+	printf("%s",cc);
+}
