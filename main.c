@@ -129,7 +129,9 @@ int main(void)
 					_delay_us(130);
 					PORTC.OUTCLR = PIN0_bm;
 					maxRTFlag = 0;
+					printf_SetColor(COLOR_RED);
 					printf("Max Retries\r\n");
+					printf_SetColor(COLOR_RESET);
 					nextState = S_Idle;
 				}
 				else if ( TXCounter > 250 )
@@ -141,7 +143,9 @@ int main(void)
 					nrfStartListening();
 					_delay_us(130);
 					PORTC.OUTCLR = PIN0_bm;
+					printf_SetColor(COLOR_RED);
 					printf("TX TIMEOUT\r\n");
+					printf_SetColor(COLOR_RESET);
 					nextState = S_Idle;
 				}
 				else 
