@@ -36,13 +36,15 @@ int uart_fputc(char c, FILE *stream)
   // uartF0
   while( ! USART_TXBuffer_FreeSpace(&uartF0) );
 
-  if (c == '\n') uart_putc(&uartF0, '\r');
+	//Removed for 'Sensornetwerken Ontwerp'
+  //if (c == '\n') uart_putc(&uartF0, '\r');
   uart_putc(&uartF0, c);
 
   // uartE0
   while( ! USART_TXBuffer_FreeSpace(&uartE0) );
-
-  if (c == '\n') uart_putc(&uartE0, '\r');
+	
+	//Removed for 'Sensornetwerken Ontwerp'
+  //if (c == '\n') uart_putc(&uartE0, '\r');
   uart_putc(&uartE0, c);
 
   return 0;

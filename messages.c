@@ -22,7 +22,7 @@ void printf_hex(uint8_t *str, uint8_t str_len)
 	{
 		printf("0x%02X ", str[i]);
 	}
-	printf("\n");
+	printf("\r\n");
 }
 
 void printf_bin(uint8_t *str, uint8_t str_len)
@@ -35,7 +35,7 @@ void printf_bin(uint8_t *str, uint8_t str_len)
 		}
 		printf(" ");
 	}
-	printf("\n");
+	printf("\r\n");
 }
 
 void printf_Routing(uint8_t *str, uint8_t str_len)
@@ -44,18 +44,18 @@ void printf_Routing(uint8_t *str, uint8_t str_len)
 	{
 		printf("%d ", str[i]);
 	}
-	printf("\n");
+	printf("\r\n");
 }
 
 void printf_DeviceSerial(uint8_t *str, uint8_t str_len)
 {
-	printf("|---------------DeviceSerial--------------|\n");
+	printf("|---------------DeviceSerial--------------|\r\n");
 
 	for(int i = 0; i < str_len-1; i++)
 	{
 		printf("%d-", str[i]);
 	}
-	printf("%d\n",str[str_len-1]);
+	printf("%d\r\n",str[str_len-1]);
 
-	printf("|---------------DeviceSerial--------------|\n");
+	printf("|---------------DeviceSerial--------------|\r\n");
 }

@@ -95,17 +95,17 @@ int main(void)
 		switch(currentState) {
 			case S_Boot:
 				bootFunction();
-				printf("S_Boot\n");
+				printf("S_Boot\r\n");
 				nextState = S_SendRouting;
 			break;
 			case S_SendRouting:
-				printf("S_SendRouting\n");
+				printf("S_SendRouting\r\n");
 				SendRouting();
 				PORTF.OUTCLR = PIN1_bm;
 				nextState = S_WaitforTX;
 			break;
 			case S_SendSensorData:
-				printf("S_SendSensorData\n");
+				printf("S_SendSensorData\r\n");
 				sendPrivateMSG (105, sampleData);
 				PORTF.OUTCLR = PIN1_bm;
 				nextState = S_WaitforTX;
@@ -120,7 +120,7 @@ int main(void)
 						PORTC.OUTCLR = PIN0_bm;
 						TCD0.CTRLFSET = TC_CMD_RESTART_gc;
 						successTXFlag = 0;
-						printf("Succesfull TX\n");
+						printf("Succesfull TX\r\n");
 						nextState = S_Idle;
 					}
 					
@@ -134,7 +134,7 @@ int main(void)
 					_delay_us(130);
 					PORTC.OUTCLR = PIN0_bm;
 					maxRTFlag = 0;
-					printf("Max Retries\n");
+					printf("Max Retries\r\n");
 					nextState = S_Idle;
 				}
 				else if ( TXCounter > 250 )
@@ -146,7 +146,7 @@ int main(void)
 					nrfStartListening();
 					_delay_us(130);
 					PORTC.OUTCLR = PIN0_bm;
-					printf("TX Failed\n");
+					printf("TX Failed\r\n");
 					nextState = S_Idle;
 				}
 				else 
@@ -155,7 +155,7 @@ int main(void)
 				}
 			break;
 			case S_GotMail:
-				printf("S_GotMail\n");
+				printf("S_GotMail\r\n");
 				parseIncomingData();
 				PORTF.OUTCLR = PIN0_bm;
 				nextState = S_Idle;
@@ -219,7 +219,7 @@ void bootFunction(void)
 	init_adc();
 	ADC_timer();
 	
-	DB_MSG("\n----Debug mode enabled----\n\n");
+	DB_MSG("\r\n----Debug mode enabled----\r\n\n");
 	printf_DeviceSerial(device_serial,11);
 
 	_delay_ms(200);
@@ -240,7 +240,7 @@ void parseIncomingData( void )
 		case DATAHEADER:
 			DB_MSG("Received Data");
 			ReceiveData(packet.content, packet.size);	
-			printf("0x%02X %d %d\n", packet.content[0], packet.content[1], (( (uint16_t) packet.content[2] ) << 8) | packet.content[3]);
+			printf("0x%02X %d %d\r\n", packet.content[0], packet.content[1], (( (uint16_t) packet.content[2] ) << 8) | packet.content[3]);
 		break;
 		default:
 		 	printf("UMT: ");
