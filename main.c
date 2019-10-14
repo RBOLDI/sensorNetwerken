@@ -38,7 +38,6 @@ volatile uint8_t maxRTFlag			= 0;
 volatile uint8_t sampleCounter		= 0;
 
 uint8_t MYID;
-uint8_t device_serial[11];
 uint8_t PayloadSize;
 uint8_t TXCounter = 0;
 
@@ -207,7 +206,8 @@ void bootFunction(void)
 	InitClocks();
 	init_io();
 	init_stream(F_CPU);
-
+	
+	uint8_t device_serial[11];
 	NVM_GetDeviceSerial(device_serial);
 	MYID = GetIdFromLookup(device_serial);
 
@@ -219,7 +219,14 @@ void bootFunction(void)
 	init_adc();
 	ADC_timer();
 	
-	DB_MSG("\r\n----Debug mode enabled----\r\n\n");
+	
+	printf_SetColor(COLOR_GREEN);
+	
+	DB_MSG("\n----Debug mode enabled----\n\n");
+	
+	printf_SetColor(COLOR_RESET);
+	
+	
 	printf_DeviceSerial(device_serial,11);
 
 	_delay_ms(200);
