@@ -42,8 +42,9 @@ void sendPrivateMSG (uint8_t targetID, uint8_t *data)
 //Function checks if privately received data is meant for me
 // if not it calculates the least hopes to the recipiant and sends 
 // message to first node in that path.
-void ReceiveData(uint8_t *_data, uint8_t _size) //Get size from global int PayloadSize in main.c 
+uint8_t ReceiveData(uint8_t *_data, uint8_t _size) //Get size from global int PayloadSize in main.c 
 { 
+	uint8_t res = 0;
 	if(_data[2] == MyID)
 	{
 		printf("Data is for me\r\n");
@@ -55,7 +56,9 @@ void ReceiveData(uint8_t *_data, uint8_t _size) //Get size from global int Paylo
 		nrfSendMessage(_data, _size, pipe_selector(BuurRoute.uNeighbor), true);
 		printf("Data is for ");
         printf("%d\r\n",BuurRoute.uNeighbor);
+		res = 1;
 	}
+	return res;
 }
 
 void nrfSendMessage(uint8_t *str, uint8_t str_len, uint8_t *pipe, bool ack)
