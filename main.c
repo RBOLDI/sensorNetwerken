@@ -55,7 +55,6 @@ enum states currentState, nextState = S_Boot;
 ISR(TCE0_OVF_vect)
 {
 	PORTF.OUTSET = PIN1_bm;
-	updateNeighborList();
 	newBroadcastFlag = 1;
 	ADC_timer();
 }
@@ -114,17 +113,14 @@ int main(void)
 						nrfWriteRegister(REG_STATUS, NRF_STATUS_TX_DS_bm );
 						nrfStartListening();
 						PORTC.OUTCLR = PIN0_bm;
-						TCD0.CTRLFSET = TC_CMD_RESTART_gc;
-						successTXFlag = 0;
 						nextState = S_Idle;
 					}
-					
+					successTXFlag = 0;
 				}
 				else if(maxRTFlag) {
 					TXCounter = 0;
 					nrfWriteRegister(REG_STATUS, NRF_STATUS_MAX_RT_bm );
 					nrfFlushTx();
-					TCD0.CTRLFSET = TC_CMD_RESTART_gc;
 					nrfStartListening();
 					_delay_us(130);
 					PORTC.OUTCLR = PIN0_bm;
@@ -137,7 +133,6 @@ int main(void)
 					TXCounter = 0;
 					nrfWriteRegister(REG_STATUS, NRF_STATUS_MAX_RT_bm | NRF_STATUS_TX_DS_bm );
 					nrfFlushTx();
-					TCD0.CTRLFSET = TC_CMD_RESTART_gc;
 					nrfStartListening();
 					_delay_us(130);
 					PORTC.OUTCLR = PIN0_bm;
@@ -157,6 +152,7 @@ int main(void)
 			case S_Idle:
 				idle();
 				if(newBroadcastFlag) {
+					updateNeighborList();
 					newBroadcastFlag = 0;
 					nextState = S_SendRouting;
 				}
