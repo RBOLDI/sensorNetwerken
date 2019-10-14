@@ -47,7 +47,7 @@ void ReceiveData(uint8_t *_data, uint8_t _size) //Get size from global int Paylo
 { 
 	if(_data[2] == MyID)
 	{
-		printf("Data is for me\n");
+		printf("Data is for me\r\n");
 		// If is for me load in Rpi ### MUST STILL BE ADDED ###
 	}
 	else if (--_data[3] > 0)
@@ -55,7 +55,7 @@ void ReceiveData(uint8_t *_data, uint8_t _size) //Get size from global int Paylo
 		tNeighborHops BuurRoute = findLeastHops(_data[2]);
 		nrfSendMessage(_data, _size, pipe_selector(BuurRoute.uNeighbor), true);
 		printf("Data is for");
-        printf("%d\n",BuurRoute.uNeighbor);
+        printf("%d\r\n",BuurRoute.uNeighbor);
 	}
 }
 

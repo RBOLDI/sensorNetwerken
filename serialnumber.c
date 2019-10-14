@@ -52,7 +52,7 @@ uint8_t GetIdFromLookup(uint8_t* serial)
 uint8_t ReadSignatureByte(uint16_t Address) {
 	NVM_CMD = NVM_CMD_READ_CALIB_ROW_gc;
 	uint8_t Result;
-	asm ("lpm %0, Z\n" : "=r" (Result) : "z" (Address));
+	asm ("lpm %0, Z\r\n" : "=r" (Result) : "z" (Address));
 	NVM_CMD = NVM_CMD_NO_OPERATION_gc;
 	return Result;
 }
