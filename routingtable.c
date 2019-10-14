@@ -175,6 +175,10 @@ uint8_t* getRoutingString( void )
 	aRoutingString[0] = ROUTINGHEADER;
 	aRoutingString[1] = uMyID;
 	uRoutingStringLength = Idx + 1;
+	
+	printf_SetColor(COLOR_YELLOW);
 	printf_Routing(aRoutingString, uRoutingStringLength);
+	printf_SetColor(COLOR_RESET);
+	
 	return aRoutingString;
 }
