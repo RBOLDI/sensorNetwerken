@@ -222,7 +222,7 @@ void bootFunction(void)
 	
 	printf_SetColor(COLOR_GREEN);
 	
-	DB_MSG("\n----Debug mode enabled----\n\n");
+	DB_MSG("\n----Debug mode enabled----\r\n\n");
 	
 	printf_SetColor(COLOR_RESET);
 	
