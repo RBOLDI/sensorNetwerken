@@ -5,10 +5,8 @@
  *  Author: Steph
  */ 
 
-#define		BROADCAST	0x01
-#define		RHDR		0x02
-#define		DHDR		0x03
-#define		BCREPLY		0x04
+#define		ROUTINGHEADER	0x02
+#define		DATAHEADER		0x03
 
 //Function protoypes.
 uint8_t* pipe_selector(uint8_t ID);

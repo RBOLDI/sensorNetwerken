@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <util/atomic.h>
+#include <stdbool.h>
 
 #include "networkComm.h"
 #include "nrf24L01.h"
@@ -24,7 +26,7 @@ void sendPrivateMSG (uint8_t targetID, uint8_t *data)
 	if(messageInfo.uNeighbor != 0){
 		memset(aPrivateSendString, 0, 32);
 		
-		aPrivateSendString[0] = DHDR;
+		aPrivateSendString[0] = DATAHEADER;
 		aPrivateSendString[1] = MyID;
 		aPrivateSendString[2] = targetID;
 		aPrivateSendString[3] = messageInfo.uHops;
@@ -34,7 +36,7 @@ void sendPrivateMSG (uint8_t targetID, uint8_t *data)
 			aPrivateSendString[i+4] = data[i];
 		}
 		
-		nrfSendMessage(aPrivateSendString, (SENSORDATALENGTH + 4), pipe_selector(messageInfo.uNeighbor));
+		nrfSendMessage(aPrivateSendString, (SENSORDATALENGTH + 4), pipe_selector(messageInfo.uNeighbor), true);
 	}
 }
 
@@ -43,8 +45,6 @@ void sendPrivateMSG (uint8_t targetID, uint8_t *data)
 // message to first node in that path.
 void ReceiveData(uint8_t *_data, uint8_t _size) //Get size from global int PayloadSize in main.c 
 { 
-	tNeighborHops BuurRoute;
-	
 	if(_data[2] == MyID)
 	{
 		printf("Data is for me\n");
@@ -52,19 +52,25 @@ void ReceiveData(uint8_t *_data, uint8_t _size) //Get size from global int Paylo
 	}
 	else if (--_data[3] > 0)
 	{
-		BuurRoute = findLeastHops(_data[2]);
-		nrfSendMessage(_data, _size, pipe_selector(BuurRoute.uNeighbor));
+		tNeighborHops BuurRoute = findLeastHops(_data[2]);
+		nrfSendMessage(_data, _size, pipe_selector(BuurRoute.uNeighbor), true);
 		printf("Data is for");
         printf("%d\n",BuurRoute.uNeighbor);
 	}
 }
 
-void nrfSendMessage(uint8_t *str, uint8_t str_len, uint8_t *pipe)
+void nrfSendMessage(uint8_t *str, uint8_t str_len, uint8_t *pipe, bool ack)
 {
 	PORTC.OUTSET = PIN0_bm;
-	printf("SendMessage\n");
 	nrfStopListening();
 	nrfOpenWritingPipe(pipe);
-	delay_us(130);
-	nrfStartWrite(str, str_len, NRF_W_TX_PAYLOAD_NO_ACK);
+	_delay_us(130);
+	if (ack)
+	{
+		nrfStartWrite(str, str_len, NRF_W_TX_PAYLOAD);
+	}
+	else 
+	{
+		nrfStartWrite(str, str_len, NRF_W_TX_PAYLOAD_NO_ACK);
+	}
 }

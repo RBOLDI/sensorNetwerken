@@ -39,7 +39,8 @@
 uint8_t  channel = 59;		//0-128
 uint8_t  broadcast_pipe[5] = {00, 20, 20, 19, 20};
 uint8_t  private_pipe[5]   = {51, 20, 20, 19, 20};
-uint8_t  packet[32];		//buffer voor data
+struct Packet packet;
+//uint8_t  packet[32];		//buffer voor data
 
 /*!
  *  \brief Global variables and constants
@@ -407,9 +408,6 @@ void nrfStartListening(void)
     nrfWriteRegisterMulti(REG_RX_ADDR_P0, (uint8_t *)(&pipe0_reading_address), addr_width);
   }
 
-  nrfFlushRx();
-  nrfFlushTx();
-
   nrfCE(NRF_ENABLE);
   _delay_us(130);
 }
@@ -423,8 +421,6 @@ void nrfStartListening(void)
 void nrfStopListening(void)
 {
   nrfCE(NRF_DISABLE);
-  nrfFlushRx();
-  nrfFlushTx();
 }
 
 
