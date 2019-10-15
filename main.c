@@ -25,6 +25,8 @@
 #include "ADC.h"
 #include "networkComm.h"
 
+#define BASESTATION_ID 105
+
 //Function prototypes
 void init_nrf(const uint8_t pvtID);
 void SendRouting( void );
@@ -101,7 +103,7 @@ int main(void)
 				nextState = S_WaitforTX;
 			break;
 			case S_SendSensorData:
-				sendPrivateMSG (105, sampleData);
+				sendPrivateMSG (BASESTATION_ID, sampleData);
 				PORTF.OUTCLR = PIN1_bm;
 				nextState = S_WaitforTX;
 			break;
@@ -169,7 +171,7 @@ int main(void)
 					newBroadcastFlag = 0;
 					nextState = S_SendRouting;
 				}
-				else if ( ADC_sample() && MYID != 105 )
+				else if ( ADC_sample() && MYID != BASESTATION_ID )
 				{
 					nextState = S_SendSensorData;
 				}
