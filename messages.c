@@ -62,5 +62,5 @@ void printf_DeviceSerial(uint8_t *str, uint8_t str_len)
 
 void printf_SetColor(char* cc)
 {
-	printf("%s",cc);
+	if(MYID != BASESTATION_ID) printf("%s",cc);
 }
