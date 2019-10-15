@@ -58,6 +58,7 @@ void addNeighbor(uint8_t uNodeID)
 			addKnownNode(uNodeID);
 			aNeighbors[uNeighbors] = uNodeID;
 			uNeighbors++;
+			printf("New Neighbor: %d\r\n", uNodeID);
 		}
 		
 	aMissedBroadcasts[uNodeID] = 0;
@@ -80,6 +81,7 @@ void removeNeighbor(uint8_t uNodeID)
 			*(aNeighbors + MAXNODES) = 0;
 		}
 		uNeighbors--;
+		printf("Lost Neighbor: %d\r\n", uNodeID);
 	}
 }
 
@@ -112,10 +114,7 @@ void FillRoutingTable(uint8_t *routingstring, uint8_t string_length)
 			if ( (routingstring[i] != uMyID) && (routingstring[i] != 0) && !isNeighbor( routingstring[i] ) )
 			{
 				addKnownNode( routingstring[i] );
-				if (routingstring[ i + 1] <= uKnownNodes)
-				{
-					aRoutingTable[ routingstring[1] ][ routingstring[i] ] = routingstring[ i + 1 ] + 1;
-				}
+				aRoutingTable[ routingstring[1] ][ routingstring[i] ] = routingstring[ i + 1 ] + 1;
 			}
 		}
 	}
@@ -141,7 +140,7 @@ tNeighborHops findLeastHops(uint8_t uNodeID)
 
 		for (uint8_t i = 0; i < uNeighbors; i++)
 		{
-			if ((aRoutingTable[ aNeighbors[i] ][uNodeID] < NnH.uHops) && (aRoutingTable[ aNeighbors[i] ][uNodeID] > 0))
+			if ((aRoutingTable[ aNeighbors[i] ][uNodeID] < NnH.uHops) && (aRoutingTable[ aNeighbors[i] ][uNodeID] > 0) && (aRoutingTable[ aNeighbors[i] ][uNodeID] < uKnownNodes) )
 			{
 				NnH.uHops = aRoutingTable[ aNeighbors[i] ][uNodeID];
 				NnH.uNeighbor = aNeighbors[i];
