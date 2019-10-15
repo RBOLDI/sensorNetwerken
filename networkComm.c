@@ -48,17 +48,13 @@ uint8_t ReceiveData(uint8_t *_data, uint8_t _size) //Get size from global int Pa
 	if(_data[2] == MyID)
 	{
 		uint8_t datatopi[5] = {'!', 3, _data[1], _data[4], _data[5]};
-		printf_SetColor(COLOR_BLUE);
-		printf("Data is for me\r\n%s",datatopi);
-		printf_SetColor(COLOR_RESET);
+		printf("Data is for me\r\n%s\r\n",datatopi);
 	}
 	else if (--_data[3] > 0)
 	{
 		tNeighborHops BuurRoute = findLeastHops(_data[2]);
 		nrfSendMessage(_data, _size, pipe_selector(BuurRoute.uNeighbor), true);
-		printf_SetColor(COLOR_BLUE);
 		printf("Data is for %d\r\n",BuurRoute.uNeighbor);
-		printf_SetColor(COLOR_RESET);
 		res = 1;
 	}
 	return res;

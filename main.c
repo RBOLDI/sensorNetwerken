@@ -255,9 +255,11 @@ uint8_t parseIncomingData( void )
 			FillRoutingTable(packet.content, packet.size);
 		break;
 		case DATAHEADER:
-			DB_MSG("Received Data ");
+			printf_SetColor(COLOR_BLUE);
+			DB_MSG("Received Data\r\n");
 			res = ReceiveData(packet.content, packet.size);
 			printf("0x%02X %d %d %d %d\r\n", packet.content[0], packet.content[1], packet.content[2], packet.content[3], (( (uint16_t) packet.content[4] ) << 8) | packet.content[5]);
+			printf_SetColor(COLOR_RESET);
 		break;
 		default:
 		 	printf("UMT: ");
