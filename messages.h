@@ -22,6 +22,8 @@
 #define COLOR_BOLD_CYAN		"\033[1;36m"
 #define COLOR_RESET			"\033[0m"
 
+#define BASESTATION_ID 105
+
 //Function protoypes.
 uint8_t* pipe_selector(uint8_t ID);
 uint8_t GetIdFromLookup(uint8_t* serial);
@@ -30,3 +32,6 @@ void printf_bin(uint8_t *str, uint8_t str_len);
 void printf_Routing(uint8_t *str, uint8_t str_len);
 void printf_DeviceSerial(uint8_t *str, uint8_t str_len);
 void printf_SetColor(char* cc);
+
+// Global variable
+uint8_t MYID;

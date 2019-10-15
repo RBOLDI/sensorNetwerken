@@ -25,8 +25,6 @@
 #include "ADC.h"
 #include "networkComm.h"
 
-#define BASESTATION_ID 105
-
 //Function prototypes
 void init_nrf(const uint8_t pvtID);
 void SendRouting( void );
@@ -39,7 +37,6 @@ volatile uint8_t successTXFlag		= 0;
 volatile uint8_t maxRTFlag			= 0;
 volatile uint8_t sampleCounter		= 0;
 
-uint8_t MYID;
 uint8_t PayloadSize;
 uint8_t TXCounter = 0;
 
