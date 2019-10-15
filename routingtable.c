@@ -12,6 +12,7 @@
 
 #include "routingtable.h"
 #include "messages.h"
+#include "debug_opts.h"
 
 #define		MAXNODES	255
 
@@ -59,7 +60,7 @@ void addNeighbor(uint8_t uNodeID)
 			aNeighbors[uNeighbors] = uNodeID;
 			uNeighbors++;
 			printf_SetColor(COLOR_CYAN);
-			printf("New Neighbor: %d\r\n", uNodeID);
+			DB_MSG(("New Neighbor: %d\r\n", uNodeID));
 			printf_SetColor(COLOR_RESET);
 		}
 		
@@ -85,7 +86,7 @@ void removeNeighbor(uint8_t uNodeID)
 		uNeighbors--;
 
 		printf_SetColor(COLOR_MAGENTA);
-		printf("Lost Neighbor: %d\r\n", uNodeID);
+		DB_MSG(("Lost Neighbor: %d\r\n", uNodeID));
 		printf_SetColor(COLOR_RESET);
 	}
 }

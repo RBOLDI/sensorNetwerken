@@ -9,7 +9,7 @@
 
 #include "messages.h"
 #include "nrf24L01.h"
-
+#include "debug_opts.h"
 // Select Pipe to write to dependent on ID
 uint8_t* pipe_selector(uint8_t ID){
 	private_pipe[0] = ID;
@@ -42,22 +42,22 @@ void printf_Routing(uint8_t *str, uint8_t str_len)
 {
 	for(int i = 0; i < str_len; i++)
 	{
-		printf("%d ", str[i]);
+		DB_MSG(("%d ", str[i]));
 	}
-	printf("\r\n");
+	DB_MSG(("\r\n"));
 }
 
 void printf_DeviceSerial(uint8_t *str, uint8_t str_len)
 {
-	printf("|---------------DeviceSerial--------------|\r\n");
+	DB_MSG(("|---------------DeviceSerial--------------|\r\n"));
 
 	for(int i = 0; i < str_len-1; i++)
 	{
-		printf("%d-", str[i]);
+		DB_MSG(("%d-", str[i]));
 	}
-	printf("%d\r\n",str[str_len-1]);
+		DB_MSG(("%d\r\n",str[str_len-1]));
 
-	printf("|---------------DeviceSerial--------------|\r\n");
+	DB_MSG(("|---------------DeviceSerial--------------|\r\n"));
 }
 
 void printf_SetColor(char* cc)

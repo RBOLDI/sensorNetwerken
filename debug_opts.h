@@ -5,13 +5,11 @@
  *  Author: Steph
  */ 
 
-
-// File for enabaling debug messages throughout the project.
-
 #define DEBUGMODE
 
+// File for enabaling debug messages throughout the project.
 #ifdef DEBUGMODE
-#define DB_MSG(str) do { printf("%s", str); } while( false )
+# define DB_MSG(x) printf x
 #else
-#define DB_MSG(str) do { } while ( false )
+# define DB_MSG(x) do {} while (0)
 #endif

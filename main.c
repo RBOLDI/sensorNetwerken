@@ -25,6 +25,8 @@
 #include "ADC.h"
 #include "networkComm.h"
 
+
+
 //Function prototypes
 void init_nrf(const uint8_t pvtID);
 void SendRouting( void );
@@ -125,7 +127,7 @@ int main(void)
 					PORTC.OUTCLR = PIN0_bm;
 					maxRTFlag = 0;
 					printf_SetColor(COLOR_RED);
-					printf("Max Retries\r\n");
+					DB_MSG(("Max Retries\r\n"));
 					printf_SetColor(COLOR_RESET);
 					nextState = S_Idle;
 				}
@@ -138,7 +140,7 @@ int main(void)
 					_delay_us(130);
 					PORTC.OUTCLR = PIN0_bm;
 					printf_SetColor(COLOR_RED);
-					printf("TX TIMEOUT\r\n");
+					DB_MSG(("TX TIMEOUT\r\n"));
 					printf_SetColor(COLOR_RESET);
 					nextState = S_Idle;
 				}
@@ -227,7 +229,7 @@ void bootFunction(void)
 	
 	printf_SetColor(COLOR_GREEN);
 	
-	DB_MSG("\n----Debug mode enabled----\r\n\n");
+	DB_MSG(("\n----Debug mode enabled----\r\n\n"));
 	
 	printf_SetColor(COLOR_RESET);
 	
@@ -253,13 +255,13 @@ uint8_t parseIncomingData( void )
 		break;
 		case DATAHEADER:
 			printf_SetColor(COLOR_BLUE);
-			DB_MSG("Received Data\r\n");
+			DB_MSG(("Received Data\r\n"));
 			res = ReceiveData(packet.content, packet.size);
-			printf("0x%02X %d %d %d %d\r\n", packet.content[0], packet.content[1], packet.content[2], packet.content[3], (( (uint16_t) packet.content[4] ) << 8) | packet.content[5]);
+			DB_MSG(("0x%02X %d %d %d %d\r\n", packet.content[0], packet.content[1], packet.content[2], packet.content[3], (( (uint16_t) packet.content[4] ) << 8) | packet.content[5]));
 			printf_SetColor(COLOR_RESET);
 		break;
 		default:
-		 	printf("UMT: ");
+		 	DB_MSG(("UMT: "));
 			printf_hex(packet.content, sizeof(packet.content));
 		break;
 	}
