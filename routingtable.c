@@ -58,7 +58,9 @@ void addNeighbor(uint8_t uNodeID)
 			addKnownNode(uNodeID);
 			aNeighbors[uNeighbors] = uNodeID;
 			uNeighbors++;
+			printf_SetColor(COLOR_CYAN);
 			printf("New Neighbor: %d\r\n", uNodeID);
+			printf_SetColor(COLOR_RESET);
 		}
 		
 	aMissedBroadcasts[uNodeID] = 0;
@@ -81,7 +83,10 @@ void removeNeighbor(uint8_t uNodeID)
 			*(aNeighbors + MAXNODES) = 0;
 		}
 		uNeighbors--;
+
+		printf_SetColor(COLOR_MAGENTA);
 		printf("Lost Neighbor: %d\r\n", uNodeID);
+		printf_SetColor(COLOR_RESET);
 	}
 }
 
