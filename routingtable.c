@@ -209,7 +209,8 @@ void chopRoutingString(){
 	for(uint8_t _pckt = 1; _pckt <= uExtraRoutingPackets; _pckt++ ){
 		_pos += 32;
 		memset(&_tmpPacket[2], 0, 30);
-		
-		memcpy(aRoutingPackets[_pckt], &aRoutingString[_pos], 32);
+		if(_pckt < uExtraRoutingPackets) memcpy(&_tmpPacket[2], &aRoutingString[_pos], 30);
+		else memcpy(&_tmpPacket[2], &aRoutingString[_pos], uRoutingTailLen);
+		memcpy(aRoutingPackets[_pckt], _tmpPacket, 32);
 	}
 }
