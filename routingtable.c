@@ -131,7 +131,7 @@ uint8_t isNeighbor(uint8_t uNodeID)
 	return memchr(aNeighbors, uNodeID, MAXNODES) != NULL;
 }
 
-tNeighborHops findLeastHops(uint8_t uNodeID)
+tNeighborHops findFewestHops(uint8_t uNodeID)
 {
 	tNeighborHops NnH = {0 , UINT8_MAX};
 		
@@ -167,9 +167,9 @@ uint8_t* getRoutingString( void )
 	{
 		if ( isKnown(ID) )
 		{
-			NnH = findLeastHops(ID);
+			NnH = findFewestHops(ID);
 			
-			if (NnH.uNeighbor != 0)
+			if (( NnH.uHops != 255 ) && ( NnH.uNeighbor != 0 ))
 			{
 				aRoutingString[++Idx] = ID;
 				aRoutingString[++Idx] = NnH.uHops;

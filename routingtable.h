@@ -23,6 +23,6 @@ void FillRoutingTable(uint8_t *routingstring, uint8_t string_length);
 void removeNeighbor(uint8_t uNodeID);
 void updateNeighborList(void);
 uint8_t isNeighbor(uint8_t uNodeID);
-tNeighborHops findLeastHops(uint8_t uNodeID);
+tNeighborHops findFewestHops(uint8_t uNodeID);
 uint8_t* getRoutingString( void );
 #endif /* ROUTINGTABLE_H_ */
