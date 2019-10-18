@@ -22,7 +22,7 @@ void init_PrivateComm(uint8_t _myid)
 
 void sendPrivateMSG (uint8_t targetID, uint8_t *data)
 {
-	tNeighborHops messageInfo = findLeastHops(targetID);
+	tNeighborHops messageInfo = findFewestHops(targetID);
 	if(messageInfo.uNeighbor != 0){
 		memset(aPrivateSendString, 0, 32);
 		
@@ -53,7 +53,7 @@ uint8_t ReceiveData(uint8_t *_data, uint8_t _size) //Get size from global int Pa
 	}
 	else if (--_data[3] > 0)
 	{
-		tNeighborHops BuurRoute = findLeastHops(_data[2]);
+		tNeighborHops BuurRoute = findFewestHops(_data[2]);
 		nrfSendMessage(_data, _size, pipe_selector(BuurRoute.uNeighbor), true);
 		DB_MSG(("Data is for %d\r\n",BuurRoute.uNeighbor));
 		res = 1;
