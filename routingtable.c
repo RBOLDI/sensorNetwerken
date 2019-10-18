@@ -26,6 +26,10 @@ uint8_t uMyID			= 0;
 uint8_t *aRoutingString = NULL;
 uint8_t uRoutingStringLength = 0;
 
+uint8_t uRoutingTailLen = 0;
+uint8_t uExtraRoutingPackets = 0;
+uint8_t *aRoutingPackets[8];
+
 
 void init_RoutingTable(uint8_t _myid)
 {
@@ -186,4 +190,26 @@ uint8_t* getRoutingString( void )
 	printf_SetColor(COLOR_RESET);
 	
 	return aRoutingString;
+}
+
+void chopRoutingString(){
+	uint8_t _tmpPacket[32];
+	uint8_t _pos = 0;
+	
+	_tmpPacket[0] = ROUTINGHEADER;
+	_tmpPacket[1] = uMyID;
+	
+	uRoutingTailLen = uRoutingStringLength % 32;
+	uExtraRoutingPackets = (uRoutingStringLength - uRoutingTailLen) / 32;
+	
+	memset(aRoutingPackets, 0, 8);
+	
+	memcpy(&aRoutingPackets[0], aRoutingString, 32);
+	
+	for(uint8_t _pckt = 1; _pckt <= uExtraRoutingPackets; _pckt++ ){
+		_pos += 32;
+		memset(&_tmpPacket[2], 0, 30);
+		
+		memcpy(&aRoutingPackets[_pckt], &aRoutingString[_pos], 32);
+	}
 }
