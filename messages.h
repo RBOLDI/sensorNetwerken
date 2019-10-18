@@ -3,7 +3,7 @@
  *
  * Created: 11-9-2019 14:40:52
  *  Author: Steph
- */ 
+ */
 
 #define		ROUTINGHEADER	0x02
 #define		DATAHEADER		0x03
@@ -32,6 +32,7 @@ void printf_bin(uint8_t *str, uint8_t str_len);
 void printf_Routing(uint8_t *str, uint8_t str_len);
 void printf_DeviceSerial(uint8_t *str, uint8_t str_len);
 void printf_SetColor(char* cc);
+void data_to_pi(uint8_t *data, uint8_t data_len);
 
 // Global variable
 uint8_t MYID;

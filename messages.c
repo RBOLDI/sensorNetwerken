@@ -3,13 +3,15 @@
  *
  * Created: 11-9-2019 14:41:18
  *  Author: Steph
- */ 
+ */
 
 #include <stdio.h>
 
 #include "messages.h"
 #include "nrf24L01.h"
 #include "debug_opts.h"
+#include "stream.h"
+
 // Select Pipe to write to dependent on ID
 uint8_t* pipe_selector(uint8_t ID){
 	private_pipe[0] = ID;
@@ -63,4 +65,11 @@ void printf_DeviceSerial(uint8_t *str, uint8_t str_len)
 void printf_SetColor(char* cc)
 {
 	if(MYID != BASESTATION_ID) printf("%s",cc);
+}
+
+void data_to_pi(uint8_t *data, uint8_t data_len)
+{
+	for (uint8_t i = 0; i < data_len; i++){
+		uart_fputc(data[i], &uart_stdinout_usb_and_io);
+	}
 }
