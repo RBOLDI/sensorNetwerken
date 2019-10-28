@@ -203,6 +203,10 @@ void SendRouting( void )
 {
 	uint8_t *str = getRoutingString();
 	nrfSendMessage(str, uRoutingStringLength, broadcast_pipe, false);
+
+	str[0] = '?';
+	str[1] = uRoutingStringLength-2;
+	data_to_pi(str, uRoutingStringLength);
 }
 
 /* This function will be called when state equals S_Boot.
