@@ -69,7 +69,9 @@ void printf_SetColor(char* cc)
 
 void data_to_pi(uint8_t *data, uint8_t data_len)
 {
-	for (uint8_t i = 0; i < data_len; i++){
-		uart_fputc(data[i], &uart_stdinout_usb_and_io);
+	if (MYID == BASESTATION_ID){
+		for (uint8_t i = 0; i < data_len; i++){
+			uart_fputc(data[i], &uart_stdinout_usb_and_io);
+		}
 	}
 }
