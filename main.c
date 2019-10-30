@@ -32,11 +32,13 @@ void init_nrf(const uint8_t pvtID);
 void SendRouting( void );
 void bootFunction(void);
 uint8_t parseIncomingData(void);
+void readNrfStatus(void);
 
 volatile uint8_t newDataFlag		= 0;
 volatile uint8_t newBroadcastFlag	= 0;
 volatile uint8_t successTXFlag		= 0;
 volatile uint8_t maxRTFlag			= 0;
+volatile uint8_t newNrfStatusFlag	= 0;
 volatile uint8_t sampleCounter		= 0;
 
 uint8_t PayloadSize;
@@ -48,7 +50,7 @@ enum states {
 	S_SendSensorData,
 	S_Idle,
 	S_GotMail,
-	S_WaitforTX,
+	S_WaitforTX
 };
 
 enum states currentState, nextState = S_Boot;
@@ -66,26 +68,11 @@ ISR(PORTD_INT0_vect)
 	newBroadcastFlag = 1;
 }
 
-ISR(PORTF_INT0_vect){
-	uint8_t status;
-	status = nrfReadRegister(REG_STATUS);
-
-	if(status & NRF_STATUS_RX_DR_bm)			// RX Data Ready
-	{
-		PORTF.OUTSET = PIN0_bm;
-		newDataFlag = 1;
-	}
-
-	if(status & NRF_STATUS_TX_DS_bm)			// TX Data Sent
-	{
-		successTXFlag = 1;
-	}
-
-	if(status & NRF_STATUS_MAX_RT_bm)			// Max Retries
-	{
-		maxRTFlag = 1;
-	}
+ISR(PORTF_INT0_vect)
+{
+	newNrfStatusFlag = 1;
 }
+
 
 int main(void)
 {
@@ -107,6 +94,12 @@ int main(void)
 				nextState = S_WaitforTX;
 			break;
 			case S_WaitforTX:
+				if(newNrfStatusFlag)
+				{
+ 					newNrfStatusFlag = 0;
+					readNrfStatus();
+				}			
+				
 				if(successTXFlag) {
 					TXCounter = 0;
 					if ( nrfReadRegister(REG_FIFO_STATUS) & NRF_FIFO_STATUS_TX_EMPTY_bm )
@@ -186,6 +179,11 @@ int main(void)
 					}
 					ATOMIC_BLOCK(ATOMIC_RESTORESTATE);
 					nextState = S_GotMail;
+				}
+				else if(newNrfStatusFlag)
+				{
+					 newNrfStatusFlag = 0;
+					 readNrfStatus();
 				}
 				else 
 				{
@@ -300,4 +298,26 @@ void init_nrf(const uint8_t pvtID){
 	
 	PMIC.CTRL |= PMIC_LOLVLEN_bm;
 	sei();
+}
+
+void readNrfStatus(void)
+{
+	uint8_t status;
+	status = nrfReadRegister(REG_STATUS);
+
+	if(status & NRF_STATUS_RX_DR_bm)			// RX Data Ready
+	{
+		PORTF.OUTSET = PIN0_bm;
+		newDataFlag = 1;
+	}
+
+	if(status & NRF_STATUS_TX_DS_bm)			// TX Data Sent
+	{
+		successTXFlag = 1;
+	}
+
+	if(status & NRF_STATUS_MAX_RT_bm)			// Max Retries
+	{
+		maxRTFlag = 1;
+	}
 }
