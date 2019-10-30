@@ -27,8 +27,7 @@ uint8_t *aRoutingString = NULL;
 uint8_t uRoutingStringLength = 0;
 
 uint8_t uRoutingTailLen = 0;
-uint8_t uExtraRoutingPackets = 0;
-uint8_t aRoutingPackets[8][32];
+
 
 
 void init_RoutingTable(uint8_t _myid)
@@ -192,15 +191,17 @@ uint8_t* getRoutingString( void )
 	return aRoutingString;
 }
 
-void chopRoutingString(){
+void chopRoutingString( void ){
 	uint8_t _tmpPacket[32];
 	uint8_t _pos = 0;
-	
+	uExtraRoutingPackets = 0;
+	uRoutingTailLen = 0;
 	_tmpPacket[0] = ROUTINGHEADER;
 	_tmpPacket[1] = uMyID;
 	
 	uRoutingTailLen = uRoutingStringLength % 32;
 	uExtraRoutingPackets = (uRoutingStringLength - uRoutingTailLen) / 32;
+	uTotRoutingPackets = uExtraRoutingPackets + 1;
 	
 	memset(aRoutingPackets, 0, sizeof aRoutingPackets);
 	

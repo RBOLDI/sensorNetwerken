@@ -25,4 +25,10 @@ void updateNeighborList(void);
 uint8_t isNeighbor(uint8_t uNodeID);
 tNeighborHops findFewestHops(uint8_t uNodeID);
 uint8_t* getRoutingString( void );
+void chopRoutingString( void );
+uint8_t uExtraRoutingPackets;
+uint8_t aRoutingPackets[8][32];
+uint8_t	uRoutingTailLen;
+uint8_t uTotRoutingPackets;
+
 #endif /* ROUTINGTABLE_H_ */
