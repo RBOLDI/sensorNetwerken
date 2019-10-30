@@ -94,7 +94,11 @@ int main(void)
 				nextState = S_WaitforTX;
 			break;
 			case S_WaitforTX:
-				readNrfStatus();
+				if(newNrfStatusFlag)
+				{
+ 					newNrfStatusFlag = 0;
+					readNrfStatus();
+				}			
 				
 				if(successTXFlag) {
 					TXCounter = 0;
