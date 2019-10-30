@@ -50,8 +50,7 @@ enum states {
 	S_SendSensorData,
 	S_Idle,
 	S_GotMail,
-	S_WaitforTX,
-	S_ReadNrfStatus
+	S_WaitforTX
 };
 
 enum states currentState, nextState = S_Boot;
@@ -152,10 +151,6 @@ int main(void)
 				}
 				
 			break;
-			case S_ReadNrfStatus:
-				readNrfStatus();
-				nextState = S_Idle;
-			break;
 			case S_Idle:
 				idle();
 				if(newBroadcastFlag) 
@@ -184,7 +179,7 @@ int main(void)
 				else if(newNrfStatusFlag)
 				{
 					 newNrfStatusFlag = 0;
-					 nextState = S_ReadNrfStatus;
+					 readNrfStatus();
 				}
 				else 
 				{
