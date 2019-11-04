@@ -120,8 +120,8 @@ void FillRoutingTable(uint8_t *routingstring, uint8_t string_length)
 		if ( (stringNodeId != uMyID) && (stringNodeId != 0) && !isNeighbor( stringNodeId ) )
 		{
 			addKnownNode( stringNodeId );
-			aRoutingTable[ originId ][ stringNodeId ] = writeHopCount(aRoutingTable[ originId ][ stringNodeId ], hopCnt + 1);
-			aRoutingTable[ originId ][ stringNodeId ] = resetExpiration(aRoutingTable[ originId ][ stringNodeId ]);
+			writeHopCount( originId, stringNodeId, hopCnt + 1);
+			resetAge( originId, stringNodeId );
 		}
 	}
 }
