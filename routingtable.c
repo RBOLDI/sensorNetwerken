@@ -110,22 +110,18 @@ void updateNeighborList(void)
 
 void FillRoutingTable(uint8_t *routingstring, uint8_t string_length)
 {
-	memset( aRoutingTable[ routingstring[1] ], 0, MAXNODES + 1 );
+	uint8_t originId = routingstring[1];
 	
-	if(string_length > 2)
+	for(uint8_t i = 2; i < string_length; i += 2 ) 
 	{
-		if (string_length > 32) 
-		{
-			string_length = 32;
-		}
+		uint8_t stringNodeId = routingstring[i];
+		uint8_t hopCnt = routingstring[i + 1];
 		
-		for(uint8_t i = 2; i < string_length; i += 2 ) 
+		if ( (stringNodeId != uMyID) && (stringNodeId != 0) && !isNeighbor( stringNodeId ) )
 		{
-			if ( (routingstring[i] != uMyID) && (routingstring[i] != 0) && !isNeighbor( routingstring[i] ) )
-			{
-				addKnownNode( routingstring[i] );
-				aRoutingTable[ routingstring[1] ][ routingstring[i] ] = routingstring[ i + 1 ] + 1;
-			}
+			addKnownNode( stringNodeId );
+			aRoutingTable[ originId ][ stringNodeId ] = writeHopCount(aRoutingTable[ originId ][ stringNodeId ], hopCnt + 1);
+			aRoutingTable[ originId ][ stringNodeId ] = resetExpiration(aRoutingTable[ originId ][ stringNodeId ]);
 		}
 	}
 }
