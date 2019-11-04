@@ -110,22 +110,37 @@ void updateNeighborList(void)
 
 void FillRoutingTable(uint8_t *routingstring, uint8_t string_length)
 {
-	memset( aRoutingTable[ routingstring[1] ], 0, MAXNODES + 1 );
+	uint8_t originID = routingstring[1];
+	uint8_t stringNodeID;
+	uint8_t hopCnt;
 	
-	if(string_length > 2)
+	for ( uint8_t  i = 1; i != 0; i++)
 	{
-		if (string_length > 32) 
+		if(readHopCount( originID, i ) != 0)
 		{
-			string_length = 32;
+			incrementAge( originID, i );
 		}
+	}
+	
+	for(uint8_t i = 2; i < string_length; i += 2 ) 
+	{
+		stringNodeID = routingstring[i];
+		hopCnt = routingstring[i + 1];
 		
-		for(uint8_t i = 2; i < string_length; i += 2 ) 
+		if ( (stringNodeID != uMyID) && (stringNodeID != 0) && !isNeighbor( stringNodeID ) )
 		{
-			if ( (routingstring[i] != uMyID) && (routingstring[i] != 0) && !isNeighbor( routingstring[i] ) )
-			{
-				addKnownNode( routingstring[i] );
-				aRoutingTable[ routingstring[1] ][ routingstring[i] ] = routingstring[ i + 1 ] + 1;
-			}
+			addKnownNode( stringNodeID );
+			writeHopCount( originID, stringNodeID,  hopCnt );
+			resetAge( originID, stringNodeID );
+		}
+	}
+	
+	for (uint8_t  i = 1; i != 0; i++)
+	{
+		if ( readHopCount(originID, i ) == 3 )
+		{
+			resetAge( originID, i );
+			writeHopCount( originID, i , 0);
 		}
 	}
 }
@@ -135,9 +150,10 @@ uint8_t isNeighbor(uint8_t uNodeID)
 	return memchr(aNeighbors, uNodeID, MAXNODES) != NULL;
 }
 
-tNeighborHops findLeastHops(uint8_t uNodeID)
+tNeighborHops findFewestHops(uint8_t uNodeID)
 {
 	tNeighborHops NnH = {0 , UINT8_MAX};
+	uint8_t tempHops = 0;
 		
 	if (isKnown(uNodeID))
 	{
@@ -150,9 +166,11 @@ tNeighborHops findLeastHops(uint8_t uNodeID)
 
 		for (uint8_t i = 0; i < uNeighbors; i++)
 		{
-			if ((aRoutingTable[ aNeighbors[i] ][uNodeID] < NnH.uHops) && (aRoutingTable[ aNeighbors[i] ][uNodeID] > 0) && (aRoutingTable[ aNeighbors[i] ][uNodeID] < uKnownNodes) )
+			tempHops = readHopCount( aNeighbors[i], uNodeID);
+			
+			if ( (tempHops < NnH.uHops) && (tempHops > 0) && (tempHops < uKnownNodes) )
 			{
-				NnH.uHops = aRoutingTable[ aNeighbors[i] ][uNodeID];
+				NnH.uHops = tempHops;
 				NnH.uNeighbor = aNeighbors[i];
 			}
 		}
@@ -171,9 +189,9 @@ uint8_t* getRoutingString( void )
 	{
 		if ( isKnown(ID) )
 		{
-			NnH = findLeastHops(ID);
+			NnH = findFewestHops(ID);
 			
-			if (NnH.uNeighbor != 0)
+			if (( NnH.uHops != 255 ) && ( NnH.uNeighbor != 0 ))
 			{
 				aRoutingString[++Idx] = ID;
 				aRoutingString[++Idx] = NnH.uHops;
@@ -213,4 +231,37 @@ void chopRoutingString(){
 		else memcpy(&_tmpPacket[2], &aRoutingString[_pos], uRoutingTailLen);
 		memcpy(aRoutingPackets[_pckt], _tmpPacket, 32);
 	}
+}
+
+uint8_t readHopCount(uint8_t uRow, uint8_t uNode)
+{
+	return aRoutingTable[uRow][uNode] & 0x3F;
+}
+
+uint8_t readAge(uint8_t uRow, uint8_t uNode)
+{
+	return (aRoutingTable[uRow][uNode] & 0xC0) >> 6;
+}
+
+void writeHopCount(uint8_t uRow, uint8_t uNode, uint8_t hopCount) {
+	if (hopCount > 63)	//CHeck if the new hopCount isn't larger than a 6 bit number
+	{
+		hopCount = 63;
+	}
+	
+	aRoutingTable[uRow][uNode] &= 0xC0;
+	aRoutingTable[uRow][uNode] |= hopCount;
+}
+
+void incrementAge(uint8_t uRow, uint8_t uNode)
+{
+	if ( (aRoutingTable[uRow][uNode] & 0xC0) != 0xC0 )
+	{
+		aRoutingTable[uRow][uNode] += 0x40;
+	}
+}
+
+void resetAge(uint8_t uRow, uint8_t uNode)
+{
+	aRoutingTable[uRow][uNode] &= 0xC0;
 }

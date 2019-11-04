@@ -28,4 +28,4 @@
 FILE uart_stdinout_usb_and_io;
 
 void init_stream(uint32_t fcpu);
-
+int uart_fputc(char c, FILE *stream);

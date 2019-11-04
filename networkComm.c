@@ -22,38 +22,39 @@ void init_PrivateComm(uint8_t _myid)
 
 void sendPrivateMSG (uint8_t targetID, uint8_t *data)
 {
-	tNeighborHops messageInfo = findLeastHops(targetID);
+	tNeighborHops messageInfo = findFewestHops(targetID);
 	if(messageInfo.uNeighbor != 0){
 		memset(aPrivateSendString, 0, 32);
-		
+
 		aPrivateSendString[0] = DATAHEADER;
 		aPrivateSendString[1] = MyID;
 		aPrivateSendString[2] = targetID;
 		aPrivateSendString[3] = messageInfo.uHops;
-		
+
 		for(uint8_t i = 0; i < SENSORDATALENGTH; i++)
 		{
-			aPrivateSendString[i+4] = data[i];
+			aPrivateSendString[i+4] = data[i] ^ KEY;
 		}
-		
+
 		nrfSendMessage(aPrivateSendString, (SENSORDATALENGTH + 4), pipe_selector(messageInfo.uNeighbor), true);
 	}
 }
 
 //Function checks if privately received data is meant for me
-// if not it calculates the least hopes to the recipiant and sends 
+// if not it calculates the least hopes to the recipiant and sends
 // message to first node in that path.
-uint8_t ReceiveData(uint8_t *_data, uint8_t _size) //Get size from global int PayloadSize in main.c 
-{ 
+uint8_t ReceiveData(uint8_t *_data, uint8_t _size) //Get size from global int PayloadSize in main.c
+{
 	uint8_t res = 0;
 	if(_data[2] == MyID)
 	{
-		uint8_t datatopi[5] = {'!', 3, _data[1], _data[4], _data[5]};
-		DB_MSG(("Data is for me\r\n%s\r\n",datatopi));
+		uint8_t datatopi[5] = {'!', 3, _data[1], _data[4] ^ KEY, _data[5] ^ KEY};
+		DB_MSG(("Data is for me\r\n"));
+		data_to_pi(datatopi, 5);
 	}
 	else if (--_data[3] > 0)
 	{
-		tNeighborHops BuurRoute = findLeastHops(_data[2]);
+		tNeighborHops BuurRoute = findFewestHops(_data[2]);
 		nrfSendMessage(_data, _size, pipe_selector(BuurRoute.uNeighbor), true);
 		DB_MSG(("Data is for %d\r\n",BuurRoute.uNeighbor));
 		res = 1;
@@ -71,7 +72,7 @@ void nrfSendMessage(uint8_t *str, uint8_t str_len, uint8_t *pipe, bool ack)
 	{
 		nrfStartWrite(str, str_len, NRF_W_TX_PAYLOAD);
 	}
-	else 
+	else
 	{
 		nrfStartWrite(str, str_len, NRF_W_TX_PAYLOAD_NO_ACK);
 	}
