@@ -200,11 +200,35 @@ int main(void)
 void SendRouting( void )
 {
 	uint8_t *str = getRoutingString();
-	nrfSendMessage(str, uRoutingStringLength, broadcast_pipe, false);
-
-	str[0] = '?';
-	str[1] = uRoutingStringLength-2;
-	data_to_pi(str, uRoutingStringLength);
+	
+	if(uRoutingStringLength <= 32){
+		nrfSendMessage(str, uRoutingStringLength, broadcast_pipe, false);
+		if(MYID == BASESTATION_ID){
+			str[0] = '?';
+			str[1] = uRoutingStringLength-2;
+			data_to_pi(str, uRoutingStringLength);
+		}
+	}
+	//Messages should go in Nordics fifo
+	else{
+		
+		chopRoutingString();
+		for(int sends = 0; sends <= uExtraRoutingPackets-1; sends ++){
+			nrfSendMessage(aRoutingPackets[sends], 32, broadcast_pipe, false );
+			if(MYID == BASESTATION_ID){
+				aRoutingPackets[sends][0] = '?';
+				aRoutingPackets[sends][1] = uRoutingStringLength-2;
+				data_to_pi(str, uRoutingStringLength);
+			}
+		}
+		
+		nrfSendMessage(aRoutingPackets[uExtraRoutingPackets], uRoutingTailLen, broadcast_pipe, false);
+		if(MYID == BASESTATION_ID){
+			aRoutingPackets[uExtraRoutingPackets][0] = '?';
+			aRoutingPackets[uExtraRoutingPackets][1] = uRoutingStringLength-2;
+			data_to_pi(str, uRoutingStringLength);
+		}
+	}
 }
 
 /* This function will be called when state equals S_Boot.
