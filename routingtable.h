@@ -25,4 +25,9 @@ void updateNeighborList(void);
 uint8_t isNeighbor(uint8_t uNodeID);
 tNeighborHops findFewestHops(uint8_t uNodeID);
 uint8_t* getRoutingString( void );
+uint8_t readHopCount(uint8_t uRow, uint8_t uNode);
+uint8_t readAge(uint8_t uRow, uint8_t uNode);
+void writeHopCount(uint8_t uRow, uint8_t uNode, uint8_t hopCount);
+void incrementAge(uint8_t uRow, uint8_t uNode);
+void resetAge(uint8_t uRow, uint8_t uNode);
 #endif /* ROUTINGTABLE_H_ */
