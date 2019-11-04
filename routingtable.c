@@ -110,22 +110,37 @@ void updateNeighborList(void)
 
 void FillRoutingTable(uint8_t *routingstring, uint8_t string_length)
 {
-	memset( aRoutingTable[ routingstring[1] ], 0, MAXNODES + 1 );
+	uint8_t originID = routingstring[1];
+	uint8_t stringNodeID;
+	uint8_t hopCnt;
 	
-	if(string_length > 2)
+	for ( uint8_t  i = 1; i != 0; i++)
 	{
-		if (string_length > 32) 
+		if(readHopCount( originID, i ) != 0)
 		{
-			string_length = 32;
+			incrementAge( originID, i );
 		}
+	}
+	
+	for(uint8_t i = 2; i < string_length; i += 2 ) 
+	{
+		stringNodeID = routingstring[i];
+		hopCnt = routingstring[i + 1];
 		
-		for(uint8_t i = 2; i < string_length; i += 2 ) 
+		if ( (stringNodeID != uMyID) && (stringNodeID != 0) && !isNeighbor( stringNodeID ) )
 		{
-			if ( (routingstring[i] != uMyID) && (routingstring[i] != 0) && !isNeighbor( routingstring[i] ) )
-			{
-				addKnownNode( routingstring[i] );
-				aRoutingTable[ routingstring[1] ][ routingstring[i] ] = routingstring[ i + 1 ] + 1;
-			}
+			addKnownNode( stringNodeID );
+			writeHopCount( originID, stringNodeID,  hopCnt );
+			resetAge( originID, stringNodeID );
+		}
+	}
+	
+	for (uint8_t  i = 1; i != 0; i++)
+	{
+		if ( readHopCount(originID, i ) == 3 )
+		{
+			resetAge( originID, i );
+			writeHopCount( originID, i , 0);
 		}
 	}
 }
@@ -138,6 +153,7 @@ uint8_t isNeighbor(uint8_t uNodeID)
 tNeighborHops findFewestHops(uint8_t uNodeID)
 {
 	tNeighborHops NnH = {0 , UINT8_MAX};
+	uint8_t tempHops = 0;
 		
 	if (isKnown(uNodeID))
 	{
@@ -150,9 +166,11 @@ tNeighborHops findFewestHops(uint8_t uNodeID)
 
 		for (uint8_t i = 0; i < uNeighbors; i++)
 		{
-			if ((aRoutingTable[ aNeighbors[i] ][uNodeID] < NnH.uHops) && (aRoutingTable[ aNeighbors[i] ][uNodeID] > 0) && (aRoutingTable[ aNeighbors[i] ][uNodeID] < uKnownNodes) )
+			tempHops = readHopCount( aNeighbors[i], uNodeID);
+			
+			if ( (tempHops < NnH.uHops) && (tempHops > 0) && (tempHops < uKnownNodes) )
 			{
-				NnH.uHops = aRoutingTable[ aNeighbors[i] ][uNodeID];
+				NnH.uHops = tempHops;
 				NnH.uNeighbor = aNeighbors[i];
 			}
 		}
