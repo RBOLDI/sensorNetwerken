@@ -126,7 +126,7 @@ void FillRoutingTable(uint8_t *routingstring, uint8_t string_length)
 		stringNodeID = routingstring[i];
 		hopCnt = routingstring[i + 1];
 		
-		if ( (stringNodeID != uMyID) && (stringNodeID != 0) && !isNeighbor( stringNodeID ) )
+		if ( (stringNodeID != uMyID) && (stringNodeID != 0) )
 		{
 			addKnownNode( stringNodeID );
 			writeHopCount( originID, stringNodeID,  hopCnt );
@@ -136,7 +136,7 @@ void FillRoutingTable(uint8_t *routingstring, uint8_t string_length)
 	
 	for (uint8_t  i = 1; i != 0; i++)
 	{
-		if ( readHopCount(originID, i ) == 3 )
+		if ( readAge(originID, i ) == 3 )
 		{
 			resetAge( originID, i );
 			writeHopCount( originID, i , 0);
