@@ -214,3 +214,41 @@ void chopRoutingString(){
 		memcpy(aRoutingPackets[_pckt], _tmpPacket, 32);
 	}
 }
+
+uint8_t readHopCount(uint8_t nodeData) {
+	nodeData = nodeData & 0b00111111;	//take out the expiration date, leave the hopcount
+	return nodeData;
+}
+
+uint8_t readExpiration(uint8_t nodeData) {
+	nodeData = nodeData & 0b11000000;	//take out the hopcount, leave the expiration
+	nodeData = (nodeData >> 6);			//move the expiration to 6 bits to the right 
+	return nodeData;
+}
+
+uint8_t writeHopCount(uint8_t nodeData, uint8_t hopCount) {
+	if (hopCount > 63)	//CHeck if the new hopCount isn't larger than a 6 bit number
+		return 0;
+	else {
+		nodeData = nodeData & 0b11000000;	//reset the current hopCount
+		nodeData = nodeData | hopCount;		//put in new hopCount
+		return nodeData;
+	}
+}
+
+uint8_t higherExpiration(uint8_t nodeData) {
+	uint8_t copyNodeData = nodeData;
+	copyNodeData = copyNodeData & 0b11000000;	//take out the hopcount, leave the expiration
+	copyNodeData = (copyNodeData >> 6);			//move the expiration to 6 bits to the right
+	copyNodeData = copyNodeData + 1;			//higher the expiration
+	copyNodeData = (copyNodeData << 6);			//move expiration back to position
+	
+	nodeData = nodeData & 0b00111111;			//reset expiration
+	nodeData = nodeData | copyNodeData;			//put new expiration in , leave hopcount same
+	return nodeData;
+}
+
+uint8_t resetExpiration(uint8_t nodeData) {
+	nodeData = nodeData & 0b00111111;		//reset expiration
+	return nodeData; 
+}
