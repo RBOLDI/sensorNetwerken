@@ -163,7 +163,7 @@ int main(void)
 					newBroadcastFlag = 0;
 					nextState = S_SendRouting;
 				}
-				else if ( ADC_sample() && MYID != BASESTATION_ID )
+				else if ( ADC_sample() && MYID != BASESTATION_ID  && isKnown(BASESTATION_ID))
 				{
 					nextState = S_SendSensorData;
 				}
