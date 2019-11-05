@@ -37,8 +37,8 @@
 #include <stdio.h>
 
 uint8_t  channel = 111;		//0-128
-uint8_t  broadcast_pipe[5] = {00, 20, 20, 19, 20};
-uint8_t  private_pipe[5]   = {51, 20, 20, 19, 20};
+uint8_t  broadcast_pipe[5] = {0x00, 0x20, 0x20, 0x19, 0x20};
+uint8_t  private_pipe[5]   = {0x51, 0x20, 0x20, 0x19, 0x20};
 struct Packet packet;
 //uint8_t  packet[32];		//buffer voor data
 

@@ -115,7 +115,7 @@ void FillRoutingTable(uint8_t *routingstring, uint8_t string_length)
 	
 	for ( uint8_t  i = 1; i != 0; i++)
 	{
-		if(readHopCount( originID, i ) != 0)
+		if( readHopCount( originID, i ) != 0 )
 		{
 			incrementAge( originID, i );
 		}
@@ -124,7 +124,7 @@ void FillRoutingTable(uint8_t *routingstring, uint8_t string_length)
 	for(uint8_t i = 2; i < string_length; i += 2 ) 
 	{
 		stringNodeID = routingstring[i];
-		hopCnt = routingstring[i + 1];
+		hopCnt = routingstring[i + 1] + 1;
 		
 		if ( (stringNodeID != uMyID) && (stringNodeID != 0) )
 		{
@@ -264,5 +264,5 @@ void incrementAge(uint8_t uRow, uint8_t uNode)
 
 void resetAge(uint8_t uRow, uint8_t uNode)
 {
-	aRoutingTable[uRow][uNode] &= 0xC0;
+	aRoutingTable[uRow][uNode] &= 0x3F;
 }
