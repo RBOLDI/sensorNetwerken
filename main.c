@@ -82,17 +82,17 @@ int main(void)
 			case S_Boot:
 				bootFunction();
 				nextState = S_SendRouting;
-			break;
+				break;
 			case S_SendRouting:
 				SendRouting();
 				PORTF.OUTCLR = PIN1_bm;
 				nextState = S_WaitforTX;
-			break;
+				break;
 			case S_SendSensorData:
 				sendPrivateMSG (BASESTATION_ID, sampleData);
 				PORTF.OUTCLR = PIN1_bm;
 				nextState = S_WaitforTX;
-			break;
+				break;
 			case S_WaitforTX:
 				if(newNrfStatusFlag)
 				{
@@ -141,20 +141,15 @@ int main(void)
 				{
 					TXCounter++;
 				}
-			break;
+				break;
 			case S_GotMail:
 				if (parseIncomingData())
-				{
-					PORTF.OUTCLR = PIN0_bm;
 					nextState = S_WaitforTX;
-				}
 				else
-				{
-					PORTF.OUTCLR = PIN0_bm;
 					nextState = S_Idle;
-				}
 				
-			break;
+				PORTF.OUTCLR = PIN0_bm;
+				break;
 			case S_Idle:
 				idle();
 				if( newBroadcastFlag ) 
@@ -190,10 +185,9 @@ int main(void)
 				{
 					nextState = S_Idle;
 				}
-			break;
+				break;
 			default:
 					nextState = S_Idle;
-			break;
 			}
 		currentState = nextState;
 	}
@@ -279,18 +273,17 @@ uint8_t parseIncomingData( void )
 			addNeighbor(packet.content[1]);
 			printf_Routing(packet.content, packet.size);
 			FillRoutingTable(packet.content, packet.size);
-		break;
+			break;
 		case DATAHEADER:
 			printf_SetColor(COLOR_BLUE);
 			DB_MSG(("Received Data\r\n"));
 			res = ReceiveData(packet.content, packet.size);
 			DB_MSG(("0x%02X %d %d %d %d\r\n", packet.content[0], packet.content[1], packet.content[2], packet.content[3], (( (uint16_t) packet.content[4] ) << 8) | packet.content[5]));
 			printf_SetColor(COLOR_RESET);
-		break;
+			break;
 		default:
 		 	DB_MSG(("UMT: "));
 			printf_hex(packet.content, sizeof(packet.content));
-		break;
 	}
 	return res;
 }
