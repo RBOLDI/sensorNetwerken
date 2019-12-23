@@ -41,11 +41,10 @@ void sendPrivateMSG (uint8_t targetID, uint8_t *data)
 }
 
 //Function checks if privately received data is meant for me
-// if not it calculates the least hopes to the recipiant and sends
+// if not it calculates the least hopes to the recipient and sends
 // message to first node in that path.
 uint8_t ReceiveData(uint8_t *_data, uint8_t _size) //Get size from global int PayloadSize in main.c
 {
-	uint8_t res = 0;
 	if(_data[2] == MyID)
 	{
 		uint8_t datatopi[5] = {'!', 3, _data[1], _data[4] ^ KEY, _data[5] ^ KEY};
@@ -57,9 +56,9 @@ uint8_t ReceiveData(uint8_t *_data, uint8_t _size) //Get size from global int Pa
 		tNeighborHops BuurRoute = findFewestHops(_data[2]);
 		nrfSendMessage(_data, _size, pipe_selector(BuurRoute.uNeighbor), true);
 		DB_MSG(("Data is for %d\r\n",BuurRoute.uNeighbor));
-		res = 1;
+		return 1;
 	}
-	return res;
+	return 0;
 }
 
 void nrfSendMessage(uint8_t *str, uint8_t str_len, uint8_t *pipe, bool ack)

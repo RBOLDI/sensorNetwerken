@@ -27,19 +27,6 @@ void printf_hex(uint8_t *str, uint8_t str_len)
 	printf("\r\n");
 }
 
-void printf_bin(uint8_t *str, uint8_t str_len)
-{
-	for (uint8_t i = 0; i <str_len; i++)
-	{
-		for (uint8_t j = 0; j < 8; j++)
-		{
-			printf("%d", ((str[i] & (0x80 >> j)) > 0));
-		}
-		printf(" ");
-	}
-	printf("\r\n");
-}
-
 void printf_Routing(uint8_t *str, uint8_t str_len)
 {
 	for(int i = 0; i < str_len; i++)

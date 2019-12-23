@@ -40,7 +40,10 @@ uint8_t  channel = 111;		//0-128
 uint8_t  broadcast_pipe[5] = {0x00, 0x20, 0x20, 0x19, 0x20};
 uint8_t  private_pipe[5]   = {0x51, 0x20, 0x20, 0x19, 0x20};
 struct Packet packet;
-//uint8_t  packet[32];		//buffer voor data
+
+volatile uint8_t newDataFlag		= 0;
+volatile uint8_t successTXFlag		= 0;
+volatile uint8_t maxRTFlag			= 0;
 
 /*!
  *  \brief Global variables and constants
@@ -1161,3 +1164,52 @@ void nrfSend(uint8_t* send, uint8_t length, uint8_t* pipe){
 	_delay_ms(5);
 }
 
+void init_nrf(const uint8_t pvtID){
+	nrfspiInit();
+	nrfSetRetries(NRF_SETUP_ARD_1000US_gc,	NRF_SETUP_ARC_10RETRANSMIT_gc);
+	nrfSetPALevel(NRF_RF_SETUP_PWR_18DBM_gc);
+	nrfSetDataRate(NRF_RF_SETUP_RF_DR_250K_gc);
+	nrfSetCRCLength(NRF_CONFIG_CRC_16_gc);
+	nrfSetChannel(channel);
+	nrfSetAutoAck(0);
+	nrfSetAutoAckPipe(1, 1);
+	nrfEnableDynamicPayloads();
+	nrfEnableAckPayload();
+	
+	nrfClearInterruptBits();
+	nrfFlushRx();
+	nrfFlushTx();
+
+	PORTF.INT0MASK |= PIN6_bm;
+	PORTF.PIN6CTRL  = PORT_ISC_FALLING_gc;
+	PORTF.INTCTRL   = (PORTF.INTCTRL & ~PORT_INT0LVL_gm) | PORT_INT0LVL_LO_gc;
+
+	//Starts in broadcast mode with own pvt ID selected by HW pin.
+	
+	nrfOpenReadingPipe(0, broadcast_pipe);
+	nrfOpenReadingPipe(1, pipe_selector(pvtID));
+	nrfStartListening();
+
+}
+
+void readNrfStatus(void)
+{
+	uint8_t status;
+	status = nrfReadRegister(REG_STATUS);
+
+	if(status & NRF_STATUS_RX_DR_bm)			// RX Data Ready
+	{
+		PORTF.OUTSET = PIN0_bm;
+		newDataFlag = 1;
+	}
+
+	if(status & NRF_STATUS_TX_DS_bm)			// TX Data Sent
+	{
+		successTXFlag = 1;
+	}
+
+	if(status & NRF_STATUS_MAX_RT_bm)			// Max Retries
+	{
+		maxRTFlag = 1;
+	}
+}

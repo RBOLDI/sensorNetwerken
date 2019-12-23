@@ -28,16 +28,11 @@
 
 
 //Function prototypes
-void init_nrf(const uint8_t pvtID);
 void SendRouting( void );
 void bootFunction(void);
 uint8_t parseIncomingData(void);
-void readNrfStatus(void);
 
-volatile uint8_t newDataFlag		= 0;
 volatile uint8_t newBroadcastFlag	= 0;
-volatile uint8_t successTXFlag		= 0;
-volatile uint8_t maxRTFlag			= 0;
 volatile uint8_t newNrfStatusFlag	= 0;
 volatile uint8_t sampleCounter		= 0;
 
@@ -82,17 +77,17 @@ int main(void)
 			case S_Boot:
 				bootFunction();
 				nextState = S_SendRouting;
-			break;
+				break;
 			case S_SendRouting:
 				SendRouting();
 				PORTF.OUTCLR = PIN1_bm;
 				nextState = S_WaitforTX;
-			break;
+				break;
 			case S_SendSensorData:
 				sendPrivateMSG (BASESTATION_ID, sampleData);
 				PORTF.OUTCLR = PIN1_bm;
 				nextState = S_WaitforTX;
-			break;
+				break;
 			case S_WaitforTX:
 				if(newNrfStatusFlag)
 				{
@@ -141,33 +136,29 @@ int main(void)
 				{
 					TXCounter++;
 				}
-			break;
+				break;
 			case S_GotMail:
 				if (parseIncomingData())
-				{
-					PORTF.OUTCLR = PIN0_bm;
 					nextState = S_WaitforTX;
-				}
 				else
-				{
-					PORTF.OUTCLR = PIN0_bm;
 					nextState = S_Idle;
-				}
 				
-			break;
+				PORTF.OUTCLR = PIN0_bm;
+				break;
 			case S_Idle:
 				idle();
-				if(newBroadcastFlag) 
+				if( newBroadcastFlag ) 
 				{
 					updateNeighborList();
 					newBroadcastFlag = 0;
 					nextState = S_SendRouting;
 				}
-				else if ( ADC_sample() && MYID != BASESTATION_ID  && isKnown(BASESTATION_ID))
+				else if ( ADC_takesample() )
 				{
-					nextState = S_SendSensorData;
+					if( MYID != BASESTATION_ID && isKnown(BASESTATION_ID) )
+						nextState = S_SendSensorData;
 				}
-				else if(newDataFlag) 
+				else if( newDataFlag ) 
 				{
 					ATOMIC_BLOCK(ATOMIC_FORCEON);
 					memset(packet.content, 0, sizeof(packet.content));
@@ -189,10 +180,9 @@ int main(void)
 				{
 					nextState = S_Idle;
 				}
-			break;
+				break;
 			default:
 					nextState = S_Idle;
-			break;
 			}
 		currentState = nextState;
 	}
@@ -245,6 +235,8 @@ void bootFunction(void)
 	MYID = GetIdFromLookup(device_serial);
 
 	init_nrf(MYID);
+	PMIC.CTRL |= PMIC_LOLVLEN_bm;
+	sei();
 	
 	init_RoutingTable(MYID);
 	init_PrivateComm(MYID);
@@ -261,6 +253,7 @@ void bootFunction(void)
 	
 	
 	printf_DeviceSerial(device_serial,11);
+	printf("This device's ID: %u\r\n", MYID);
 
 	_delay_ms(200);
 }
@@ -278,70 +271,17 @@ uint8_t parseIncomingData( void )
 			addNeighbor(packet.content[1]);
 			printf_Routing(packet.content, packet.size);
 			FillRoutingTable(packet.content, packet.size);
-		break;
+			break;
 		case DATAHEADER:
 			printf_SetColor(COLOR_BLUE);
 			DB_MSG(("Received Data\r\n"));
 			res = ReceiveData(packet.content, packet.size);
 			DB_MSG(("0x%02X %d %d %d %d\r\n", packet.content[0], packet.content[1], packet.content[2], packet.content[3], (( (uint16_t) packet.content[4] ) << 8) | packet.content[5]));
 			printf_SetColor(COLOR_RESET);
-		break;
+			break;
 		default:
 		 	DB_MSG(("UMT: "));
 			printf_hex(packet.content, sizeof(packet.content));
-		break;
 	}
 	return res;
-}
-
-void init_nrf(const uint8_t pvtID){
-	nrfspiInit();
-	nrfSetRetries(NRF_SETUP_ARD_1000US_gc,	NRF_SETUP_ARC_10RETRANSMIT_gc);
-	nrfSetPALevel(NRF_RF_SETUP_PWR_18DBM_gc);
-	nrfSetDataRate(NRF_RF_SETUP_RF_DR_250K_gc);
-	nrfSetCRCLength(NRF_CONFIG_CRC_16_gc);
-	nrfSetChannel(channel);
-	nrfSetAutoAck(0);
-	nrfSetAutoAckPipe(1, true);
-	nrfEnableDynamicPayloads();
-	nrfEnableAckPayload();
-	
-	nrfClearInterruptBits();
-	nrfFlushRx();
-	nrfFlushTx();
-
-	PORTF.INT0MASK |= PIN6_bm;
-	PORTF.PIN6CTRL  = PORT_ISC_FALLING_gc;
-	PORTF.INTCTRL   = (PORTF.INTCTRL & ~PORT_INT0LVL_gm) | PORT_INT0LVL_LO_gc;
-
-	//Starts in broadcast mode with own pvt ID selected by HW pin.
-	
-	nrfOpenReadingPipe(0, broadcast_pipe);
-	nrfOpenReadingPipe(1, pipe_selector(pvtID));
-	nrfStartListening();
-	
-	PMIC.CTRL |= PMIC_LOLVLEN_bm;
-	sei();
-}
-
-void readNrfStatus(void)
-{
-	uint8_t status;
-	status = nrfReadRegister(REG_STATUS);
-
-	if(status & NRF_STATUS_RX_DR_bm)			// RX Data Ready
-	{
-		PORTF.OUTSET = PIN0_bm;
-		newDataFlag = 1;
-	}
-
-	if(status & NRF_STATUS_TX_DS_bm)			// TX Data Sent
-	{
-		successTXFlag = 1;
-	}
-
-	if(status & NRF_STATUS_MAX_RT_bm)			// Max Retries
-	{
-		maxRTFlag = 1;
-	}
 }
