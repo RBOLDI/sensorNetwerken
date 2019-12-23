@@ -157,17 +157,18 @@ int main(void)
 			break;
 			case S_Idle:
 				idle();
-				if(newBroadcastFlag) 
+				if( newBroadcastFlag ) 
 				{
 					updateNeighborList();
 					newBroadcastFlag = 0;
 					nextState = S_SendRouting;
 				}
-				else if ( ADC_sample() && MYID != BASESTATION_ID  && isKnown(BASESTATION_ID))
+				else if ( ADC_takesample() )
 				{
-					nextState = S_SendSensorData;
+					if( MYID != BASESTATION_ID && isKnown(BASESTATION_ID) )
+						nextState = S_SendSensorData;
 				}
-				else if(newDataFlag) 
+				else if( newDataFlag ) 
 				{
 					ATOMIC_BLOCK(ATOMIC_FORCEON);
 					memset(packet.content, 0, sizeof(packet.content));

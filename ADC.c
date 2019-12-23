@@ -11,6 +11,8 @@
 #include <stdio.h>
 #include "ADC.h"
 
+#define TIMERCOUNTSBETWEENSAMPLES 6 // Count to this amount between new sample. Every count is 5 seconds.
+
 //Function prototypes
 uint16_t readCalibrationWord(uint8_t index);
 
@@ -59,20 +61,19 @@ uint16_t read_adc(void)
 
 //Take sample function
 //Returns 0 if new sample is taken, 1 when there is no new sample.
-uint8_t ADC_sample(void){
-	if(sampleFlag){
-		res = read_adc();
+uint8_t ADC_takesample(void){
+	if(sampleFlag)
+	{
 		sampleFlag = 0;
-		sampleData[0] = (res & 0xFF00) >> 8;
-		sampleData[1] = res & 0x00FF;
+		res = read_adc();
+		sampleData[0] = res >> 8;		// Take 8 MSB's as first data byte
+		sampleData[1] = res & 0x00FF;	// Take 8 LSB's as second data byte
 		return 1;
 	} 
-	else
-		return 0;
+	
+	return 0;
 }
 
 void ADC_timer(void){
-	ADCCounter++;
-	if (ADCCounter % 6 == 0) sampleFlag = 1;
-	else if (ADCCounter == 255) ADCCounter = 0;
+	if (++ADCCounter % TIMERCOUNTSBETWEENSAMPLES == 0) sampleFlag = 1;
 }
