@@ -309,6 +309,8 @@ uint16_t nrfGetMaxTimeout(void);
 void    nrfClearInterruptBits(void);
 uint8_t nrfVerifySPIConnection(void);
 void nrfSend(uint8_t* send, uint8_t length, uint8_t* pipe);
+void init_nrf(const uint8_t pvtID);
+void readNrfStatus(void);
 
 struct Packet {
 	uint8_t size;
@@ -319,6 +321,10 @@ uint8_t  channel;
 uint8_t  broadcast_pipe[5];
 uint8_t  private_pipe[5];
 struct Packet packet;
+
+volatile uint8_t newDataFlag;
+volatile uint8_t successTXFlag;
+volatile uint8_t maxRTFlag;
 
 #endif
 

@@ -28,16 +28,11 @@
 
 
 //Function prototypes
-void init_nrf(const uint8_t pvtID);
 void SendRouting( void );
 void bootFunction(void);
 uint8_t parseIncomingData(void);
-void readNrfStatus(void);
 
-volatile uint8_t newDataFlag		= 0;
 volatile uint8_t newBroadcastFlag	= 0;
-volatile uint8_t successTXFlag		= 0;
-volatile uint8_t maxRTFlag			= 0;
 volatile uint8_t newNrfStatusFlag	= 0;
 volatile uint8_t sampleCounter		= 0;
 
@@ -240,6 +235,8 @@ void bootFunction(void)
 	MYID = GetIdFromLookup(device_serial);
 
 	init_nrf(MYID);
+	PMIC.CTRL |= PMIC_LOLVLEN_bm;
+	sei();
 	
 	init_RoutingTable(MYID);
 	init_PrivateComm(MYID);
@@ -256,6 +253,7 @@ void bootFunction(void)
 	
 	
 	printf_DeviceSerial(device_serial,11);
+	printf("This device's ID: %u\r\n", MYID);
 
 	_delay_ms(200);
 }
@@ -286,56 +284,4 @@ uint8_t parseIncomingData( void )
 			printf_hex(packet.content, sizeof(packet.content));
 	}
 	return res;
-}
-
-void init_nrf(const uint8_t pvtID){
-	nrfspiInit();
-	nrfSetRetries(NRF_SETUP_ARD_1000US_gc,	NRF_SETUP_ARC_10RETRANSMIT_gc);
-	nrfSetPALevel(NRF_RF_SETUP_PWR_18DBM_gc);
-	nrfSetDataRate(NRF_RF_SETUP_RF_DR_250K_gc);
-	nrfSetCRCLength(NRF_CONFIG_CRC_16_gc);
-	nrfSetChannel(channel);
-	nrfSetAutoAck(0);
-	nrfSetAutoAckPipe(1, true);
-	nrfEnableDynamicPayloads();
-	nrfEnableAckPayload();
-	
-	nrfClearInterruptBits();
-	nrfFlushRx();
-	nrfFlushTx();
-
-	PORTF.INT0MASK |= PIN6_bm;
-	PORTF.PIN6CTRL  = PORT_ISC_FALLING_gc;
-	PORTF.INTCTRL   = (PORTF.INTCTRL & ~PORT_INT0LVL_gm) | PORT_INT0LVL_LO_gc;
-
-	//Starts in broadcast mode with own pvt ID selected by HW pin.
-	
-	nrfOpenReadingPipe(0, broadcast_pipe);
-	nrfOpenReadingPipe(1, pipe_selector(pvtID));
-	nrfStartListening();
-	
-	PMIC.CTRL |= PMIC_LOLVLEN_bm;
-	sei();
-}
-
-void readNrfStatus(void)
-{
-	uint8_t status;
-	status = nrfReadRegister(REG_STATUS);
-
-	if(status & NRF_STATUS_RX_DR_bm)			// RX Data Ready
-	{
-		PORTF.OUTSET = PIN0_bm;
-		newDataFlag = 1;
-	}
-
-	if(status & NRF_STATUS_TX_DS_bm)			// TX Data Sent
-	{
-		successTXFlag = 1;
-	}
-
-	if(status & NRF_STATUS_MAX_RT_bm)			// Max Retries
-	{
-		maxRTFlag = 1;
-	}
 }
