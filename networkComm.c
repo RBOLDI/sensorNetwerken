@@ -36,7 +36,7 @@ void sendPrivateMSG (uint8_t targetID, uint8_t *data)
 			aPrivateSendString[i+4] = data[i] ^ KEY;
 		}
 
-		nrfSendMessage(aPrivateSendString, (SENSORDATALENGTH + 4), pipe_selector(messageInfo.uNeighbor), true);
+		nrfSendMessage(aPrivateSendString, (SENSORDATALENGTH + 4), pipe_selector(messageInfo.uNeighbor), false);
 	}
 }
 
